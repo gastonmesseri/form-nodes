@@ -22,7 +22,8 @@ class Company {
     <form [formNode]="profile" (formNodeSubmit)="$event.form.$api.submitted()" (formNodeSubmitBlocked)="$event.event.preventDefault()">
       <span>{{ profile.submitted() }}</span>
       @if (closestForm(); as closest) { <span>{{ closest.submitted() }}</span> }
-      <input #nameBinding="formNode" [formNode]="profile.name">
+      <input #nameBinding="formNode" [formNode]="profile.name"
+        (formNodeChange)="$event.toUpperCase()" (formNodeValueChange)="$event.toUpperCase()">
       <form-node-errors [node]="profile.name">
         <ng-template #message let-message let-messages="messages">
           {{ message }} ({{ messages.length }})

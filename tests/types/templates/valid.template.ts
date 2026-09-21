@@ -8,9 +8,9 @@ import { array, field, form, FormNodeDirective } from '../../../src/public-api';
   imports: [FormNodeDirective],
   template: `
     <form [formNode]="profile" (formNodeSubmit)="$event.value.age.toFixed()" (formNodeSubmitBlocked)="$event.form.$api.submitted()"></form>
-    <input #binding="formNode" [formNode]="name" (formNodeValueChange)="$event.toUpperCase()"
+    <input #binding="formNode" [formNode]="name" (formNodeValueChange)="$event.toUpperCase()" (formNodeChange)="$event.toUpperCase()"
       (formNodeControlValueChange)="$event.toUpperCase()">
-    <input [formNode]="profile.age" (formNodeValueChange)="$event.toFixed()"
+    <input [formNode]="profile.age" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()"
       (formNodeControlValueChange)="$event.toFixed()">
     @if (profile.get('dynamicName'); as dynamicName) {
       <input [formNode]="dynamicName">
@@ -85,7 +85,7 @@ class ValidSignalControlHost {
   standalone: true,
   imports: [ValidProfileControl, ValidPeopleControl, FormNodeDirective],
   template: `
-    <valid-profile-control [formNode]="profile" (formNodeValueChange)="$event.name?.toUpperCase()" />
+    <valid-profile-control [formNode]="profile" (formNodeChange)="$event.name?.toUpperCase()" />
     <valid-people-control [formNode]="people" (formNodeControlValueChange)="$event[0]?.name?.toUpperCase()" />
   `,
 })
@@ -99,15 +99,15 @@ void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost];
 @Component({
   imports: [FormNodeDirective, ValidProfileControl, ValidPeopleControl],
   template: `
-    <input #standalone="formNode" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()"
+    <input #standalone="formNode" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()"
       (formNodeControlValueChange)="$event.toFixed()">
     {{ standalone.node()().toFixed() }}
     <input [(formNodeValue)]="amount">
-    <input [formNode]="optionalAge()" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()">
+    <input [formNode]="optionalAge()" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()">
     <input [formNodeValue]="optionalName()" (formNodeValueChange)="$event?.toUpperCase()">
     <valid-profile-control [formNodeValue]="person" (formNodeValueChange)="$event.name.toUpperCase()" />
     <valid-people-control [formNodeValue]="people" (formNodeValueChange)="$event[0]!.name.toUpperCase()" />
-    <input [formNode]="age" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()">
+    <input [formNode]="age" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()">
   `,
 })
 class ValidStandaloneHost {

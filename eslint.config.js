@@ -7,7 +7,7 @@ import multilineArrowBody from './scripts/eslint-rules/multiline-arrow-body.js';
 
 export default defineConfig(
   {
-    ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'website/.docusaurus/**', 'website/build/**'],
+    ignores: ['.angular/**', 'coverage/**', 'dist/**', 'node_modules/**', 'website/.docusaurus/**', 'website/build/**'],
   },
   {
     files: ['src/**/*.ts'],

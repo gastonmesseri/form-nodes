@@ -112,6 +112,32 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    */
   readonly formNodeValueChange: OutputRef<NodeValue<TNode>>;
   /**
+   * Short name for formNodeValueChange. Both names share the same committed-value output.
+   * Emits control-originated values after debounce; programmatic writes do not emit.
+   * Listen with (formNodeChange) alongside [formNode], not [(formNode)].
+   * Use [(formNodeValue)] for two-way value binding.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     <input [formNode]="form.username"
+   *       (formNodeChange)="save($event)" />
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   form = form({ username: field('') });
+   *
+   *   save(value: string) {
+   *     console.log(value);
+   *   }
+   * }
+   * ```
+   */
+  readonly formNodeChange: OutputRef<NodeValue<TNode>>;
+  /**
    * Latest parsed value received from the selected control adapter, before waiting for debounce.
    * This does not guarantee a physical user interaction: custom controls can emit from code.
    *

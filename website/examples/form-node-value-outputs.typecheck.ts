@@ -7,7 +7,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
     <textarea
       [formNode]="form.description"
       (formNodeControlValueChange)="onControlValueChange($event)"
-      (formNodeValueChange)="onValueChange($event)"
+      (formNodeChange)="onValueChange($event)"
     ></textarea>
     <p>Draft length: {{ draftLength }}</p>
     <p>Confirmed description: {{ confirmedDescription }}</p>

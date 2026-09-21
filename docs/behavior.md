@@ -3646,8 +3646,23 @@ fallback intentionally extends that metadata-only behavior; it does not register
 
 ## Binding value outputs
 
+The short `formNodeChange` name is an additive alias; `formNodeValueChange` remains supported
+and powers `[(formNodeValue)]`. `[formNode]` still receives a node, not its value. With strict
+template checking, accidental `[(formNode)]` on a string field fails because Angular unwraps
+the writable signal to a string. Invalid runtime inputs fail before control binding with a
+message recommending `[formNode]` or `[(formNodeValue)]`. This is value validation, not template
+syntax detection; `any` or disabled type checks cannot provide a universal compile-time guarantee.
+Alias/compiler behavior was checked against Angular v22.1.7 (f3358f24b884e34d44cfb8ec3db53965153d61e1),
+`packages/core/src/render3/instructions/two_way.ts`,
+`packages/compiler/src/render3/r3_template_transform.ts` and its matching compiler spec, plus
+`packages/forms/signals/src/directive/form_field.ts` and `test/web/form_field.spec.ts`.
+Node state, validation, debounce, and control synchronization rules remain unchanged.
+
 `[formNode]` exposes typed `formNodeControlValueChange` (immediate parsed control value) and
-`formNodeValueChange` (exposed committed node value). Only the selected control adapter initiates
+`formNodeChange` / `formNodeValueChange` (exposed committed node value). Both committed names
+share one output instance, so each subscription receives the same notification once; subscribing
+under both names registers two listeners. Unsubscribing one leaves other listeners active.
+Only the selected control adapter initiates
 these notifications. Native forms and pass-through bindings do not forward child notifications.
 Without debounce, the node and synchronous parent/validation state are updated before either
 handler; the control-value output runs first. With debounce, the committed notification runs after

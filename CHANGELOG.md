@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup; `[(formNodeValue)]` remains supported. Invalid node bindings now explain how to use `[formNode]` or two-way value binding.
+
 ## [5.0.0] - 2026-09-21
 
 ### Changed

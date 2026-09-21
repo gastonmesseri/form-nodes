@@ -53,7 +53,7 @@ class StandaloneCva implements ControlValueAccessor {
 
 @Component({
   template: `<standalone-cva [formNode]="bound()" [formNodeValue]="source()"
-    (formNodeValueChange)="commits.push($event)" (formNodeControlValueChange)="drafts.push($event)" />`,
+    (formNodeValueChange)="commits.push($event)" (formNodeChange)="changes.push($event)" (formNodeControlValueChange)="drafts.push($event)" />`,
   imports: [FormNodeDirective, StandaloneCva],
 })
 class Host {
@@ -62,6 +62,8 @@ class Host {
   bound = signal<AnyNode | undefined>(undefined);
 
   commits: unknown[] = [];
+
+  changes: unknown[] = [];
 
   drafts: unknown[] = [];
 }
@@ -94,6 +96,7 @@ describe('formNodeValue', () => {
     expect(node.$api.touched()).toBe(true);
     expect(host.source()).toBe('Ada');
     expect(host.commits).toEqual(['Grace']);
+    expect(host.changes).toEqual(['Grace']);
     expect(host.drafts).toEqual(['Grace']);
     expect(control.writeValue).not.toHaveBeenCalled();
     host.source.set('Lin');
@@ -104,6 +107,7 @@ describe('formNodeValue', () => {
     expect(node.$api.touched()).toBe(true);
     expect(control.writeValue).toHaveBeenCalledExactlyOnceWith('Lin');
     expect(host.commits).toEqual(['Grace']);
+    expect(host.changes).toEqual(['Grace']);
     binding.reset();
     fixture.detectChanges();
     expect(node()).toBe('Lin');
@@ -135,6 +139,7 @@ describe('formNodeValue', () => {
     control.change('Grace');
     expect(node()).toBe('Ada');
     expect(fixture.componentInstance.commits).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
     expect(fixture.componentInstance.drafts).toEqual(['Grace']);
     fixture.componentInstance.source.set('');
     fixture.detectChanges();
@@ -143,10 +148,12 @@ describe('formNodeValue', () => {
     control.touch();
     expect(node()).toBe('');
     expect(fixture.componentInstance.commits).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
     control.change('Lin');
     control.touch();
     expect(node()).toBe('Lin');
     expect(fixture.componentInstance.commits).toEqual(['Lin']);
+    expect(fixture.componentInstance.changes).toEqual(['Lin']);
   });
 
   it('moves contributed errors on rebinding and reuses its original standalone field', () => {
@@ -193,6 +200,7 @@ describe('formNodeValue', () => {
     expect(profile.nested.name.invalid()).toBe(true);
     expect(changed).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.commits).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
   });
 
   it('ignores deferred output from a node replaced by a standalone binding', () => {
@@ -207,9 +215,11 @@ describe('formNodeValue', () => {
     node.flush();
     expect(node()).toBe('Grace');
     expect(fixture.componentInstance.commits).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
     expect(control.writeValue.mock.lastCall).toEqual(['Ada']);
     control.change('Lin');
     expect(fixture.componentInstance.commits).toEqual(['Lin']);
+    expect(fixture.componentInstance.changes).toEqual(['Lin']);
   });
 
   it('uses a newly bound node even when the source value stays equal', () => {
@@ -224,17 +234,20 @@ describe('formNodeValue', () => {
     expect(binding.node()).toBe(second);
     expect(second()).toBe('Ada');
     expect(host.commits).toEqual([]);
+    expect(host.changes).toEqual([]);
   });
 
   it('supports native two-way bindings without registering in an ancestor form', () => {
     @Component({
-      template: `<form [formNode]="profile"><input [(formNodeValue)]="name" /></form>`,
+      template: `<form [formNode]="profile"><input [(formNodeValue)]="name" (formNodeChange)="commits.push($event)" /></form>`,
       imports: [FormNodeDirective],
     })
     class NativeHost {
       profile = form({ age: field(42) });
 
       name = signal('Ada');
+
+      commits: string[] = [];
     }
     const fixture = TestBed.createComponent(NativeHost);
     fixture.detectChanges();
@@ -253,6 +266,7 @@ describe('formNodeValue', () => {
     fixture.componentInstance.name.set('Lin');
     fixture.detectChanges();
     expect(input.value).toBe('Lin');
+    expect(fixture.componentInstance.commits).toEqual(['Grace']);
   });
 
   it('does not overwrite a newer draft when two-way binding echoes a committed value', () => {
@@ -302,5 +316,73 @@ describe('formNodeValue', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.name()).toBe('Grace');
     expect(control.state.dirty()).toBe(true);
+  });
+});
+
+describe('formNodeChange', () => {
+  it.each(['field', 'form'] as const)('shares committed events and cleanup for a %s source', (kind) => {
+    const fixture = TestBed.createComponent(Host);
+    const leaf = field('Ada', [required], { debounce: 'blur' });
+    const node = kind === 'field' ? leaf : form({ nested: form({ name: leaf }) }, { debounce: 'blur' });
+    const value = (name: string) => kind === 'field' ? name : { nested: { name } };
+    fixture.componentInstance.bound.set(node);
+    fixture.componentInstance.source.set(value('Ada'));
+    fixture.detectChanges();
+    const element = fixture.debugElement.query(By.directive(StandaloneCva));
+    const control = element.componentInstance as StandaloneCva;
+    const binding = element.injector.get(FormNodeDirective);
+    const snapshots: unknown[] = [];
+    const subscription = binding.formNodeChange.subscribe((next) => {
+      snapshots.push({ value: next, current: node(), invalid: node.invalid(), dirty: node.dirty() });
+    });
+    control.change(value(''));
+    expect(fixture.componentInstance.changes).toEqual([]);
+    expect(node()).toEqual(value('Ada'));
+    control.touch();
+    expect(snapshots).toEqual([{ value: value(''), current: value(''), invalid: true, dirty: true }]);
+    expect(fixture.componentInstance.changes).toEqual([value('')]);
+    expect(fixture.componentInstance.commits).toEqual([value('')]);
+    subscription.unsubscribe();
+    control.change(value('Grace'));
+    control.touch();
+    expect(node.valid()).toBe(true);
+    expect(snapshots).toHaveLength(1);
+    expect(fixture.componentInstance.changes).toEqual([value(''), value('Grace')]);
+    expect(fixture.componentInstance.commits).toEqual([value(''), value('Grace')]);
+    fixture.destroy();
+    control.change(value('after destruction'));
+    expect(node()).toEqual(value('Grace'));
+  });
+
+  it('keeps the event snapshot when a listener writes a newer value', () => {
+    const { control, binding, host } = setup();
+    const node = binding.node();
+    const seen: unknown[] = [];
+    binding.formNodeChange.subscribe(() => node.$api.set('newer'));
+    binding.formNodeValueChange.subscribe(value => seen.push(value));
+    control.change('Grace');
+    expect(node()).toBe('newer');
+    expect(host.changes).toEqual(['Grace']);
+    expect(host.commits).toEqual(['Grace']);
+    expect(seen).toEqual(['Grace']);
+  });
+
+  it('rejects accidental two-way node binding before modifying the form', () => {
+    @Component({
+      template: '<input [(formNode)]="form.username" />',
+      imports: [FormNodeDirective],
+    })
+    class InvalidHost {
+      form = form({ username: field('Ada', [required]) });
+    }
+    const fixture = TestBed.createComponent(InvalidHost);
+    const formNode = fixture.componentInstance.form;
+    const username = formNode.username;
+    expect(() => fixture.detectChanges()).toThrow('Use [formNode] to bind a node, not [(formNode)]');
+    expect(formNode.username).toBe(username);
+    expect(formNode()).toEqual({ username: 'Ada' });
+    expect(formNode.pristine()).toBe(true);
+    expect(formNode.untouched()).toBe(true);
+    expect(formNode.valid()).toBe(true);
   });
 });

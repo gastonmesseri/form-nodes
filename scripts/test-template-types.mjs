@@ -7,6 +7,8 @@ const ngc = join(process.cwd(), 'node_modules', '@angular', 'compiler-cli', 'bun
 const fixtures = [
   { file: 'valid-error-template.template.ts', shouldCompile: true },
   { file: 'valid.template.ts', shouldCompile: true },
+  { file: 'invalid-node-two-way.template.ts', shouldCompile: false, code: 'TS2322', diagnostic: "is not assignable to type 'AnyNode'" },
+  { file: 'invalid-short-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
   { file: 'invalid-committed-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
   { file: 'invalid-control-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
   { file: 'invalid-standalone-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },

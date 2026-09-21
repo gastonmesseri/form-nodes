@@ -46,6 +46,8 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
     '(submit)': 'submitNativeForm($event)',
     '(reset)': 'resetNativeForm($event)',
   },
+  // eslint-disable-next-line @angular-eslint/no-outputs-metadata-property -- Expose the existing output() instance under both names without a second emitter.
+  outputs: ['formNodeChange'],
   exportAs: 'formNode',
 })
 export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implements FormNodeBinding<BoundNode<TNode, TValue>>, OnInit, OnChanges {
@@ -82,6 +84,33 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * ```
    */
   formNodeValueChange = output<NodeValue<BoundNode<TNode, TValue>>>();
+
+  /**
+   * Short name for formNodeValueChange. Both names share the same committed-value output.
+   * Emits control-originated values after debounce; programmatic writes do not emit.
+   * Listen with (formNodeChange) alongside [formNode], not [(formNode)].
+   * Use [(formNodeValue)] for two-way value binding.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     <input [formNode]="form.username"
+   *       (formNodeChange)="save($event)" />
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   form = form({ username: field('') });
+   *
+   *   save(value: string) {
+   *     console.log(value);
+   *   }
+   * }
+   * ```
+   */
+  formNodeChange = this.formNodeValueChange;
 
   /**
    * Latest parsed value received from the selected control adapter, before waiting for debounce.
@@ -402,7 +431,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     }
     // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
     if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
-      throw new Error('formNode: a field, form, or array node is required');
+      throw new Error('formNode: a field, form, group, or array node is required. Use [formNode] to bind a node, not [(formNode)]. Use [(formNodeValue)] for two-way value binding.');
     }
     return node as BoundNode<TNode, TValue>;
   }
