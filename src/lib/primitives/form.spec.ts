@@ -6753,12 +6753,11 @@ it('aggregates JSON array field validation and batches nested form writes throug
   injector.destroy();
 });
 
-it.each(['serializer', 'codec'] as const)('restores a whole form through JSON with nested validation, array structure, drafts, and reset baselines through %s', async (option) => {
+it('restores a whole form through JSON with nested validation, array structure, drafts, and reset baselines through a JSON serializer', async () => {
   const url = (name: string, tags: string[]) => `/search?state=${encodeURIComponent(JSON.stringify({ nested: { name }, tags }))}`;
   const { router, injector } = setup(url('Ada', ['one', 'two']));
   const profile = form({ nested: form({ name: field('', [required], { debounce: 'blur' }) }), tags: array(field.strict('')) });
-  const conversion = option === 'serializer' ? { serializer: 'json' as const } : { codec: 'json' as const };
-  const sync = syncQueryParams({ state: { source: profile, ...conversion } }, { injector });
+  const sync = syncQueryParams({ state: { source: profile, serializer: 'json' } }, { injector });
   expect(profile()).toEqual({ nested: { name: 'Ada' }, tags: ['one', 'two'] });
   expect(profile.valid()).toBe(true);
   expect(profile.pristine()).toBe(true);

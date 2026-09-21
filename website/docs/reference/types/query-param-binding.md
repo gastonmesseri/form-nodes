@@ -42,7 +42,6 @@ type QueryParamBinding<T> = {
     ] extends [
         readonly string[]
     ] ? string[] extends NoInfer<T> ? 'array' : never : never);
-    codec?: QueryParamBinding<T>['serializer'];
     defaultValue?: NoInfer<T>;
     clearOnDefault?: boolean;
     history?: 'replace' | 'push';
@@ -64,7 +63,6 @@ The declaration above also includes inherited contracts and overloads where appl
 | --- | --- |
 | `source` | Existing field, form, group, array, or writable Angular signal to synchronize. Nodes keep committed-value observation, validation, and node ownership. Signals respect their own equality and use the entry injector. Readonly signals are rejected. Objects and arrays need an explicit serializer. Aggregate imports use the node set operation. |
 | `serializer` | A built-in serializer name or a custom conversion contract compatible with the source. |
-| `codec` | Compatibility alias for serializer, with the same names and custom objects. serializer takes precedence when both options are supplied. |
 | `defaultValue` | Value used for missing or malformed parameters. Default: source value captured at registration. Nodes capture their committed value; signals use their current value. |
 | `clearOnDefault` | Remove values whose serialized representation matches the default. Default: false. |
 | `history` | History behavior for this key. Default: inherit the helper option, otherwise replace. |

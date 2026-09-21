@@ -123,12 +123,11 @@ try {
   if (!packageManifest.peerDependenciesMeta?.['@angular/router']?.optional) throw new Error('Angular Router must remain an optional peer.');
   symlinkSync(resolve(workspace, 'node_modules/@angular/router'), join(angularDirectory, 'router'), 'dir');
   writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source + `
-    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding, type QueryParamUrlSyncEvent, type QueryParamSerializer, type QueryParamCodec } from '@ngblocks/form-nodes/router';
+    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding, type QueryParamUrlSyncEvent, type QueryParamSerializer } from '@ngblocks/form-nodes/router';
     import { signal as querySignal } from '@angular/core';
     const queryField = field(1);
-    const objectCodec: QueryParamSerializer<number> = queryParam.integer();
-    const legacyCodec: QueryParamCodec<number> = objectCodec;
-    objectCodec.parse(['2']);
+    const objectSerializer: QueryParamSerializer<number> = queryParam.integer();
+    objectSerializer.parse(['2']);
     const queryBinding: QueryParamBinding<number | null> = { source: queryField, serializer: 'integer', defaultValue: 1 };
     function connectQueryParameters() {
       const sync = syncQueryParams({ page: queryBinding, tag: { source: field.strict<string[]>([]), serializer: 'array' }, active: { source: field(false), serializer: 'boolean' }, state: { source: field.strict({ ids: [1, 2] }), serializer: 'json' } });
@@ -149,7 +148,7 @@ try {
           void [snapshot, name];
         },
       });
-      syncQueryParams({ legacyPage: { source: querySignal(1), codec: legacyCodec } });
+      syncQueryParams({ customPage: { source: querySignal(1), serializer: objectSerializer } });
       const rawProfile: string | null = mixed.params.profile();
       void rawProfile;
       const typed: QueryParamsSync<'page'> = sync;

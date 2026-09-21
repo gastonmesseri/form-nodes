@@ -8,7 +8,9 @@ import CodeBlock from '@theme/CodeBlock';
 import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
 
-## Moving to 5.0.0: inferred field nullability {#inferred-field-nullability}
+## Moving to 5.0.0 {#version-5}
+
+### Inferred field nullability {#inferred-field-nullability}
 
 **Breaking, unreleased:** `field('')` now produces `FieldNode<string>` instead of
 `FieldNode<string | null>`. The same inference applies to form/group shorthands and array
@@ -35,6 +37,26 @@ Declare nullable number/date fields when their controls can emit null on clearin
 does not filter runtime writes, alter binding empty values, or change validation or reset rules:
 `reset()` preserves the current value and clears interaction state; `resetToInitial()` restores
 the original value, including explicit undefined.
+
+### Query parameter serializers {#query-parameter-serializers}
+
+**Breaking, unreleased:** The deprecated query parameter aliases introduced before 5.0.0
+have been removed from `@ngblocks/form-nodes/router`.
+
+| Previous API | Replacement |
+| --- | --- |
+| `codec: 'integer'` | `serializer: 'integer'` |
+| `codec: customSerializer` | `serializer: customSerializer` |
+| `QueryParamCodec<T>` | `QueryParamSerializer<T>` |
+
+Rename the option in each `syncQueryParams()` binding and update type imports and annotations.
+If a binding already supplies both options, keep only `serializer`. The `queryParam` factory
+names, supported built-in strings, and custom `parse`/`serialize` contract are unchanged.
+Bindings that omit both options continue to infer a serializer from their fallback value.
+
+See [syncQueryParams()](../reference/sync-query-params.md#serializer-option) for the supported
+configuration and [custom serializers](../reference/sync-query-params.md#custom-serializers)
+for conversion examples.
 
 ## Moving to 4.0.0: minimum length checks empty text {#minimum-length-empty-text}
 

@@ -1,7 +1,7 @@
 import type { NodeApi } from '@ngblocks/form-nodes';
 import type { Injector, Signal, WritableSignal } from '@angular/core';
 
-import type { QueryParamSerializer } from './query-param-codec';
+import type { QueryParamSerializer } from './query-param-serializer';
 
 /**
  * Options for one form node or writable signal in a query parameter map.
@@ -32,9 +32,7 @@ export type QueryParamBinding<T> = {
   /**
    * A built-in serializer name or a custom conversion contract compatible with the source.
    *
-   * Takes precedence over the deprecated codec option when both are supplied.
-   *
-   * **Default:** Use codec when supplied; otherwise infer string, number, or boolean
+   * **Default:** Infer string, number, or boolean
    * from the fallback value.
    *
    * **Accepted values:**
@@ -107,26 +105,6 @@ export type QueryParamBinding<T> = {
     | ([NonNullable<NoInfer<T>>] extends [number] ? number extends NoInfer<T> ? 'number' | 'integer' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [boolean] ? boolean extends NoInfer<T> ? 'boolean' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [readonly string[]] ? string[] extends NoInfer<T> ? 'array' : never : never);
-  /**
-   * Compatibility alias for serializer, with the same names and custom objects.
-   * serializer takes precedence when both options are supplied.
-   *
-   * **Default:** No legacy override; infer from the fallback when serializer is absent.
-   *
-   * ```ts
-   * function connect() {
-   *   return syncQueryParams({
-   *     page: {
-   *       source: field(1),
-   *       serializer: 'integer',
-   *     },
-   *   });
-   * }
-   * ```
-   *
-   * @deprecated Use serializer instead.
-   */
-  codec?: QueryParamBinding<T>['serializer'];
   /**
    * Value used for missing or malformed parameters. Default: source value captured at registration.
    * Nodes capture their committed value; signals use their current value.

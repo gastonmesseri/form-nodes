@@ -4,7 +4,7 @@ title: Synchronizing query parameters
 
 import CodeBlock from '@theme/CodeBlock';
 import source from '!!raw-loader!../../examples/query-params.typecheck.ts';
-import serializers from '!!raw-loader!../../examples/query-param-codecs.example.ts';
+import serializers from '!!raw-loader!../../examples/query-param-serializers.example.ts';
 
 # Synchronizing query parameters
 
@@ -101,10 +101,6 @@ Use a custom serializer when parsing must enforce a schema, literal choices, or 
 | `'boolean'` | `queryParam.boolean()` | Exactly `true` or `false`. |
 | `'array'` | `queryParam.array()` | Repeated values in order; an empty array removes the parameter. |
 | `'json'` | `queryParam.json<T>()` | One JSON string containing the whole value; parsing checks syntax, not a schema. |
-
-`codec` and `QueryParamCodec<T>` remain supported as deprecated aliases for `serializer` and
-`QueryParamSerializer<T>`. If both options are supplied, `serializer` wins. Existing 4.5.0 code
-continues to work without runtime warnings.
 
 Custom serializers implement `QueryParamSerializer<T>` with `parse(values)` and `serialize(value)`. Throw
 for malformed input. Serialization returns a string array or null to remove the key. Null and

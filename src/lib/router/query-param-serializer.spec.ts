@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { queryParam, inferCodec } from './query-param-codec';
+import { queryParam, inferSerializer } from './query-param-serializer';
 
 describe('query parameter serializers', () => {
   it('preserves decoded strings and rejects absent or repeated scalar input', () => {
@@ -33,7 +33,7 @@ describe('query parameter serializers', () => {
     expect(queryParam.array().serialize([])).toEqual([]);
   });
   it('requires an explicit serializer for ambiguous and complex defaults', () => {
-    for (const value of [null, undefined, [], {}, new Date()]) expect(() => inferCodec(value)).toThrow('serializer');
+    for (const value of [null, undefined, [], {}, new Date()]) expect(() => inferSerializer(value)).toThrow('serializer');
   });
   it('round trips JSON objects, arrays, and primitives as a single value', () => {
     const serializer = queryParam.json();

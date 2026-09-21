@@ -7,7 +7,7 @@ import { field } from '../primitives/field';
 import { group } from '../primitives/group';
 import { array } from '../primitives/array';
 import { syncQueryParams } from './public-api';
-import { queryParam } from './query-param-codec';
+import { queryParam } from './query-param-serializer';
 import { setup, settle } from './tests/router.fixture';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';

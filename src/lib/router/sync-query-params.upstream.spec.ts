@@ -4,7 +4,7 @@ import { computed, Injector, signal } from '@angular/core';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import { queryParam } from './query-param-codec';
+import { queryParam } from './query-param-serializer';
 import { syncQueryParams } from './sync-query-params';
 import { setup, settle } from './tests/router.fixture';
 

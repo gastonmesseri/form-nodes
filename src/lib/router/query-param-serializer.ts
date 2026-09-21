@@ -17,13 +17,6 @@ export type QueryParamSerializer<T> = {
   serialize(value: T): readonly string[] | null;
 };
 
-/**
- * Deprecated compatibility alias for QueryParamSerializer.
- *
- * @deprecated Use {@link QueryParamSerializer} instead.
- */
-export type QueryParamCodec<T> = QueryParamSerializer<T>;
-
 const scalar = (values: readonly string[]) => {
   if (values.length !== 1) throw new Error('Expected exactly one query parameter value.');
   return values[0]!;
@@ -140,15 +133,15 @@ export const queryParam = {
   },
 };
 
-export const inferCodec = (value: unknown): QueryParamSerializer<any> => {
+export const inferSerializer = (value: unknown): QueryParamSerializer<any> => {
   if (typeof value === 'string') return queryParam.string();
   if (typeof value === 'number') return queryParam.number();
   if (typeof value === 'boolean') return queryParam.boolean();
   throw new Error('Provide a query parameter serializer for null, undefined, arrays, and object values.');
 };
 
-export const resolveCodec = (serializer: QueryParamSerializer<any> | keyof typeof queryParam | undefined, fallback: unknown): QueryParamSerializer<any> => {
-  if (typeof serializer !== 'string') return serializer ?? inferCodec(fallback);
+export const resolveSerializer = (serializer: QueryParamSerializer<any> | keyof typeof queryParam | undefined, fallback: unknown): QueryParamSerializer<any> => {
+  if (typeof serializer !== 'string') return serializer ?? inferSerializer(fallback);
   if (!Object.hasOwn(queryParam, serializer)) throw new Error(`Unknown query parameter serializer "${serializer}".`);
   return queryParam[serializer]();
 };

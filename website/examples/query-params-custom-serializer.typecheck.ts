@@ -4,7 +4,7 @@ import { syncQueryParams, type QueryParamSerializer } from '@ngblocks/form-nodes
 
 type Sort = 'name' | 'date';
 
-const sortCodec: QueryParamSerializer<Sort> = {
+const sortSerializer: QueryParamSerializer<Sort> = {
   parse(values) {
     if (values.length !== 1 || (values[0] !== 'name' && values[0] !== 'date')) {
       throw new Error('Expected one sort value: name or date.');
@@ -21,6 +21,6 @@ export class SortedResultsPage {
   filters = form({ sort: field.strict<Sort>('name') });
 
   querySync = syncQueryParams({
-    sort: { source: this.filters.sort, serializer: sortCodec, clearOnDefault: true },
+    sort: { source: this.filters.sort, serializer: sortSerializer, clearOnDefault: true },
   });
 }

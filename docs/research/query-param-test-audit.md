@@ -31,7 +31,7 @@ Nodes integration contracts rather than Angular Signal Forms APIs.
 | Label | File | Role |
 | --- | --- | --- |
 | Core | [`sync-query-params.spec.ts`](../../src/lib/router/sync-query-params.spec.ts) | Existing deterministic navigation, ownership, signal/node, and error scenarios. |
-| Codecs | [`query-param-codec.spec.ts`](../../src/lib/router/query-param-codec.spec.ts) | Scalar, repeated-array, JSON, malformed-input, and serializer contracts. |
+| Serializers | [`query-param-serializer.spec.ts`](../../src/lib/router/query-param-serializer.spec.ts) | Scalar, repeated-array, JSON, malformed-input, and serializer contracts. |
 | Adapted | [`sync-query-params.upstream.spec.ts`](../../src/lib/router/sync-query-params.upstream.spec.ts) | Added cross-library regressions, shared field/signal matrix, and generated Unicode round trips. |
 | Browser | [`sync-query-params.browser.spec.ts`](../../src/lib/router/sync-query-params.browser.spec.ts) | Existing real Router, guard, redirect, history, array/JSON, and mixed-source integration. |
 | Adapted browser | [`sync-query-params.upstream.browser.spec.ts`](../../src/lib/router/sync-query-params.upstream.browser.spec.ts) | Added history traversal, conditional components, late debounce completion, and model signal integration. |
@@ -50,15 +50,15 @@ one observable contract.
 
 | Upstream evidence | Form Nodes coverage | Adaptation or difference |
 | --- | --- | --- |
-| nuqs `useQueryState.browser.test.tsx`, `useQueryStates.browser.test.tsx`, `basic-io.spec.ts`; VueUse initialization/default tests; ngxtension default/parse tests | Core and Codecs; Adapted `captures … before hydration` for field/signal with null, undefined, zero, and nonzero fallbacks | Initial URL wins synchronously; absence or malformed input restores a fixed captured fallback; registration does not navigate. |
+| nuqs `useQueryState.browser.test.tsx`, `useQueryStates.browser.test.tsx`, `basic-io.spec.ts`; VueUse initialization/default tests; ngxtension default/parse tests | Core and Serializers; Adapted `captures … before hydration` for field/signal with null, undefined, zero, and nonzero fallbacks | Initial URL wins synchronously; absence or malformed input restores a fixed captured fallback; registration does not navigate. |
 | nuqs defaults and `clearOnDefault`; VueUse default removal; use-query-params default configuration | Core `shares a coordinator…`, `does not echo noncanonical…`, `distinguishes JSON empty arrays…` | Default removal is opt-in and compares serialized values. JSON property order is significant. |
-| VueUse null/undefined transformation tests; nuqs clearing tests; use-query-params null/undefined serialization | Adapted `removes only the bound key…`; Core nullable/custom-null/JSON cases; Codecs | Outgoing null/undefined removes the key; its acknowledgment preserves the local value. Later URL absence restores the fixed fallback. |
+| VueUse null/undefined transformation tests; nuqs clearing tests; use-query-params null/undefined serialization | Adapted `removes only the bound key…`; Core nullable/custom-null/JSON cases; Serializers | Outgoing null/undefined removes the key; its acknowledgment preserves the local value. Later URL absence restores the fixed fallback. |
 | nuqs multi-update sequencing; ngxtension coalescing; use-query-params functional updates and `JsonParam` updates | Adapted `composes functional updates…`, `composes JSON functional updates…` for field/form/signal; Core mixed-source batching | Source callbacks accumulate synchronously, followed by one microtask URL batch. JSON updates retain sibling properties. |
 | nuqs `stitching.spec.ts`, queue tests; VueUse multiple simultaneous refs; ngxtension multiple parameters | Adapted `serializes staggered batches…`; Core older acknowledgment, reverting-to-in-flight, and multi-helper tests | One coordinator per Router serializes navigation and preserves newer revisions. |
 | nuqs `push.spec.ts`; VueUse push/replace options; use-query-params router updates | Adapted `applies history overrides…`; Adapted browser `replays push entries…`; Core replace/push batching | Only changed entries influence batch history. Back and Forward restore both page and search values. |
 | nuqs `hash-preservation.spec.ts`, `key-isolation.spec.ts`, `repro-982.spec.ts`; VueUse unrelated query/hash tests | Adapted malformed repeated scalar preservation, stable parsed/raw state, delimiter and generated encoding tests; Core merges | Scalar repetition is rejected here, not reduced to its first item. Updating a different key still preserves the repeated raw URL data. |
-| nuqs `native-array.spec.ts`, array-boundary cases in hook tests; use-query-params array serialization | Adapted four comma/empty/repeated transition cases; Codecs and existing Browser repeated-array round trips | Repeated keys preserve order, duplicates, and empty strings. Commas are data; `[]` removes the key. |
-| nuqs `json.spec.ts`; use-query-params object/JSON serialization and functional updates | Codecs, Core JSON cases, Adapted JSON update matrix, existing Browser JSON history | Native JSON syntax/coercion only; no implicit schema validation. JSON `[]` remains a value. |
+| nuqs `native-array.spec.ts`, array-boundary cases in hook tests; use-query-params array serialization | Adapted four comma/empty/repeated transition cases; Serializers and existing Browser repeated-array round trips | Repeated keys preserve order, duplicates, and empty strings. Commas are data; `[]` removes the key. |
+| nuqs `json.spec.ts`; use-query-params object/JSON serialization and functional updates | Serializers, Core JSON cases, Adapted JSON update matrix, existing Browser JSON history | Native JSON syntax/coercion only; no implicit schema validation. JSON `[]` remains a value. |
 | nuqs `lib/url-encoding.browser.test.ts`, `pretty-urls.spec.ts` | Adapted explicit delimiter/percent/Unicode and generated Unicode round trips | Assert decoded semantics, isolation, and fragment preservation; Angular controls the exact escaped URL spelling. |
 | nuqs `constructor`/`hasOwnProperty` hook tests | Adapted `round trips scalar and repeated values under the key…`; Core helper-method-name collisions | `constructor` and `toString` work; Angular serializer limitations below prevent claiming all upstream reserved names work. |
 | VueUse same-value and `computed` invalidation tests; use-query-params memoization/decode counts; nuqs equality/key isolation | Adapted `keeps structured values, derived computations, and raw keys stable…`; Core signal equality/same-reference/linked dependencies | Unrelated or fragment-only navigation does not reparse or invalidate unchanged keys. History intentionally restores even an equal committed value to discard pending input. |
@@ -86,7 +86,7 @@ one observable contract.
   and React cache/loader utilities have no corresponding public contract here. Control debounce
   is tested on nodes; it is not an implementation of nuqs URL throttling.
 - Unsupported upstream codecs (dates, enums, CSV, schemas, and other framework-specific parameter
-  types) are not added by copying tests. Existing custom-codec and runtime error tests cover the
+  types) are not added by copying tests. Existing custom-serializer and runtime error tests cover the
   extension point. Number/boolean parsing remains stricter than permissive upstream parsers.
 - In-place mutation without an accepted signal/node notification is not an observable write.
   Existing same-reference notification tests cover deliberately permissive signal equality.
@@ -122,7 +122,7 @@ matrix. Angular 22 source inspection is distinct from executing these tests on A
 The focused command is:
 
 ```sh
-npx vitest run src/lib/router/sync-query-params.upstream.spec.ts src/lib/router/sync-query-params.spec.ts src/lib/router/query-param-codec.spec.ts src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts
+npx vitest run src/lib/router/sync-query-params.upstream.spec.ts src/lib/router/sync-query-params.spec.ts src/lib/router/query-param-serializer.spec.ts src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts
 ```
 
 It discovers five files and **739 tests**. The adapted Chromium file discovers **7 tests**.

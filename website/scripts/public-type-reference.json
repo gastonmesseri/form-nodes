@@ -479,10 +479,6 @@
       "family": "router",
       "usage": "Read raw URL query signals and synchronization state, or unsubscribe a connection early."
     },
-    "QueryParamCodec": {
-      "family": "router",
-      "usage": "Compatibility alias for QueryParamSerializer; migrate existing type annotations to the preferred name."
-    },
     "QueryParamBinding": {
       "family": "router",
       "usage": "Reuse the configuration for one field and its query parameter."

@@ -2,8 +2,8 @@ import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, ErrorHandler, Injector, PLATFORM_ID, inject, untracked, type Signal } from '@angular/core';
 
-import { resolveCodec } from './query-param-codec';
 import { createQueryParamState } from './query-param-state';
+import { resolveSerializer } from './query-param-serializer';
 import { createQueryParamSource } from './query-param-source';
 import { createQueryParamNotification } from './query-param-notification';
 import { getCoordinator, sameValues, type QueryEntry } from './query-param-coordinator';
@@ -97,7 +97,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
       const config = (typeof input === 'function' ? { source: input } : input) as QueryParamBinding<any>;
       const source = createQueryParamSource(config?.source, key);
       const fallback = Object.hasOwn(config, 'defaultValue') ? config.defaultValue : source.read();
-      const serializer = resolveCodec(config.serializer ?? config.codec, fallback);
+      const serializer = resolveSerializer(config.serializer, fallback);
       const serialize = (value: unknown): readonly string[] => {
         const result = (value === null || value === undefined) ? null : serializer.serialize(value);
         if (result !== null && (!Array.isArray(result) || result.some(item => typeof item !== 'string'))) {

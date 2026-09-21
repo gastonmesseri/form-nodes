@@ -4,7 +4,7 @@ import { form } from '../../src/lib/primitives/form';
 import { array } from '../../src/lib/primitives/array';
 import { field } from '../../src/lib/primitives/field';
 import { group } from '../../src/lib/primitives/group';
-import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamCodec, type QueryParamSerializer, type QueryParamBinding } from '../../src/lib/router/public-api';
+import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamSerializer, type QueryParamBinding } from '../../src/lib/router/public-api';
 
 const injector = Injector.create({ providers: [] });
 const filters = form({ q: field(''), page: field(1), nested: { active: field(false) } });
@@ -177,16 +177,3 @@ syncQueryParams({
     void [reason, page, initial];
   },
 });
-
-// Deprecated aliases retain the same type restrictions and remain assignable.
-const legacyCodec: QueryParamCodec<number> = queryParam.integer();
-const preferredSerializer: QueryParamSerializer<number> = legacyCodec;
-const legacyBinding: QueryParamBinding<number> = { source: signal(1), codec: legacyCodec };
-syncQueryParams({ page: legacyBinding }, { injector });
-syncQueryParams({ page: { source: signal(1), serializer: preferredSerializer, codec: 'integer' } }, { injector });
-// @ts-expect-error The deprecated name still checks custom output types.
-syncQueryParams({ page: { source: signal(1), codec: queryParam.string() } }, { injector });
-// @ts-expect-error The deprecated name still checks named serializers.
-syncQueryParams({ page: { source: signal(1), codec: 'string' } }, { injector });
-// @ts-expect-error Supplying the new name does not widen the legacy option's type.
-syncQueryParams({ page: { source: signal(1), serializer: 'integer', codec: 'string' } }, { injector });

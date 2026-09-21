@@ -7,7 +7,7 @@ import basicSource from '!!raw-loader!../../examples/query-params-basic.typechec
 import signalsSource from '!!raw-loader!../../examples/query-params-signals.typecheck.ts';
 import arraysSource from '!!raw-loader!../../examples/query-params-arrays.typecheck.ts';
 import jsonSource from '!!raw-loader!../../examples/query-params-json.typecheck.ts';
-import customCodecSource from '!!raw-loader!../../examples/query-params-custom-codec.typecheck.ts';
+import customSerializerSource from '!!raw-loader!../../examples/query-params-custom-serializer.typecheck.ts';
 import hooksSource from '!!raw-loader!../../examples/query-params-hooks.typecheck.ts';
 import lifecycleSource from '!!raw-loader!../../examples/query-params-lifecycle.typecheck.ts';
 
@@ -159,8 +159,7 @@ Options belong to one query key; the helper-level options are described [separat
 | Option | Accepted value | Default |
 | --- | --- | --- |
 | [`source`](#source-option) | Existing node or writable Angular signal | Required in a configured entry |
-| [`codec`](#legacy-codec) | Deprecated alias of `serializer` | Used only when `serializer` is absent |
-| [`serializer`](#serializer-option) | Built-in name or compatible `QueryParamSerializer<T>` | Use `codec`, otherwise infer from the fallback |
+| [`serializer`](#serializer-option) | Built-in name or compatible `QueryParamSerializer<T>` | Infer from the fallback |
 | [`defaultValue`](#default-value) | A value compatible with the source | Capture the source value at registration |
 | [`clearOnDefault`](#clear-on-default) | `boolean` | `false` |
 | [`history`](#history-option) | `'replace'` or `'push'` | Shared `history`, otherwise `'replace'` |
@@ -180,12 +179,13 @@ Functional updates accumulate immediately in the source before the URL batch is 
 The direct-entry shorthand is equivalent to a configured entry containing only `source`.
 
 <span id="codec-option" />
+<span id="legacy-codec" />
 
 ### serializer {#serializer-option}
 
 **Signature:** `serializer?: QueryParamSerializer<T> | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'json'`
 
-**Default:** Use `codec` when supplied; otherwise infer `'string'`, `'number'`, or `'boolean'`
+**Default:** Infer `'string'`, `'number'`, or `'boolean'`
 from the fallback value: explicit
 `defaultValue` when supplied, otherwise the captured source value. Numeric inference uses
 `'number'`, so request `'integer'` explicitly for integral values.
@@ -198,16 +198,6 @@ JSON accepts the expected source type but does not check its structure at runtim
 A null, undefined, array, or object fallback cannot select a serializer automatically. Supply one
 explicitly. A serializer object and the corresponding name use the same conversion; for example,
 `serializer: 'integer'` and `serializer: queryParam.integer()` are equivalent.
-
-### codec (deprecated) {#legacy-codec}
-
-Use `serializer` for new code. `codec` remains supported with the same accepted names, custom
-objects, and type checking as in 4.5.0. When both are supplied, `serializer` takes precedence;
-the unused `codec` is not evaluated. Deprecation is shown in IntelliSense without runtime warnings.
-
-The exported `QueryParamCodec<T>` type is also deprecated; use
-[`QueryParamSerializer<T>`](./types/query-param-serializer.md). Its `parse` and `serialize` methods
-are unchanged. The `queryParam` factories keep their names and now return `QueryParamSerializer<T>`.
 
 ### defaultValue {#default-value}
 
@@ -383,7 +373,7 @@ side effects; reads of unrelated signals in a serializer do not make the binding
 
 This serializer restricts sorting to two choices and preserves the source's literal union:
 
-<CodeBlock language="ts" title="sorted-results-page.ts">{customCodecSource}</CodeBlock>
+<CodeBlock language="ts" title="sorted-results-page.ts">{customSerializerSource}</CodeBlock>
 
 `?sort=date` imports `'date'`. `?sort=unknown` reports a parsing failure and imports `'name'`.
 Choosing `'name'` for an outbound edit removes the parameter because it is the captured default.

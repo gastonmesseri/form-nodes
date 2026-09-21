@@ -4614,13 +4614,12 @@ without Router or an injection context; only the integration needs a Router-prov
   The activation NavigationEnd acknowledges already hydrated parameters, preserving initial hook
   edits and avoiding a duplicate callback. A differing final URL is imported normally. Cleanup
   suppresses pending callbacks, and a newer reentrant import supersedes stale notifications.
-- `serializer` is the preferred conversion option and factories return `QueryParamSerializer<T>`.
-  `codec` and `QueryParamCodec<T>` remain supported aliases marked deprecated in public declarations.
-  Resolve the explicit serializer first, otherwise the legacy codec, otherwise infer from the fallback.
-  When both options are provided, the legacy codec is not parsed, serialized, or validated at runtime.
-  Both properties retain source-compatible type restrictions. Deprecation emits no runtime warning.
-  This naming/precedence contract is specific to Form Nodes and changes no node state semantics;
-  Angular v22.1.7 was re-resolved and its node model-write/debounce tests re-inspected for this change.
+- `serializer` configures conversion and factories return `QueryParamSerializer<T>`.
+  When omitted, infer the serializer from the fallback. Version 5 removes the deprecated
+  `codec` option and `QueryParamCodec<T>` alias; use `serializer` and `QueryParamSerializer<T>`.
+  This naming contract is specific to Form Nodes and changes no node state semantics;
+  Angular v22.1.7 remains the reference for model writes and pending control cancellation
+  (`packages/forms/signals/src/field/node.ts` and `packages/forms/signals/test/node/api/debounce.spec.ts`).
 - `serializer` accepts built-in names (`string`, `number`, `integer`, `boolean`, `array`, `json`)
   as well as `QueryParamSerializer<T>` objects. Names resolve to the existing factories and do not change
   parsing, serialization, defaults, validation, or history. Type checking rejects incompatible scalar
@@ -4654,7 +4653,7 @@ without Router or an injection context; only the integration needs a Router-prov
   echoing rebuilt aggregate objects. Defaults remain complete source values, not patch objects.
 - Writable signals (including `linkedSignal`) use their own read/set contract and equality. Rejected
   equal writes do not publish; accepted same-reference notifications remain observable. Signal
-  imports acknowledge reactive notifications without canonicalizing the URL. Codec and Router reads
+  imports acknowledge reactive notifications without canonicalizing the URL. Serializer and Router reads
   are untracked. Signals share node batching, history, failure handling, SSR, and cleanup, but do not
   acquire node validation, dirty/touched, reset, or control-debounce state. Readonly/computed signals
   and ordinary functions fail before any source mutation. Signals have no node owner, so their
