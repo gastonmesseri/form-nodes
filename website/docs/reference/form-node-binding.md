@@ -28,9 +28,9 @@ Bind a node, listen to control edits, or attach the directive to `<form>` for su
 | --- | --- | --- |
 | [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
 | [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="saveDraft($event)"` | Receives the committed value after debounce. |
-| [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="preview($event)"` | Receives the parsed control value immediately, before debounce. |
 | [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="recordAttempt($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
 | [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="showErrors($event)"` | Reports an attempt rejected by `submitWhen`. |
+| [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="preview($event)"` | Receives the parsed control value immediately, before debounce. |
 
 `formNodeChange` carries the field or aggregate **value** in `$event`.
 See [Value outputs](#value-outputs) for timing and the equivalent `formNodeValueChange` alias.
@@ -99,7 +99,7 @@ and linker infrastructure.
 ## 🔌 Directive input {#directive-input}
 
 Import `FormNodeDirective` in the component and bind a Form Nodes node to the `formNode` input,
-as in the [opening example](#formnode-directive).
+as in the opening example.
 
 **Binding:** `[formNode]="node"`
 
