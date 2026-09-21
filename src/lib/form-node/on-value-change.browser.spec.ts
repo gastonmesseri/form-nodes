@@ -145,3 +145,45 @@ it('reports committed input after blur and complete programmatic resets without 
   profile.name.set('Lin');
   expect(changed).toHaveBeenCalledTimes(3);
 });
+
+it('debounces committed input notifications and cancels pending delivery on component destruction', async () => {
+  const changed = vi.fn();
+  @Component({
+    selector: 'test-debounced-value-subscription',
+    template: '<input [formNode]="form.username" />',
+    imports: [FormNodeDirective],
+  })
+  class Host {
+    form = form({ username: field('') });
+
+    ngOnInit() {
+      this.form.patch({ username: 'initial' });
+      this.form.onValueChange(changed, { debounce: 30 });
+    }
+  }
+  const fixture = TestBed.createComponent(Host);
+  try {
+    fixture.detectChanges();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(changed).not.toHaveBeenCalled();
+    const node = fixture.componentInstance.form;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    for (const value of ['A', 'Ad', 'Ada']) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    expect(node.username()).toBe('Ada');
+    expect(node.dirty()).toBe(true);
+    expect(changed).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'Ada' }, node));
+    input.value = 'Grace';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(node.username()).toBe('Grace');
+    fixture.destroy();
+    node.patch({ username: 'after destruction' });
+    await new Promise(resolve => setTimeout(resolve, 60));
+    expect(changed).toHaveBeenCalledOnce();
+  } finally {
+    if (!fixture.componentRef.hostView.destroyed) fixture.destroy();
+  }
+});

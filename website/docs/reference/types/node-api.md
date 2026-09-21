@@ -23,6 +23,7 @@ type NodeApi = {
     nodeType(): NodeType;
     onValueChange(callback: (value: any, node: AnyNode) => void, options?: {
         injector?: Injector;
+        debounce?: number;
     }): () => void;
     form: Signal<AnyNode | null>;
     root: Signal<AnyNode>;

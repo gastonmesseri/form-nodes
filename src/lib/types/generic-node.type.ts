@@ -14,7 +14,7 @@ type UnknownChildrenApi = {
 };
 type GenericOwnerApi<TNode extends AnyNode> = {
   /** Subscribes to future exposed value changes and returns an idempotent cancellation function. */
-  onValueChange(callback: (value: any, node: TNode) => void, options?: { injector?: Injector }): () => void;
+  onValueChange(callback: (value: any, node: TNode) => void, options?: { injector?: Injector; debounce?: number }): () => void;
   root: Signal<AnyNode>;
   errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>;
   setValidators(validators: ValidatorSource<any, TNode>): void;

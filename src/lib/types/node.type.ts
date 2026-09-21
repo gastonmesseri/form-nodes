@@ -100,7 +100,7 @@ export type NodeApi = {
    * @param callback Receives the exposed value and node; no initial value is emitted.
    * @param options Optional injector that owns this subscription without changing node ownership.
    */
-  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector }): () => void;
+  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector; debounce?: number }): () => void;
   /**
    * Nearest explicit `form()` containing this node, or `null` when no form workflow owns it.
    *

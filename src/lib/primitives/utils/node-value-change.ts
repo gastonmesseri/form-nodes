@@ -57,8 +57,7 @@ const flush = (errors: unknown[]) => {
         }
         for (const subscription of subscriptions) {
           try {
-            const listener = subscription.callback;
-            listener?.(value, node);
+            subscription.notify(value, node);
           } catch (error) {
             errors.push(error);
           }

@@ -1400,7 +1400,7 @@ reset and array behavior, callback ordering, and error handling.
 ### Subscribe after creation {#onvaluechange-method}
 
 ```ts
-onValueChange(callback: (value: TValue, node: TNode) => void, options?: { injector?: Injector }): () => void;
+onValueChange(callback: (value: TValue, node: TNode) => void, options?: { injector?: Injector; debounce?: number }): () => void;
 ```
 
 Here `TNode` is the inferred type of this field instance. Call the instance method to register
@@ -1408,6 +1408,14 @@ independent listeners after construction; use `$api.onValueChange()` if a child 
 It returns an idempotent cancellation function and emits no initial value. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.
+
+Pass `{ debounce: 300 }` to deliver only the latest change after 300 ms of silence for this listener.
+Omission or `0` keeps synchronous delivery. Values, validation, and interaction state update normally;
+this delay applies to programmatic writes and committed control edits. Unsubscribing or owner
+destruction cancels pending delivery. The delay must be finite and non-negative; otherwise
+registration throws `RangeError`. Delayed callback errors are thrown from the timer callback.
+See [subscription debounce](../guides/configuring-nodes.md#subscription-debounce) for a component
+example, reset behavior, and how it combines with control debounce.
 
 See [instance subscriptions](../guides/configuring-nodes.md#value-subscriptions) for typed examples,
 [automatic cleanup](../guides/configuring-nodes.md#subscription-ownership) for owner precedence and

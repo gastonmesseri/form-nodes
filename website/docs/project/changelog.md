@@ -10,6 +10,11 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Add per-subscription `onValueChange(callback, { debounce: 300 })` for fields, forms, groups, and arrays. Deliver the latest committed change after a pause without delaying node values, validation, or interaction state; cancel pending delivery on unsubscribe or injector destruction. Omitted or zero debounce retains synchronous notifications.
+
+
 ## 📦 5.1.0 — 2026-09-21 {#510--2026-09-21}
 
 ### Added

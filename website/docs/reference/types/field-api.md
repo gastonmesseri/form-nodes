@@ -23,6 +23,7 @@ type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'field';
     onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: {
         injector?: Injector;
+        debounce?: number;
     }): () => void;
     form: Signal<NearestForm<TParent> | null>;
     root: Signal<IsUnknownNode<TParent> extends true ? NavigationRoot : RootNode<TParent>>;
@@ -107,7 +108,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `nodeType` | Returns the concrete primitive represented by this node. |
-| `onValueChange` | Subscribes to future exposed value changes and returns an idempotent cancellation function. Runs synchronously and untracked, respects equality and control debounce, and skips initial values. Multiple listeners coexist with the construction callback; subscriptions are not cloned. The explicit injector, otherwise the registration context, owns the listener. The node's current injector also ends the subscription on destruction and acts as the fallback owner. Binding and ancestor ownership follow the node when it is rebound or detached. Without an injector, observation still works and can be canceled manually. |
+| `onValueChange` | Subscribes to future exposed value changes and returns an idempotent cancellation function. Runs untracked, respects equality and control debounce, and skips initial values. Multiple listeners coexist with the construction callback; subscriptions are not cloned. The explicit injector, otherwise the registration context, owns the listener. The node's current injector also ends the subscription on destruction and acts as the fallback owner. Binding and ancestor ownership follow the node when it is rebound or detached. Without an injector, observation still works and can be canceled manually. A positive `debounce` delays only this callback until that many milliseconds without another change. Omitted or zero stays synchronous. Cancellation drops pending delivery. Node values, validation, and interaction state are unaffected by the subscription delay. |
 | `form` | Nearest explicit `form()` containing this field, or `null` when no form workflow owns it. A nested explicit form is the workflow owner instead of the complete structural root. |
 | `root` | Complete structural root containing this field. A standalone or detached field returns itself. Use this signal when traversal must cross nested form workflow boundaries. |
 | `parent` | Immediate structural parent of this field, or `null` when it is a root or has been detached. |

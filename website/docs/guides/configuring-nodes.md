@@ -5,6 +5,7 @@ title: Configuring nodes and sibling rules
 # Configuring nodes and sibling rules
 
 import CodeBlock from '@theme/CodeBlock';
+import debouncedSubscriptionSource from '!!raw-loader!../../examples/debounced-value-subscription.typecheck.ts';
 import subscriptionsSource from '!!raw-loader!../../examples/node-value-subscriptions.example.ts';
 import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subscriptions.typecheck.ts';
 import initializeFromInputsSource from '!!raw-loader!../../examples/initialize-form-from-inputs.typecheck.ts';
@@ -164,14 +165,14 @@ the [binding outputs](../reference/form-node-binding.md) instead.
 
 ### Subscribe to an existing node {#value-subscriptions}
 
-Call `node.onValueChange(callback, { injector? })` after creating a field, form, group, or array.
+Call `node.onValueChange(callback, { injector?, debounce? })` after creating a field, form, group, or array.
 The callback receives the inferred value and original node. Each call creates an independent
 subscription and returns an idempotent cancellation function. The method also exists on `$api`
 when an object child is named `onValueChange`.
 
 <CodeBlock language="ts" title="node-value-subscriptions.ts">{subscriptionsSource}</CodeBlock>
 
-Instance subscriptions follow the same equality, debounce, batching, validation, and error rules
+By default, instance subscriptions follow the same equality, control debounce, batching, validation, and error rules
 as the construction callback above. They emit no initial value, coexist with the construction
 callback, and are not copied to array template clones. Registration during `configure` works;
 construction-time writes remain silent. For each notification, the construction callback runs
@@ -179,6 +180,37 @@ first, then instance listeners in registration order. Canceling a listener befor
 it. New listeners do not receive an update already in progress, but can receive subsequent
 reentrant changes. Every listener in a delivery receives the same value snapshot, even if an
 earlier listener makes another write.
+
+### Debounce a subscription {#subscription-debounce}
+
+Pass `{ debounce: 300 }` to notify that listener only after 300 milliseconds without another
+committed value change. Each subscription has its own timer and receives the latest value and
+original node. This is useful for search requests, autosave, or notifying a parent component after
+typing pauses.
+
+<CodeBlock language="ts" title="search-editor.ts">{debouncedSubscriptionSource}</CodeBlock>
+
+The form value, validation, dirty/touched state, and other listeners update normally. This delay
+does not make `debouncing()` or validation `pending()` true. Both programmatic writes and committed
+control edits restart the timer. Equality-suppressed writes do not restart it. Registration emits
+nothing, including when the form was patched earlier in `ngOnInit()`.
+
+- Omit `debounce` or pass `0` for the existing synchronous behavior.
+- Use finite, non-negative milliseconds. Negative values, `NaN`, and infinities throw `RangeError`
+  when registering, before the listener is installed.
+- Calling the returned cancellation function or destroying either subscription owner cancels the
+  pending notification as well as future ones. `injector` and `debounce` can be used together.
+- A reset that changes the committed value replaces the pending notification with the reset value.
+  Resetting only interaction state leaves the pending notification intact.
+- Returning to a previously delivered value still emits if intervening committed changes occurred.
+- A delayed callback that throws reports its error from the timer, after the original write has
+  returned. Catch errors in the callback when they need application-specific handling. Work already
+  started by a callback, such as a request, is not canceled by later changes or unsubscription.
+
+The node's own `debounce` option delays **control commits**. This subscription option delays
+**callback delivery after a commit**. If both are set to `300`, a control edit can take approximately
+600 ms to reach the listener. Programmatic writes bypass control debounce but still wait for the
+subscription delay. `flush()` flushes control edits; it does not bypass subscription debounce.
 
 ### Initialize from component inputs before listening {#initialize-before-listening}
 
@@ -225,7 +257,7 @@ A detached node can still notify. Destruction of the former owner does not cance
 that has already moved away, unless that injector was also chosen explicitly or captured as the
 consumer owner. A canceled subscription does not restart on later attachment.
 
-Without an injector, subscriptions still work synchronously. Use the returned cancellation function
+Without an injector, subscriptions still work, including subscription debounce. Use the returned cancellation function
 when the node outlives its consumer. Unreachable nodes and callbacks can be garbage-collected;
 keeping an injector or cancellation function alive does not retain the node tree. Canceling early
 also unregisters lifecycle hooks. Unsubscribing does not reset the node or change its validation rules.

@@ -1,4 +1,4 @@
-import { DestroyRef, Injector } from '@angular/core';
+import { DestroyRef, Injector, untracked } from '@angular/core';
 
 import type { AnyNode } from '../../types/node.type';
 import { getCurrentInjector, resolveNodeInjector, watchNodeInjector } from '../../utils/node-injector';
@@ -15,6 +15,10 @@ const updateSubscriptionOwner = (reference: WeakRef<ValueSubscription>) => {
   return (injector: Injector | undefined) => reference.deref()?.setNodeInjector(injector);
 };
 
+const deliverSubscription = (reference: WeakRef<ValueSubscription>) => {
+  return () => reference.deref()?.deliver();
+};
+
 export class ValueSubscription {
   reference = new WeakRef(this);
 
@@ -26,7 +30,32 @@ export class ValueSubscription {
 
   watchCleanup: (() => void) | undefined;
 
-  constructor(public node: WeakRef<AnyNode>, public callback: ValueChangeCallback | undefined, public registry = valueSubscriptions, public onUnsubscribe?: () => void) {}
+  timer: ReturnType<typeof setTimeout> | undefined;
+
+  pendingValue: unknown;
+
+  constructor(public node: WeakRef<AnyNode>, public callback: ValueChangeCallback | undefined, public registry = valueSubscriptions, public onUnsubscribe?: () => void, public debounce = 0) {}
+
+  notify(value: unknown, node: AnyNode) {
+    const callback = this.callback;
+    if (!callback) return;
+    if (this.debounce === 0) {
+      callback(value, node);
+      return;
+    }
+    clearTimeout(this.timer);
+    this.pendingValue = value;
+    this.timer = setTimeout(deliverSubscription(this.reference), this.debounce);
+  }
+
+  deliver() {
+    const value = this.pendingValue;
+    this.timer = undefined;
+    this.pendingValue = undefined;
+    const node = this.node.deref();
+    const callback = this.callback;
+    if (node && callback) untracked(() => callback(value, node));
+  }
 
   attach(injector: Injector | undefined) {
     return injector?.get(DestroyRef).onDestroy(cancelSubscription(this.reference));
@@ -43,6 +72,9 @@ export class ValueSubscription {
   unsubscribe() {
     if (!this.callback) return;
     this.callback = undefined;
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    this.pendingValue = undefined;
     const node = this.node.deref();
     if (node) {
       const subscriptions = this.registry.get(node)!;
@@ -60,8 +92,10 @@ export class ValueSubscription {
   }
 }
 
-export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector }, registry = valueSubscriptions, onUnsubscribe?: () => void): (() => void) => {
-  const subscription = new ValueSubscription(new WeakRef(node), callback, registry, onUnsubscribe);
+export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector; debounce?: number }, registry = valueSubscriptions, onUnsubscribe?: () => void): (() => void) => {
+  const debounce = options?.debounce ?? 0;
+  if (!Number.isFinite(debounce) || debounce < 0) throw new RangeError('onValueChange debounce must be a finite, non-negative number of milliseconds.');
+  const subscription = new ValueSubscription(new WeakRef(node), callback, registry, onUnsubscribe, debounce);
   let subscriptions = registry.get(node);
   if (!subscriptions) registry.set(node, subscriptions = new Set());
   subscriptions.add(subscription);

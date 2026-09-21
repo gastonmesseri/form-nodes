@@ -4469,3 +4469,217 @@ it('reports URL synchronization after field validation and draft cancellation wi
   expect(router.navigateByUrl).not.toHaveBeenCalled();
   injector.destroy();
 });
+
+describe('field instance onValueChange subscription debounce', () => {
+  it('does not delay or restart async validation and can notify while validation is pending', async () => {
+    vi.useFakeTimers();
+    try {
+      const completions: Array<(result: null) => void> = [];
+      const validate = vi.fn(({ value }: Context<unknown>) => {
+        value();
+        return new Promise<null>(resolve => completions.push(resolve));
+      });
+      const node = field('', { validators: asyncValidator(validate) });
+      const notify = vi.fn();
+      node.onValueChange(notify, { debounce: 100 });
+      node.set('Ada');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(validate).toHaveBeenCalledOnce();
+      node.set('Grace');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(validate).toHaveBeenCalledTimes(2);
+      expect(node.pending()).toBe(true);
+      expect(notify).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(100);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(node.pending()).toBe(true);
+      expect(validate).toHaveBeenCalledTimes(2);
+      completions[0]!(null);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(node.pending()).toBe(true);
+      completions[1]!(null);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(node.pending()).toBe(false);
+      expect(node.valid()).toBe(true);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(notify).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('delays only each listener, retaining the latest unequal change and independent timing', () => {
+    vi.useFakeTimers();
+    try {
+      const configured = vi.fn();
+      const node = field('', { validators: [required], onValueChange: configured, equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+      node.set('initial');
+      const immediate = vi.fn();
+      const fast = vi.fn();
+      const slow = vi.fn();
+      node.onValueChange(immediate, { debounce: 0 });
+      node.onValueChange(fast, { debounce: 100 });
+      node.$api.onValueChange(slow, { debounce: 300 });
+      vi.advanceTimersByTime(300);
+      expect(fast).not.toHaveBeenCalled();
+      expect(slow).not.toHaveBeenCalled();
+      node.set('Ada');
+      expect(node()).toBe('Ada');
+      expect(node.valid()).toBe(true);
+      expect(node.pristine()).toBe(true);
+      expect(node.untouched()).toBe(true);
+      expect(node.debouncing()).toBe(false);
+      expect(immediate).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(configured).toHaveBeenCalledTimes(2);
+      vi.advanceTimersByTime(99);
+      expect(fast).not.toHaveBeenCalled();
+      node.set('Grace');
+      vi.advanceTimersByTime(99);
+      expect(fast).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(fast).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      node.set('GRACE');
+      node.markAsTouched();
+      node.reset();
+      node.flush();
+      vi.advanceTimersByTime(199);
+      expect(slow).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(slow).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(immediate).toHaveBeenCalledTimes(2);
+      node.set('Ada');
+      node.set('Grace');
+      vi.advanceTimersByTime(300);
+      // Returning to the last delivered value still reports a new burst of committed changes.
+      expect(slow).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([0, 'blur', 20] as const)('starts the subscription delay after a control commit with node debounce %s', (debounce) => {
+    vi.useFakeTimers();
+    try {
+      const node = field('', { debounce, validators: [required] });
+      const notify = vi.fn();
+      node.onValueChange(notify, { debounce: 100 });
+      node.value.control.set('Ada');
+      expect(node.dirty()).toBe(true);
+      expect(node.touched()).toBe(false);
+      if (debounce !== 0) {
+        expect(node.invalid()).toBe(true);
+        if (debounce === 'blur') {
+          vi.advanceTimersByTime(200);
+          expect(notify).not.toHaveBeenCalled();
+          node.markAsTouched();
+        } else vi.advanceTimersByTime(debounce);
+      }
+      expect(node()).toBe('Ada');
+      expect(node.valid()).toBe(true);
+      expect(node.debouncing()).toBe(false);
+      vi.advanceTimersByTime(99);
+      expect(notify).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      node.value.control.set('draft');
+      node.reset('');
+      expect(node()).toBe('');
+      expect(node.invalid()).toBe(true);
+      expect(node.pristine()).toBe(true);
+      expect(node.untouched()).toBe(true);
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenCalledTimes(2);
+      expect(notify).toHaveBeenLastCalledWith('', node);
+      expect(node.value.control()).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(['stop', 'node', 'consumer', 'explicit'] as const)('cancels pending and future delivery through %s', (owner) => {
+    vi.useFakeTimers();
+    const nodeOwner = Injector.create({ providers: [] });
+    const consumer = Injector.create({ providers: [] });
+    const explicit = Injector.create({ providers: [] });
+    const owners = new Set([nodeOwner, consumer, explicit]);
+    const destroy = (injector: typeof nodeOwner) => {
+      owners.delete(injector);
+      injector.destroy();
+    };
+    try {
+      const node = runInInjectionContext(nodeOwner, () => field(''));
+      const notify = vi.fn();
+      const stop = runInInjectionContext(consumer, () => node.onValueChange(notify, owner === 'explicit' ? { debounce: 100, injector: explicit } : { debounce: 100 }));
+      node.set('Ada');
+      if (owner === 'stop') { stop(); stop(); } else if (owner === 'node') destroy(nodeOwner);
+      else if (owner === 'consumer') destroy(consumer);
+      else {
+        destroy(consumer);
+        vi.advanceTimersByTime(100);
+        expect(notify).toHaveBeenCalledOnce();
+        notify.mockClear();
+        node.set('Grace');
+        destroy(explicit);
+      }
+      expect(vi.getTimerCount()).toBe(0);
+      node.set('Lin');
+      vi.runAllTimers();
+      expect(notify).not.toHaveBeenCalled();
+    } finally {
+      for (const injector of owners) injector.destroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('accepts undefined values and clears delivery state before reentrant writes or cancellation', () => {
+    vi.useFakeTimers();
+    try {
+      const node = field<string>(undefined);
+      const notify = vi.fn((value: string | undefined) => {
+        if (value === 'Ada') node.set(undefined);
+        else stop();
+      });
+      const stop = node.onValueChange(notify, { debounce: 100 });
+      node.set('Ada');
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenLastCalledWith(undefined, node);
+      expect(notify).toHaveBeenCalledTimes(2);
+      node.set('Grace');
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('surfaces delayed errors at delivery and allows subsequent changes', () => {
+    vi.useFakeTimers();
+    try {
+      const node = field('');
+      const error = new Error('Delayed listener');
+      const notify = vi.fn().mockImplementationOnce(() => { throw error; });
+      const immediate = vi.fn();
+      node.onValueChange(notify, { debounce: 100 });
+      node.onValueChange(immediate);
+      expect(() => node.set('Ada')).not.toThrow();
+      expect(immediate).toHaveBeenCalledOnce();
+      expect(() => vi.advanceTimersByTime(100)).toThrow(error);
+      node.set('Grace');
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenCalledTimes(2);
+      expect(notify).toHaveBeenLastCalledWith('Grace', node);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([-1, NaN, Infinity, -Infinity])('rejects invalid delay %s before registering', (debounce) => {
+    const node = field('');
+    const notify = vi.fn();
+    expect(() => node.onValueChange(notify, { debounce })).toThrow(RangeError);
+    node.set('Ada');
+    expect(notify).not.toHaveBeenCalled();
+  });
+});

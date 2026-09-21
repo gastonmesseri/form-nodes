@@ -23,6 +23,7 @@ type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'form';
     onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>) => void, options?: {
         injector?: Injector;
+        debounce?: number;
     }): () => void;
     readonly children: FormChildren<TNodes, TParent> & Readonly<Record<string, DynamicNode>>;
     forEachChild(callback: (child: keyof TNodes extends never ? DynamicNode : FormChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: {
@@ -119,7 +120,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `nodeType` | Returns the concrete primitive represented by this node. |
-| `onValueChange` | Subscribes to future exposed value changes and returns an idempotent cancellation function. Runs synchronously and untracked, respects equality and control debounce, and skips initial values. Multiple listeners coexist with the construction callback; subscriptions are not cloned. The explicit injector, otherwise the registration context, owns the listener. The node's current injector also ends the subscription on destruction and acts as the fallback owner. Binding and ancestor ownership follow the node when it is rebound or detached. Without an injector, observation still works and can be canceled manually. |
+| `onValueChange` | Subscribes to future exposed value changes and returns an idempotent cancellation function. Runs untracked, respects equality and control debounce, and skips initial values. Multiple listeners coexist with the construction callback; subscriptions are not cloned. The explicit injector, otherwise the registration context, owns the listener. The node's current injector also ends the subscription on destruction and acts as the fallback owner. Binding and ancestor ownership follow the node when it is rebound or detached. Without an injector, observation still works and can be canceled manually. A positive `debounce` delays only this callback until that many milliseconds without another change. Omitted or zero stays synchronous. Cancellation drops pending delivery. Node values, validation, and interaction state are unaffected by the subscription delay. |
 | `children` | Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. |
 | `forEachChild` | **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them. |
 | `get` | Returns a child by runtime key, or `undefined` when no current child has that key. |

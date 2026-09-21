@@ -4179,7 +4179,7 @@ do not emit a callback, and recovery compares against the last successfully obse
 
 ### Instance value subscriptions
 
-Every node and its collision-safe `$api` expose `onValueChange(callback, { injector? })`, returning
+Every node and its collision-safe `$api` expose `onValueChange(callback, { injector?, debounce? })`, returning
 an idempotent cancellation function. Callback value and node arguments preserve the concrete
 primitive and parent types. Multiple registrations are independent, including registrations of
 the same function, and coexist with the unchanged factory callback. Instance subscriptions are
@@ -4193,6 +4193,32 @@ snapshot. All listeners for one notification receive the same exposed value snap
 by an earlier listener. Failures in any listener do not prevent the remaining listeners or ancestors
 from receiving the update, and are rethrown after delivery. Initialization remains suppressed.
 
+An optional finite, non-negative `debounce` in milliseconds delays only this subscription's
+callback. Omitted or zero keeps synchronous delivery. Negative, NaN, and infinite delays throw
+RangeError before registration. Each positive-delay subscription replaces its pending exposed value
+snapshot and restarts its timer on each otherwise eligible notification, including programmatic
+writes. Equality-suppressed writes and state-only changes do not restart the timer. Initialization
+and changes preceding registration are never replayed. Returning to the last delivered value after
+intervening changes still emits. Delivery clears pending state before invoking the callback untracked,
+so reentrant writes schedule a fresh notification. Delayed exceptions escape the timer callback;
+they cannot propagate through the already-completed mutation or its error aggregation.
+
+Node values, validation, dirty/touched, `debouncing()`, and validation pending state keep their existing
+semantics. Control debounce runs before subscription debounce; their delays can accumulate. Control
+flush and blur do not bypass subscription debounce. A value-changing reset replaces pending delivery
+with the reset snapshot; a state-only reset does not cancel a committed notification. Unsubscription
+and owner destruction clear the timer and pending snapshot. Timers hold weak subscription references
+so pending delivery does not retain an unreachable node tree, including callbacks closing over it.
+Detaching alone preserves pending delivery while ownership follows attachment as before.
+
+This subscription delay is a Form Nodes API extension, distinct from Angular's control debounce.
+The comparison uses Angular **v22.1.7**, commit `f3358f24b884e34d44cfb8ec3db53965153d61e1`,
+`packages/forms/signals/src/api/rules/debounce.ts` and
+`packages/forms/signals/test/web/form_field.spec.ts` (control commit and reset tests), and RxJS **7.8.2**
+`src/internal/operators/debounceTime.ts` for trailing notification behavior. Unlike RxJS's default
+scheduler with zero delay, this API retains synchronous delivery for zero. Destroying an owner
+cancels delivery rather than flushing it as observable completion can.
+
 Consumer ownership uses an explicit injector, otherwise the registration context. Independently,
 node ownership follows the existing explicit/captured, direct binding, and ancestor precedence.
 With no consumer owner, node ownership is the fallback. Destroying either active owner cancels
@@ -4205,7 +4231,7 @@ fail while attaching lifecycle hooks are removed before the error is rethrown.
 Subscriptions and ownership observations use weak node ownership. Injector destruction hooks and
 returned cancellation functions hold weak subscription references, so they cannot retain an
 unreachable node tree even if callbacks close over nodes. With no injector, notifications still
-work synchronously and are canceled manually or disappear with the unreachable node. Callback
+work without DI and are canceled manually or disappear with the unreachable node. Callback
 return values never register cleanup and asynchronous callback work remains unmanaged. Factory
 callbacks retain their existing node-lifetime behavior, independently of injector destruction.
 

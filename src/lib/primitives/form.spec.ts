@@ -6869,3 +6869,151 @@ it('reports a complete nested form URL import once after validation and draft ca
   expect(router.navigateByUrl).not.toHaveBeenCalled();
   injector.destroy();
 });
+
+describe('form instance onValueChange subscription debounce', () => {
+  it('does not delay or restart async validation and can notify while validation is pending', async () => {
+    vi.useFakeTimers();
+    try {
+      const completions: Array<(result: null) => void> = [];
+      const validate = vi.fn(({ value }: Context<unknown>) => {
+        value();
+        return new Promise<null>(resolve => completions.push(resolve));
+      });
+      const node = form({ nested: form({ name: field('', { validators: asyncValidator(validate) }) }) });
+      const notify = vi.fn();
+      node.onValueChange(notify, { debounce: 100 });
+      node.nested.name.set('Ada');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(validate).toHaveBeenCalledOnce();
+      node.nested.name.set('Grace');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(validate).toHaveBeenCalledTimes(2);
+      expect(node.pending()).toBe(true);
+      expect(notify).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(100);
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, node);
+      expect(node.pending()).toBe(true);
+      expect(validate).toHaveBeenCalledTimes(2);
+      completions[0]!(null);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(node.pending()).toBe(true);
+      completions[1]!(null);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(node.pending()).toBe(false);
+      expect(node.valid()).toBe(true);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(notify).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('coalesces complete nested form, group, and array snapshots without delaying validation or state', () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({ details: form({ name: field('', required), contact: group({ email: field('') }) }), tags: array(field(''), ['first']) });
+      profile.patch({ details: { name: 'initial' } });
+      const root = vi.fn();
+      const nested = vi.fn();
+      const contact = vi.fn();
+      const tags = vi.fn();
+      profile.onValueChange(root, { debounce: 100 });
+      profile.details.onValueChange(nested, { debounce: 50 });
+      profile.details.contact.onValueChange(contact, { debounce: 50 });
+      profile.tags.onValueChange(tags, { debounce: 50 });
+      vi.advanceTimersByTime(100);
+      expect(root).not.toHaveBeenCalled();
+      profile.patch({ details: { name: 'Ada', contact: { email: 'ada@example.com' } }, tags: ['second'] });
+      profile.tags.push('third');
+      expect(profile.valid()).toBe(true);
+      expect(profile.pristine()).toBe(true);
+      expect(profile.untouched()).toBe(true);
+      expect(profile.debouncing()).toBe(false);
+      vi.advanceTimersByTime(49);
+      expect(nested).not.toHaveBeenCalled();
+      expect(tags).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(nested).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', contact: { email: 'ada@example.com' } }, profile.details);
+      expect(contact).toHaveBeenCalledExactlyOnceWith({ email: 'ada@example.com' }, profile.details.contact);
+      expect(tags).toHaveBeenCalledExactlyOnceWith(['second', 'third'], profile.tags);
+      expect(root).not.toHaveBeenCalled();
+      profile.details.name.value.control.set('');
+      expect(profile.invalid()).toBe(true);
+      expect(profile.dirty()).toBe(true);
+      expect(profile.untouched()).toBe(true);
+      vi.advanceTimersByTime(99);
+      expect(root).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(root).toHaveBeenCalledExactlyOnceWith({ details: { name: '', contact: { email: 'ada@example.com' } }, tags: ['second', 'third'] }, profile);
+      profile.patch({ details: { name: 'Grace' } });
+      profile.resetToInitial();
+      vi.advanceTimersByTime(100);
+      expect(root).toHaveBeenCalledTimes(2);
+      expect(root).toHaveBeenLastCalledWith({ details: { name: '', contact: { email: '' } }, tags: ['first'] }, profile);
+      expect(profile.pristine()).toBe(true);
+      expect(profile.untouched()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(['stop', 'node', 'consumer', 'explicit'] as const)('cancels a pending aggregate notification through %s', (owner) => {
+    vi.useFakeTimers();
+    const nodeOwner = Injector.create({ providers: [] });
+    const consumer = Injector.create({ providers: [] });
+    const explicit = Injector.create({ providers: [] });
+    const owners = new Set([nodeOwner, consumer, explicit]);
+    const destroy = (injector: typeof nodeOwner) => {
+      owners.delete(injector);
+      injector.destroy();
+    };
+    try {
+      const profile = runInInjectionContext(nodeOwner, () => form({ nested: form({ name: field('') }) }));
+      const notify = vi.fn();
+      const stop = runInInjectionContext(consumer, () => profile.onValueChange(notify, owner === 'explicit' ? { debounce: 100, injector: explicit } : { debounce: 100 }));
+      profile.nested.name.set('Ada');
+      if (owner === 'stop') stop();
+      else if (owner === 'node') destroy(nodeOwner);
+      else if (owner === 'consumer') destroy(consumer);
+      else destroy(explicit);
+      profile.patch({ nested: { name: 'Grace' } });
+      vi.runAllTimers();
+      expect(notify).not.toHaveBeenCalled();
+    } finally {
+      for (const injector of owners) injector.destroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('moves pending subscription ownership when a nested form is detached and reattached', () => {
+    vi.useFakeTimers();
+    const firstOwner = Injector.create({ providers: [] });
+    const secondOwner = Injector.create({ providers: [] });
+    const owners = new Set([firstOwner, secondOwner]);
+    const destroy = (injector: typeof firstOwner) => {
+      owners.delete(injector);
+      injector.destroy();
+    };
+    try {
+      const nested = form({ name: field('') });
+      const notify = vi.fn();
+      nested.onValueChange(notify, { debounce: 100 });
+      const first = form({}, { injector: firstOwner });
+      const second = form({}, { injector: secondOwner });
+      first.add('nested', nested);
+      nested.name.set('Ada');
+      first.remove('nested');
+      destroy(firstOwner);
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, nested);
+      second.add('nested', nested);
+      nested.name.set('Grace');
+      destroy(secondOwner);
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledOnce();
+    } finally {
+      for (const injector of owners) injector.destroy();
+      vi.useRealTimers();
+    }
+  });
+});

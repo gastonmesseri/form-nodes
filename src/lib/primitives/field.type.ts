@@ -430,12 +430,15 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
   nodeType(): 'field';
   /**
    * Subscribes to future exposed value changes and returns an idempotent cancellation function.
-   * Runs synchronously and untracked, respects equality and control debounce, and skips initial
+   * Runs untracked, respects equality and control debounce, and skips initial
    * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
    * The explicit injector, otherwise the registration context, owns the listener. The node's
    * current injector also ends the subscription on destruction and acts as the fallback owner.
    * Binding and ancestor ownership follow the node when it is rebound or detached.
    * Without an injector, observation still works and can be canceled manually.
+   * A positive `debounce` delays only this callback until that many milliseconds without another
+   * change. Omitted or zero stays synchronous. Cancellation drops pending delivery.
+   * Node values, validation, and interaction state are unaffected by the subscription delay.
    *
    * ```ts
    * const node = field('Ada');
@@ -464,10 +467,19 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * values.length; // 0
    * ```
    *
-   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored; thrown errors propagate after the other listeners are notified.
-   * @param options Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+   * ```ts
+   * const node = field('Ada');
+   * const stop = node.onValueChange(value => {
+   *   console.log(value);
+   * }, { debounce: 300 });
+   * // Cancel pending and future delivery.
+   * stop();
+   * ```
+   *
+   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored. Synchronous errors propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+   * @param options Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
    */
-  onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: { injector?: Injector }): () => void;
+  onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: { injector?: Injector; debounce?: number }): () => void;
   /**
    * Nearest explicit `form()` containing this field, or `null` when no form workflow owns it.
    * A nested explicit form is the workflow owner instead of the complete structural root.
