@@ -22,10 +22,10 @@ export class PairedText {
 // profile.component.ts
 @Component({
   imports: [FormNodeDirective, PairedText],
-  template: `<app-paired-text [formNode]="profile.name" />`,
+  template: `<app-paired-text [formNode]="form.name" />`,
 })
 export class ProfileComponent {
-  profile = form({
+  form = form({
     // Experimental value transport, without any optional state input writes.
     name: field('Ada', { bindInputOutputPairs: true }),
   });

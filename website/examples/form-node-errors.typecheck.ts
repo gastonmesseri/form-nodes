@@ -5,14 +5,14 @@ import { email, field, form, required, FormNodeErrors, FormNodeDirective } from 
   selector: 'app-contact-form',
   imports: [FormNodeErrors, FormNodeDirective],
   template: `
-    <form [formNode]="contact">
+    <form [formNode]="form">
       <label for="contact-email">Email</label>
-      <input id="contact-email" type="email" autocomplete="email" [formNode]="contact.email" />
-      <form-node-errors [node]="contact.email" />
+      <input id="contact-email" type="email" autocomplete="email" [formNode]="form.email" />
+      <form-node-errors [node]="form.email" />
 
       <button type="submit">Continue</button>
       <button type="reset">Hide errors</button>
-      <button type="button" (click)="contact.resetToInitial()">Start over</button>
+      <button type="button" (click)="form.resetToInitial()">Start over</button>
     </form>
 
     @if (submittedEmail(); as address) {
@@ -23,7 +23,7 @@ import { email, field, form, required, FormNodeErrors, FormNodeDirective } from 
 export class ContactForm {
   submittedEmail = signal<string | null>(null);
 
-  contact = form({
+  form = form({
     email: field('', [required('Enter your email address.'), email('Enter a valid email address.')]),
   }, {
     onSubmit: (value) => {

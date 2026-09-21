@@ -40,10 +40,10 @@ export class MyTextInput implements FormValueControl<string> {
 // profile-editor.component.ts
 @Component({
   imports: [FormNodeDirective, MyTextInput],
-  template: `<app-text-input label="Name" [formNode]="profile.name" />`,
+  template: `<app-text-input label="Name" [formNode]="form.name" />`,
 })
 export class ProfileEditor {
-  profile = form({
+  form = form({
     name: field('', [required, minLength(3)], {
       // Keep automatic input writes off, even if an ancestor provider enables them.
       syncInputs: false,

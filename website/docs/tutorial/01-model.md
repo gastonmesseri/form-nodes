@@ -16,14 +16,14 @@ import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
   template: `
     <label>
       Name
-      <input [formNode]="myForm.name" />
+      <input [formNode]="form.name" />
     </label>
 
-    <p>Current name: {{ myForm.name() }}</p>
+    <p>Current name: {{ form.name() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field(''),
     age: field<number>(null),
     email: field(''),
@@ -58,18 +58,18 @@ where it communicates a boundary or constrains a nullable/union value more preci
 Call nodes directly to read their committed values:
 
 ```ts
-this.myForm(); // { name: '', age: null, email: '' }
-this.myForm.name(); // ''
-this.myForm.age(); // null
+this.form(); // { name: '', age: null, email: '' }
+this.form.name(); // ''
+this.form.age(); // null
 ```
 
 Use methods directly on fields and forms:
 
 ```ts
-this.myForm.name.set('Ada');
-this.myForm.age.update(age => (age ?? 0) + 1);
+this.form.name.set('Ada');
+this.form.age.update(age => (age ?? 0) + 1);
 
-this.myForm.patch({
+this.form.patch({
   email: 'ada@example.com',
 });
 ```

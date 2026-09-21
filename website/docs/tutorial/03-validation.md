@@ -7,7 +7,7 @@ title: 3. Add validation
 Add built-in validators where each field is declared:
 
 ```ts
-myForm = form({
+form = form({
   name: field('', [required, minLength(2)]),
   age: field<number>(null, [between(18, 120), integer]),
   email: field('', [required, email]),
@@ -29,14 +29,14 @@ Use `getError()` for a specific rule. Known built-in kinds expose their typed pa
 ```html
 <label>
   Name
-  <input [formNode]="myForm.name" />
+  <input [formNode]="form.name" />
 </label>
 
-@if (myForm.name.touched()) {
-  @if (myForm.name.getError('required'); as error) {
+@if (form.name.touched()) {
+  @if (form.name.getError('required'); as error) {
     <p class="error">{{ error.message }}</p>
   }
-  @if (myForm.name.getError('minLength'); as error) {
+  @if (form.name.getError('minLength'); as error) {
     <p class="error">
       Enter at least {{ error.minLength }} characters.
     </p>
@@ -47,9 +47,9 @@ Use `getError()` for a specific rule. Known built-in kinds expose their typed pa
 Use `errors()` for errors owned by one node and `allErrors()` for a complete subtree:
 
 ```ts
-this.myForm.name.errors();
-this.myForm.errors();
-this.myForm.allErrors();
+this.form.name.errors();
+this.form.errors();
+this.form.allErrors();
 ```
 
 A field error makes every interactive ancestor invalid. The error remains owned by its field through `targetNode`.

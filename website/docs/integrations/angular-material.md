@@ -48,52 +48,52 @@ import { FormNodeDirective, email, field, form, maxDate, required, requiredTrue 
   ],
   providers: [provideNativeDateAdapter()],
   template: `
-    <form [formNode]="profileForm">
+    <form [formNode]="form">
       <mat-form-field appearance="outline">
         <mat-label>Email</mat-label>
-        <input matInput type="email" [formNode]="profileForm.email" />
-        @if (profileForm.email.touched() && profileForm.email.invalid()) {
-          <mat-error>{{ profileForm.email.errors()[0]?.message }}</mat-error>
+        <input matInput type="email" [formNode]="form.email" />
+        @if (form.email.touched() && form.email.invalid()) {
+          <mat-error>{{ form.email.errors()[0]?.message }}</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Country</mat-label>
-        <mat-select [formNode]="profileForm.countryCode">
+        <mat-select [formNode]="form.countryCode">
           <mat-option value="CH">Switzerland</mat-option>
           <mat-option value="ES">Spain</mat-option>
           <mat-option value="US">United States</mat-option>
         </mat-select>
-        @if (profileForm.countryCode.touched() && profileForm.countryCode.invalid()) {
-          <mat-error>{{ profileForm.countryCode.errors()[0]?.message }}</mat-error>
+        @if (form.countryCode.touched() && form.countryCode.invalid()) {
+          <mat-error>{{ form.countryCode.errors()[0]?.message }}</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Birth date</mat-label>
-        <input matInput [matDatepicker]="picker" [formNode]="profileForm.birthDate" />
+        <input matInput [matDatepicker]="picker" [formNode]="form.birthDate" />
         <mat-datepicker-toggle matIconSuffix [for]="picker" />
         <mat-datepicker #picker />
-        @if (profileForm.birthDate.touched() && profileForm.birthDate.invalid()) {
-          <mat-error>{{ profileForm.birthDate.errors()[0]?.message }}</mat-error>
+        @if (form.birthDate.touched() && form.birthDate.invalid()) {
+          <mat-error>{{ form.birthDate.errors()[0]?.message }}</mat-error>
         }
       </mat-form-field>
 
-      <mat-checkbox [formNode]="profileForm.acceptedTerms">
+      <mat-checkbox [formNode]="form.acceptedTerms">
         I accept the terms
       </mat-checkbox>
-      @if (profileForm.acceptedTerms.touched() && profileForm.acceptedTerms.invalid()) {
-        <mat-error>{{ profileForm.acceptedTerms.errors()[0]?.message }}</mat-error>
+      @if (form.acceptedTerms.touched() && form.acceptedTerms.invalid()) {
+        <mat-error>{{ form.acceptedTerms.errors()[0]?.message }}</mat-error>
       }
 
-      <button mat-flat-button type="submit" [disabled]="profileForm.submitting()">
+      <button mat-flat-button type="submit" [disabled]="form.submitting()">
         Save profile
       </button>
     </form>
   `,
 })
 export class MaterialProfileEditor {
-  profileForm = form({
+  form = form({
     email: field('', [required, email]),
     countryCode: field('', [required]),
     birthDate: field<Date>(null, [maxDate(() => new Date())]),
@@ -131,8 +131,8 @@ Form Nodes errors already contain their resolved message and target node. Render
 inside `mat-error`:
 
 ```html
-@if (profileForm.email.touched() && profileForm.email.invalid()) {
-  <mat-error>{{ profileForm.email.errors()[0]?.message }}</mat-error>
+@if (form.email.touched() && form.email.invalid()) {
+  <mat-error>{{ form.email.errors()[0]?.message }}</mat-error>
 }
 ```
 
@@ -140,9 +140,9 @@ For multiple messages, choose one explicitly with `getError()`; Material normall
 space for one error message:
 
 ```html
-@if (profileForm.email.getError('required'); as error) {
+@if (form.email.getError('required'); as error) {
   <mat-error>{{ error.message }}</mat-error>
-} @else if (profileForm.email.getError('email'); as error) {
+} @else if (form.email.getError('email'); as error) {
   <mat-error>{{ error.message }}</mat-error>
 }
 ```
@@ -160,8 +160,8 @@ constraints without duplicating validator configuration in the template.
 
 - Disabled state is passed through Material's `ControlValueAccessor` contract.
 - Native Material inputs receive readonly state directly when applicable.
-- `profileForm.email.focus()` focuses its first rendered binding.
-- `profileForm.reset()` resynchronizes Material controls and clears interaction state.
+- `form.email.focus()` focuses its first rendered binding.
+- `form.reset()` resynchronizes Material controls and clears interaction state.
 - A native reset button inside the bound form delegates to the same node reset.
 
 ## 🧪 Testing with Material harnesses {#testing-with-material-harnesses}
@@ -174,9 +174,9 @@ const email = await loader.getHarness(MatInputHarness.with({ selector: '[type="e
 await email.setValue('ada@example.com');
 await email.blur();
 
-expect(component.profileForm.email()).toBe('ada@example.com');
-expect(component.profileForm.email.dirty()).toBe(true);
-expect(component.profileForm.email.touched()).toBe(true);
+expect(component.form.email()).toBe('ada@example.com');
+expect(component.form.email.dirty()).toBe(true);
+expect(component.form.email.touched()).toBe(true);
 ```
 
 See [Testing forms](../guides/testing.md).

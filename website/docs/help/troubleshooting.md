@@ -37,12 +37,14 @@ roots:
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="myForm">
-      <input [formNode]="myForm.email" />
+    <form [formNode]="form">
+      <input [formNode]="form.email" />
     </form>
   `,
 })
-export class AccountEditor {}
+export class AccountEditor {
+  form = form({ email: field('') });
+}
 ```
 
 No separate root-form directive is required. See [Control binding](../guides/control-binding.md).
@@ -197,7 +199,7 @@ model applies to readonly and hidden state. See
 
 Check these conditions:
 
-1. The native form has `[formNode]="myForm"` and the component imports `FormNodeDirective`.
+1. The native form has `[formNode]="form"` and the component imports `FormNodeDirective`.
 2. The node was created with [`form()`](../reference/form.md), not [`group()`](../reference/group.md), and has an `onSubmit` callback. A group binding
    remains functional but intentionally has no action to run.
 3. The submit button has `type="submit"`.
@@ -206,7 +208,7 @@ Check these conditions:
 5. Another action is not already running; overlapping submissions resolve to `false`.
 
 ```ts
-myForm = form({
+form = form({
   email: field('', [required, email]),
 }, {
   onSubmit: value => saveAccount(value),

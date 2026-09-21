@@ -22,7 +22,7 @@ export class CustomerEditor {
   readonly useShippingAddress = signal(true);
   readonly availableCountries = signal<readonly string[]>(['CH', 'DE', 'ES', 'FR']);
 
-  myForm = form({
+  form = form({
     account: {
       email: field('', [required, email]),
       username: field('', [
@@ -145,20 +145,20 @@ The declaration remains readable because every branch owns its value, validators
 The template follows the same tree. Arrays expose live item nodes, so nested controls need no string paths or index-based lookup:
 
 ```html
-<form [formNode]="myForm">
+<form [formNode]="form">
   <section>
     <h2>Account</h2>
-    <input type="email" [formNode]="myForm.account.email" />
-    <input [formNode]="myForm.account.username" />
-    <input type="checkbox" [formNode]="myForm.account.marketingConsent" />
+    <input type="email" [formNode]="form.account.email" />
+    <input [formNode]="form.account.username" />
+    <input type="checkbox" [formNode]="form.account.marketingConsent" />
   </section>
 
   <section>
     <h2>Shipping address</h2>
-    <input [formNode]="myForm.shippingAddress.street" />
-    <input [formNode]="myForm.shippingAddress.city" />
-    <input [formNode]="myForm.shippingAddress.postalCode" />
-    <select [formNode]="myForm.shippingAddress.country">
+    <input [formNode]="form.shippingAddress.street" />
+    <input [formNode]="form.shippingAddress.city" />
+    <input [formNode]="form.shippingAddress.postalCode" />
+    <select [formNode]="form.shippingAddress.country">
       @for (country of availableCountries(); track country) {
         <option [value]="country">{{ country }}</option>
       }
@@ -167,23 +167,23 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
 
   <section>
     <h2>Contacts</h2>
-    @for (contact of myForm.contacts; track contact; let index = $index) {
+    @for (contact of form.contacts; track contact; let index = $index) {
       <input [formNode]="contact.label" />
       <input type="email" [formNode]="contact.email" />
       <input type="tel" [formNode]="contact.phone" />
-      <button type="button" (click)="myForm.contacts.removeAt(index)">
+      <button type="button" (click)="form.contacts.removeAt(index)">
         Remove contact
       </button>
     }
 
-    <button type="button" (click)="myForm.contacts.push()">
+    <button type="button" (click)="form.contacts.push()">
       Add contact
     </button>
   </section>
 
   <section>
     <h2>Projects</h2>
-    @for (project of myForm.projects; track project) {
+    @for (project of form.projects; track project) {
       <input [formNode]="project.name" />
       <input type="number" [formNode]="project.budget" />
 
@@ -198,7 +198,7 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
     }
   </section>
 
-  <button type="submit" [disabled]="myForm.submitting()">
+  <button type="submit" [disabled]="form.submitting()">
     Save customer
   </button>
 </form>
@@ -209,12 +209,12 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
 The large shape does not change the API conventions:
 
 ```ts
-myForm(); // { account: { ... }, profile: { ... }, shippingAddress: { ... }, ... }
-myForm.profile.firstName(); // ''
-myForm.valid();
-myForm.contacts.push(); // array operation directly on the node
-myForm.projects[0]?.tasks.move(2, 0); // nested array operation
-myForm.patch({
+this.form(); // { account: { ... }, profile: { ... }, shippingAddress: { ... }, ... }
+this.form.profile.firstName(); // ''
+this.form.valid();
+this.form.contacts.push(); // array operation directly on the node
+this.form.projects[0]?.tasks.move(2, 0); // nested array operation
+this.form.patch({
   profile: {
     preferredLanguage: 'de',
   },
@@ -222,6 +222,6 @@ myForm.patch({
 ```
 
 State and validation aggregate through every level. A failing task makes its project, the projects
-array, and the root form invalid; `myForm.allErrors()` collects the complete tree. Disabling
+array, and the root form invalid; `form.allErrors()` collects the complete tree. Disabling
 `billingAddress` removes that branch from interactive validation without destroying its values or
 validators.

@@ -8,19 +8,19 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
     <!-- Text input binding -->
     <label>
       Name
-      <input [formNode]="myForm.name" />
+      <input [formNode]="form.name" />
     </label>
 
     <!-- Number input binding -->
     <label>
       Age
-      <input type="number" [formNode]="myForm.age" />
+      <input type="number" [formNode]="form.age" />
     </label>
 
     <!-- Email input binding -->
     <label>
       Email
-      <input type="email" [formNode]="myForm.email" />
+      <input type="email" [formNode]="form.email" />
     </label>
 
     <!-- Radio group: multiple options, one field -->
@@ -28,12 +28,12 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
       <legend>Preferred contact method</legend>
 
       <label>
-        <input type="radio" value="email" [formNode]="myForm.contactMethod" />
+        <input type="radio" value="email" [formNode]="form.contactMethod" />
         Email
       </label>
 
       <label>
-        <input type="radio" value="phone" [formNode]="myForm.contactMethod" />
+        <input type="radio" value="phone" [formNode]="form.contactMethod" />
         Phone
       </label>
     </fieldset>
@@ -41,7 +41,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
     <!-- Select binding -->
     <label>
       Country
-      <select [formNode]="myForm.country">
+      <select [formNode]="form.country">
         <option value="CH">Switzerland</option>
         <option value="ES">Spain</option>
       </select>
@@ -49,28 +49,28 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
     <!-- Checkbox binding -->
     <label>
-      <input type="checkbox" [formNode]="myForm.newsletter" />
+      <input type="checkbox" [formNode]="form.newsletter" />
       Receive the newsletter
     </label>
 
     <!-- Textarea binding -->
     <label>
       About you
-      <textarea rows="3" [formNode]="myForm.bio"></textarea>
+      <textarea rows="3" [formNode]="form.bio"></textarea>
     </label>
 
     <!-- Read the current field values -->
-    <p>Current name: {{ myForm.name() }}</p>
-    <p>Current age: {{ myForm.age() }}</p>
-    <p>Current email: {{ myForm.email() }}</p>
-    <p>Preferred contact method: {{ myForm.contactMethod() }}</p>
-    <p>Country code: {{ myForm.country() }}</p>
-    <p>Newsletter enabled: {{ myForm.newsletter() }}</p>
-    <p>Bio: {{ myForm.bio() }}</p>
+    <p>Current name: {{ form.name() }}</p>
+    <p>Current age: {{ form.age() }}</p>
+    <p>Current email: {{ form.email() }}</p>
+    <p>Preferred contact method: {{ form.contactMethod() }}</p>
+    <p>Country code: {{ form.country() }}</p>
+    <p>Newsletter enabled: {{ form.newsletter() }}</p>
+    <p>Bio: {{ form.bio() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field(''),
     age: field<number>(null),
     email: field(''),

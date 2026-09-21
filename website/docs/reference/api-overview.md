@@ -221,11 +221,11 @@ Import `FormNodeDirective` into a standalone component and bind nodes directly:
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="myForm.displayName" />
+    <input [formNode]="form.displayName" />
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     displayName: field(''),
   });
 }

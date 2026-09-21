@@ -6,14 +6,14 @@ import { field, form, required, FormNodeDirective } from '@ngblocks/form-nodes';
   template: `
     <label>
       Name
-      <input [formNode]="contact.name" />
+      <input [formNode]="form.name" />
     </label>
-    <button type="button" (click)="contact.reset({ name: null })">Reset name</button>
+    <button type="button" (click)="form.reset({ name: null })">Reset name</button>
   `,
   imports: [FormNodeDirective],
 })
 export class ContactEditor {
-  contact = form({
+  form = form({
     name: field<string>(null, [required]),
   });
 }

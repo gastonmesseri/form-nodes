@@ -9,7 +9,7 @@ Model the complete workflow as one tree and render one nested branch at a time:
 ```ts
 readonly activeStep = signal<1 | 2 | 3>(1);
 
-myForm = form({
+form = form({
   account: {
     email: field('', [required, email]),
     password: field('', [required, minLength(12)]),
@@ -31,8 +31,8 @@ Validate and touch only the current branch before advancing:
 next() {
   const step = this.activeStep();
   const current = step === 1
-    ? this.myForm.account
-    : this.myForm.profile;
+    ? this.form.account
+    : this.form.profile;
 
   current.markAsTouched();
   if (current.invalid()) {
@@ -47,16 +47,16 @@ next() {
 ```html
 @switch (activeStep()) {
   @case (1) {
-    <input type="email" [formNode]="myForm.account.email" />
-    <input type="password" [formNode]="myForm.account.password" />
+    <input type="email" [formNode]="form.account.email" />
+    <input type="password" [formNode]="form.account.password" />
   }
   @case (2) {
-    <input [formNode]="myForm.profile.name" />
-    <input type="number" [formNode]="myForm.profile.age" />
+    <input [formNode]="form.profile.name" />
+    <input type="number" [formNode]="form.profile.age" />
   }
   @case (3) {
-    <select [formNode]="myForm.preferences.language">...</select>
-    <input type="checkbox" [formNode]="myForm.preferences.newsletter" />
+    <select [formNode]="form.preferences.language">...</select>
+    <input type="checkbox" [formNode]="form.preferences.newsletter" />
   }
 }
 ```
@@ -69,6 +69,6 @@ it merely to mirror whether the step is currently rendered.
 
 :::
 
-The complete value remains available through `myForm()` at every step.
+The complete value remains available through `form()` at every step.
 
 See [Interaction and availability](../guides/interaction-and-availability.md).

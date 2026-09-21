@@ -25,16 +25,16 @@ export class SubmissionErrors {
 @Component({
   imports: [FormNodeDirective, SubmissionErrors],
   template: `
-    <form [formNode]="profile">
-      <input [formNode]="profile.name" />
-      <app-submission-errors [node]="profile.name" />
+    <form [formNode]="form">
+      <input [formNode]="form.name" />
+      <app-submission-errors [node]="form.name" />
       <button type="submit">Save</button>
       <button type="reset">Reset</button>
     </form>
   `,
 })
 export class ProfileEditor {
-  profile = form({
+  form = form({
     name: field('', [required]),
   }, {
     onSubmit: async value => { await this.save(value.name); },

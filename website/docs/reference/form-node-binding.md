@@ -23,15 +23,15 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <input #emailBinding="formNode" [formNode]="myForm.email" />
+    <input #emailBinding="formNode" [formNode]="form.email" />
   `,
 })
 export class EmailEditor {
-  myForm = form({
+  form = form({
     email: field(''),
   });
 
-  emailBinding = viewChild.required<FormNodeDirective<typeof this.myForm.email>>('emailBinding');
+  emailBinding = viewChild.required<FormNodeDirective<typeof this.form.email>>('emailBinding');
 }
 ```
 
@@ -55,10 +55,10 @@ Import `FormNodeDirective` in the component and bind a Form Nodes node to the `f
 ```ts
 @Component({
   imports: [FormNodeDirective],
-  template: `<input [formNode]="myForm.email" />`,
+  template: `<input [formNode]="form.email" />`,
 })
 export class EmailEditor {
-  myForm = form({
+  form = form({
     email: field(''),
   });
 }
@@ -213,7 +213,7 @@ reassigned.
 ```ts
 const binding = this.emailBinding();
 
-binding.node() === this.myForm.email; // true
+binding.node() === this.form.email; // true
 ```
 
 ### ◆ errors {#errors}
@@ -226,7 +226,7 @@ binding-specific errors belonging to another rendered control are excluded.
 ```ts
 const firstError = this.emailBinding().errors()[0];
 
-firstError?.targetNode === this.myForm.email; // true
+firstError?.targetNode === this.form.email; // true
 ```
 
 This distinction matters when the same field is rendered by multiple controls and one binding has
@@ -280,7 +280,7 @@ Immediately commits a control-originated value waiting for debounce or blur.
 ```ts
 this.emailBinding().flush();
 
-this.myForm.email(); // latest control value
+this.form.email(); // latest control value
 ```
 
 Programmatic `set()` calls are already immediate and do not require a flush.
@@ -472,12 +472,12 @@ export class DatePicker implements FormNodeValueControl<string | null> {
   selector: 'app-appointment-editor',
   imports: [FormNodeDirective, DatePicker],
   template: `
-    <app-date-picker [formNode]="appointmentForm.date" />
-    <p>Selected date: {{ appointmentForm.date() ?? 'None' }}</p>
+    <app-date-picker [formNode]="form.date" />
+    <p>Selected date: {{ form.date() ?? 'None' }}</p>
   `,
 })
 export class AppointmentEditor {
-  appointmentForm = form({
+  form = form({
     date: field<string | null>(null),
   });
 }
@@ -549,15 +549,15 @@ import { FormNodeDirective, field, form } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="myForm">
-      <input [formNode]="myForm.email" />
+    <form [formNode]="form">
+      <input [formNode]="form.email" />
       <button type="submit">Save</button>
       <button type="reset">Reset</button>
     </form>
   `,
 })
 export class EmailEditor {
-  myForm = form({
+  form = form({
     email: field(''),
   }, {
     onSubmit: value => save(value),
@@ -599,7 +599,7 @@ See [the complete example and compatibility boundaries](../guides/custom-control
 
 Signature: `OutputRef<FormNodeSubmitEvent<TNode>>`.
 
-Emits every native submission attempt on `<form [formNode]="myForm">` when the node was declared
+Emits every native submission attempt on `<form [formNode]="form">` when the node was declared
 with `form()`. The handler sees `submitted() === true` and exposed values after pending input is
 flushed. Interactive descendants are marked touched on a new attempt. The notification precedes
 the `submitWhen` gate and declared `onSubmit` action, so it also fires for invalid forms and forms
@@ -624,7 +624,7 @@ Both outputs receive `{ value, form, event }`, exported as `FormNodeSubmitEvent<
 - `form`: the bound form node; `$api` gives collision-safe access to its state and operations.
 - `event`: the original native `Event`; narrow to `SubmitEvent` to access `submitter`.
 
-The outputs do not form a two-way binding pair with `[formNode]`. Calling `myForm.submit()` directly
+The outputs do not form a two-way binding pair with `[formNode]`. Calling `form.submit()` directly
 does not emit them. They do not emit from group bindings or non-form control hosts. Native submit
 prevents browser navigation; this includes synthetic submit events, not just physical user actions.
 

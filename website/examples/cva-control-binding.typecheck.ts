@@ -57,13 +57,13 @@ export class TextInputControl implements ControlValueAccessor {
   selector: 'app-profile-editor',
   imports: [FormNodeDirective, TextInputControl],
   template: `
-    <app-text-input [formNode]="myForm.name" />
-    <p>Current name: {{ myForm.name() }}</p>
-    <p>Touched: {{ myForm.name.touched() }}</p>
+    <app-text-input [formNode]="form.name" />
+    <p>Current name: {{ form.name() }}</p>
+    <p>Touched: {{ form.name.touched() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field('Ada'),
   });
 }

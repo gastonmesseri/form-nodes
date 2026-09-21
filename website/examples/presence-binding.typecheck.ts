@@ -5,26 +5,26 @@ import { field, form, required, requiredTrue, FormNodeErrors, FormNodeDirective 
   selector: 'app-checkout',
   imports: [FormNodeDirective, FormNodeErrors],
   template: `
-    <form [formNode]="checkout">
+    <form [formNode]="form">
       <fieldset>
         <legend>Do you need an invoice?</legend>
-        <button type="button" [attr.aria-pressed]="checkout.wantsInvoice() === true"
+        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === true"
           (click)="answer(true)">Yes</button>
-        <button type="button" [attr.aria-pressed]="checkout.wantsInvoice() === false"
+        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === false"
           (click)="answer(false)">No</button>
-        <form-node-errors [node]="checkout.wantsInvoice" />
+        <form-node-errors [node]="form.wantsInvoice" />
       </fieldset>
       <label>
-        <input type="checkbox" [formNode]="checkout.acceptedTerms" />
+        <input type="checkbox" [formNode]="form.acceptedTerms" />
         I accept the terms
       </label>
-      <form-node-errors [node]="checkout.acceptedTerms" />
+      <form-node-errors [node]="form.acceptedTerms" />
       <button type="submit">Continue</button>
     </form>
   `,
 })
 export class CheckoutComponent {
-  checkout = form({
+  form = form({
     wantsInvoice: field<boolean>(null, [required]),
     acceptedTerms: field(false, [requiredTrue]),
   }, {
@@ -34,7 +34,7 @@ export class CheckoutComponent {
   });
 
   answer(value: boolean) {
-    this.checkout.wantsInvoice.set(value);
-    this.checkout.wantsInvoice.markAsTouched();
+    this.form.wantsInvoice.set(value);
+    this.form.wantsInvoice.markAsTouched();
   }
 }

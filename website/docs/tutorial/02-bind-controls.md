@@ -29,13 +29,13 @@ The directive handles both directions:
 - Blur marks it touched.
 - Numeric inputs produce numbers rather than raw strings.
 - Radio buttons bound to the same field share a generated `name`. Each option has its own
-  string `value`; selecting Phone writes `'phone'` to `myForm.contactMethod()`.
+  string `value`; selecting Phone writes `'phone'` to `form.contactMethod()`.
 - A `<select>` with string-valued options writes the selected option value, such as `'CH'`.
 - A checkbox writes `true` or `false`; `field.strict(false)` keeps this field non-nullable.
 - A `<textarea>` reads and writes text just like a text input.
 
 In the radio group, `field('email')` initially selects Email. Bind both options to
-`myForm.contactMethod` and let `[formNode]` manage `name` and `checked`. The `fieldset`, `legend`,
+`form.contactMethod` and let `[formNode]` manage `name` and `checked`. The `fieldset`, `legend`,
 and labels give the group and its options accessible names. See
 [Radio buttons](../guides/control-binding.md#radio-buttons) for a focused example.
 
@@ -68,10 +68,10 @@ Bind it exactly like a native input:
 ```ts
 @Component({
   imports: [FormNodeDirective, RatingControl],
-  template: `<app-rating [formNode]="myForm.rating" />`,
+  template: `<app-rating [formNode]="form.rating" />`,
 })
 export class ReviewEditor {
-  myForm = form({
+  form = form({
     rating: field<number>(null),
   });
 }
@@ -119,7 +119,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   template: `
     <mat-form-field>
       <mat-label>Country</mat-label>
-      <mat-select [formNode]="myForm.country">
+      <mat-select [formNode]="form.country">
         <mat-option value="CH">Switzerland</mat-option>
         <mat-option value="ES">Spain</mat-option>
       </mat-select>
@@ -127,7 +127,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   `,
 })
 export class CountryEditor {
-  myForm = form({
+  form = form({
     country: field('CH'),
   });
 }
@@ -153,7 +153,7 @@ import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
   imports: [FormNodeDirective, SelectModule],
   template: `
     <p-select
-      [formNode]="myForm.city"
+      [formNode]="form.city"
       [options]="cities"
       placeholder="Select a city"
     />
@@ -162,7 +162,7 @@ import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 export class CityEditor {
   cities = ['Madrid', 'Zurich', 'London'];
 
-  myForm = form({
+  form = form({
     city: field<string>(null),
   });
 }
@@ -195,9 +195,9 @@ expected to bind naturally:
 For example, a compatible Kendo or NG-ZORRO control uses the same binding shape:
 
 ```html
-<kendo-dropdownlist [formNode]="myForm.country" [data]="countries" />
+<kendo-dropdownlist [formNode]="form.country" [data]="countries" />
 
-<nz-select [formNode]="myForm.country">
+<nz-select [formNode]="form.country">
   <nz-option nzValue="CH" nzLabel="Switzerland" />
   <nz-option nzValue="ES" nzLabel="Spain" />
 </nz-select>

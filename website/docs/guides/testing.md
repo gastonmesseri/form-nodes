@@ -261,12 +261,12 @@ describe('profile input', () => {
     @Component({
       imports: [FormNodeDirective],
       template: `
-        <input [formNode]="profileForm.displayName" />
-        <p>{{ profileForm.displayName() }}</p>
+        <input [formNode]="form.displayName" />
+        <p>{{ form.displayName() }}</p>
       `,
     })
     class Host {
-      profileForm = form({
+      form = form({
         displayName: field(''),
       });
     }
@@ -279,8 +279,8 @@ describe('profile input', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.profileForm.displayName()).toBe('Ada');
-    expect(fixture.componentInstance.profileForm.displayName.dirty()).toBe(true);
+    expect(fixture.componentInstance.form.displayName()).toBe('Ada');
+    expect(fixture.componentInstance.form.displayName.dirty()).toBe(true);
     expect(fixture.nativeElement.querySelector('p').textContent).toContain('Ada');
   });
 });

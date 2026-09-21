@@ -153,6 +153,14 @@ When a documentation example binds `[formNode]`, prefer showing the associated n
 
 Show the necessary injection context for hooks that require it and prefer modern signal-based Angular APIs.
 
+Name a component's single form member `form`: `form = form({ username: field('') })`.
+Use `this.form.username` in component code and `[formNode]="form.username"` in its template.
+The member name does not shadow the imported `form()` factory. Use descriptive member names
+such as `loginForm` and `profileForm` when a component contains multiple forms or the distinction
+helps explain the example. Keep meaningful names such as `profile` for standalone variables;
+`const form = form(...)` would shadow the factory. Apply this convention consistently in source
+JSDoc, website examples, README examples, and their surrounding explanations.
+
 Do not mark `form()`, `field()`, or `array()` properties as `readonly` in consumer-facing Angular component examples. The extra modifier adds visual clutter without teaching the library and conflicts with the documentation's concise style. Keep `readonly` only where it communicates a relevant contract outside ordinary form-node declarations.
 
 ### Declare options directly
@@ -181,14 +189,14 @@ import { Component } from '@angular/core';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="profile.name" />
-    <button (click)="profile.name.focus()">
+    <input [formNode]="form.name" />
+    <button (click)="form.name.focus()">
       Focus name
     </button>
   `,
 })
 export class ProfilePage {
-  profile = form({ name: field('Ada') });
+  form = form({ name: field('Ada') });
 }
 ```
 

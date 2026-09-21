@@ -19,13 +19,13 @@ import { resolveMessage, shouldShowMessages, setupErrorHeightAnimation, type For
  *   imports: [FormNodeErrors],
  *   template: `
  *     <form-node-errors
- *       [node]="profile.name"
+ *       [node]="form.name"
  *       showWhen="always"
  *     />
  *   `,
  * })
  * export class ProfilePage {
- *   profile = form({
+ *   form = form({
  *     name: field('', [required]),
  *   });
  * }

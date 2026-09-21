@@ -28,12 +28,12 @@ export class ContractCheckboxControl implements FormNodeCheckboxControl {
 @Component({
   imports: [FormNodeDirective, ContractTextControl, ContractCheckboxControl],
   template: `
-    <app-contract-text [formNode]="profile.name" />
-    <app-contract-checkbox [formNode]="profile.subscribe" />
+    <app-contract-text [formNode]="form.name" />
+    <app-contract-checkbox [formNode]="form.subscribe" />
   `,
 })
 export class ProfileComponent {
-  profile = form({
+  form = form({
     name: field.strict('Ada'),
     subscribe: field.strict(false),
   });

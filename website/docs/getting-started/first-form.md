@@ -17,15 +17,15 @@ import { email, FormNodeDirective, field, form, minLength, required } from '@ngb
   selector: 'app-registration',
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="myForm.username" />
-    <input type="email" [formNode]="myForm.email" />
+    <input [formNode]="form.username" />
+    <input type="email" [formNode]="form.email" />
 
-    <p>Current username: {{ myForm.username() }}</p>
-    <p>Current email: {{ myForm.email() }}</p>
+    <p>Current username: {{ form.username() }}</p>
+    <p>Current email: {{ form.email() }}</p>
   `,
 })
 export class RegistrationComponent {
-  myForm = form({
+  form = form({
     username: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   });
@@ -41,27 +41,27 @@ the view.
 Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-myForm(); // { username: '', email: '' }
-myForm.username(); // ''
-myForm.email(); // ''
+this.form(); // { username: '', email: '' }
+this.form.username(); // ''
+this.form.email(); // ''
 ```
 
 Validation state is exposed as signals too:
 
 ```ts
-myForm.valid(); // false because username and email are required
+this.form.valid(); // false because username and email are required
 
-myForm.allErrors();
+this.form.allErrors();
 // [
-//   { kind: 'required', message: 'This field is required.', targetNode: myForm.username },
-//   { kind: 'required', message: 'This field is required.', targetNode: myForm.email },
+//   { kind: 'required', message: 'This field is required.', targetNode: this.form.username },
+//   { kind: 'required', message: 'This field is required.', targetNode: this.form.email },
 // ]
 ```
 
 ## ⚡ Reactive state signals {#reactive-state-signals}
 
 If you already use Angular writable signals, a field follows the same basic value pattern:
-`myForm.username()` reads its value and `myForm.username.set(value)` changes it. Unlike a plain
+`form.username()` reads its value and `form.username.set(value)` changes it. Unlike a plain
 `signal()`, the field also owns form-specific state and behavior such as validation, touched,
 dirty, disabled, reset, debounce, and control binding.
 
@@ -69,18 +69,18 @@ Fields, forms, and arrays expose their state as Angular signals, so templates an
 read it directly without subscriptions:
 
 ```ts
-myForm.valid(); // false
-myForm.disabled(); // false
+this.form.valid(); // false
+this.form.disabled(); // false
 
-myForm.username.invalid(); // true
-myForm.username.touched(); // false
-myForm.username.dirty(); // false
+this.form.username.invalid(); // true
+this.form.username.touched(); // false
+this.form.username.dirty(); // false
 ```
 
 Angular tracks these reads automatically in templates:
 
 ```html
-@if (myForm.username.touched() && myForm.username.invalid()) {
+@if (form.username.touched() && form.username.invalid()) {
   <p>Please enter your username.</p>
 }
 ```
@@ -88,7 +88,7 @@ Angular tracks these reads automatically in templates:
 Update a field programmatically with `set()`:
 
 ```ts
-myForm.username.set('marco');
+this.form.username.set('marco');
 ```
 
 [`FormNodeDirective`](../reference/form-node-binding.md) is imported by the standalone component so `[formNode]` is available in its template.

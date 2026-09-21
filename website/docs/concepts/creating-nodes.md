@@ -311,20 +311,20 @@ import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
   template: `
     <label>
       Name
-      <input [formNode]="myForm.name" />
+      <input [formNode]="form.name" />
     </label>
 
     <label>
       Hair color
-      <input [formNode]="myForm.hairColor" />
+      <input [formNode]="form.hairColor" />
     </label>
 
-    <p>Current name: {{ myForm.name() }}</p>
-    <p>Current hair color: {{ myForm.hairColor() }}</p>
+    <p>Current name: {{ form.name() }}</p>
+    <p>Current hair color: {{ form.hairColor() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field(''),
     hairColor: field(''),
   });

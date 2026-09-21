@@ -61,10 +61,10 @@ export class CustomInputDate implements ControlValueAccessor {
 @Component({
   selector: 'appointment-editor',
   imports: [CustomInputDate, FormNodeDirective],
-  template: '<custom-input-date [formNode]="appointment.date" />',
+  template: '<custom-input-date [formNode]="form.date" />',
 })
 export class AppointmentEditor {
-  appointment = form({
+  form = form({
     date: field<Date>(null),
   });
 }

@@ -15,19 +15,19 @@ import { asyncValidator, field, form, FormNodeDirective, minLength, required } f
   selector: 'app-username-editor',
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="myForm.username" />
+    <input [formNode]="form.username" />
 
-    @if (myForm.username.pending()) {
+    @if (form.username.pending()) {
       <p>Checking username…</p>
     }
 
-    @if (myForm.username.getError('usernameTaken'); as error) {
+    @if (form.username.getError('usernameTaken'); as error) {
       <p class="error">{{ error.message }}</p>
     }
   `,
 })
 export class UsernameEditor {
-  myForm = form({
+  form = form({
     username: field('', [
       required,
       minLength(3),

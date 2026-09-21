@@ -64,15 +64,15 @@ export class DateInput implements ControlValueAccessor {
 @Component({
   imports: [FormNodeDirective, DateInput],
   template: `
-    <app-date-input [formNode]="myForm.appointment" />
-    @for (error of myForm.appointment.errors(); track error) {
+    <app-date-input [formNode]="form.appointment" />
+    @for (error of form.appointment.errors(); track error) {
       <p>{{ error.message }}</p>
     }
-    <button [disabled]="!myForm.valid()">Continue</button>
+    <button [disabled]="!form.valid()">Continue</button>
   `,
 })
 export class AppointmentEditor {
-  myForm = form({
+  form = form({
     appointment: field<Date | null>(null, [required]),
   });
 }

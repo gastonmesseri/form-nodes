@@ -5,12 +5,12 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   selector: 'app-profile-page',
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="profile.username" />
-    <input [formNode]="profile.email" />
+    <input [formNode]="form.username" />
+    <input [formNode]="form.email" />
   `,
 })
 export class ProfilePage {
-  profile = form({
+  form = form({
     username: field(''),
     email: field(''),
   });

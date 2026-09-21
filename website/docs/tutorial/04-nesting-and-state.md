@@ -14,7 +14,7 @@ works.
 ```ts
 readonly useShippingAddress = signal(true);
 
-myForm = form({
+form = form({
   name: field(''),
   age: field<number>(null),
   email: field(''),
@@ -47,9 +47,9 @@ The billing branch reacts to `useShippingAddress()` automatically. While disable
 Nested values and access remain direct:
 
 ```ts
-this.myForm.shippingAddress.city(); // ''
-this.myForm.billingAddress.disabled();
-this.myForm.patch({
+this.form.shippingAddress.city(); // ''
+this.form.billingAddress.disabled();
+this.form.patch({
   shippingAddress: {
     city: 'Zurich',
   },

@@ -4,17 +4,17 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <textarea [formNode]="myForm.description" (input)="onUserInput()"></textarea>
+    <textarea [formNode]="form.description" (input)="onUserInput()"></textarea>
   `,
 })
 export class DescriptionEditor {
-  myForm = form({
+  form = form({
     description: field(''),
   });
 
   lastUserValue: string | null = '';
 
   onUserInput() {
-    this.lastUserValue = this.myForm.description();
+    this.lastUserValue = this.form.description();
   }
 }

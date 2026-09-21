@@ -9,21 +9,21 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
       <legend>Delivery method</legend>
 
       <label>
-        <input type="radio" value="standard" [formNode]="checkout.delivery" />
+        <input type="radio" value="standard" [formNode]="form.delivery" />
         Standard delivery
       </label>
 
       <label>
-        <input type="radio" value="express" [formNode]="checkout.delivery" />
+        <input type="radio" value="express" [formNode]="form.delivery" />
         Express delivery
       </label>
     </fieldset>
 
-    <p>Selected delivery: {{ checkout.delivery() }}</p>
+    <p>Selected delivery: {{ form.delivery() }}</p>
   `,
 })
 export class DeliveryOptions {
-  checkout = form({
+  form = form({
     delivery: field('standard'),
   });
 }

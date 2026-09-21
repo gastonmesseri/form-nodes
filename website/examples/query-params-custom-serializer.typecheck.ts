@@ -15,12 +15,12 @@ const sortSerializer: QueryParamSerializer<Sort> = {
 };
 
 @Component({
-  template: '<button (click)="filters.sort.set(\'date\')">Sort by date</button>',
+  template: '<button (click)="form.sort.set(\'date\')">Sort by date</button>',
 })
 export class SortedResultsPage {
-  filters = form({ sort: field.strict<Sort>('name') });
+  form = form({ sort: field.strict<Sort>('name') });
 
   querySync = syncQueryParams({
-    sort: { source: this.filters.sort, serializer: sortSerializer, clearOnDefault: true },
+    sort: { source: this.form.sort, serializer: sortSerializer, clearOnDefault: true },
   });
 }

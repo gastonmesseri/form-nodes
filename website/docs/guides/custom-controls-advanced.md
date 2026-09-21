@@ -247,9 +247,9 @@ The injected directive's `name` and `path` describe the bound node's current str
 | Bound node | `name` | `path` |
 | --- | --- | --- |
 | Root or detached node | `null` | `[]` |
-| Group or nested form `profile.address` | `'address'` | `['address']` |
-| Leaf `profile.address.city` | `'city'` | `['address', 'city']` |
-| Array item `profile.contacts[0]` | `0` | `['contacts', '0']` |
+| Group or nested form `form.address` | `'address'` | `['address']` |
+| Leaf `form.address.city` | `'city'` | `['address', 'city']` |
+| Array item `form.contacts[0]` | `0` | `['contacts', '0']` |
 
 Nested forms remain part of the full structural path. Detaching a subtree makes that subtree
 its own root; its descendants keep their relative paths within it. Reads track structural

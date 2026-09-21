@@ -21,13 +21,13 @@ export class TextControl {
 @Component({
   imports: [FormNodeDirective, TextControl],
   template: `
-    <app-selected-text [formNode]="profile.name" />
-    <app-selected-text [formNode]="profile.nickname" />
-    <app-selected-text [formNode]="profile.notes" />
+    <app-selected-text [formNode]="form.name" />
+    <app-selected-text [formNode]="form.nickname" />
+    <app-selected-text [formNode]="form.notes" />
   `,
 })
 export class ProfileComponent {
-  profile = form({
+  form = form({
     // Lists always synchronize exactly the selected inputs.
     name: field('', { syncInputs: ['disabled', 'dirty'] }),
     // Explicit input selection: equivalent to ['disabled'].

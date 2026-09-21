@@ -51,7 +51,7 @@ A multiple selection is one `field<File[]>`, not an `array()` node. Its value is
 
 <CodeBlock language="ts" title="document-editor.component.ts">{nativeFileSource}</CodeBlock>
 
-Reading `upload.cover()?.name` in a template or `computed()` tracks the field: selecting or
+Reading `form.cover()?.name` in a template or `computed()` tracks the field: selecting or
 clearing a file updates the displayed name. Files also expose `size` (bytes), `type`, and
 `lastModified`. File metadata itself is immutable; replace the field value to select a different
 file. Replace arrays with `set()` or `update()` instead of mutating them in place.
@@ -93,7 +93,7 @@ keeps its original value. A later change to `suggestedName` updates the control.
 detection does not restore the original value over local edits. The search uses two-way binding,
 so each committed edit updates `search`.
 
-The contact input reuses `contact.name`: incoming `loadedName` changes call its programmatic
+The contact input reuses `form.name`: incoming `loadedName` changes call its programmatic
 setter, preserving its validators, dirty state, and touched state. These source updates do not
 emit `formNodeValueChange`; user edits do, following the node's debounce configuration.
 
@@ -137,7 +137,7 @@ so you do not need to set `name` or `checked` yourself.
 
 <CodeBlock language="ts">{nativeRadioSource}</CodeBlock>
 
-Standard delivery starts selected. Selecting Express delivery updates `checkout.delivery()`
+Standard delivery starts selected. Selecting Express delivery updates `form.delivery()`
 to `'express'` and updates the displayed selection. The labels make each option clickable,
 and the `fieldset` and `legend` identify the group.
 

@@ -5,16 +5,16 @@ import { Component, Injector, inject, signal } from '@angular/core';
 export class ProfilePage {
   injector = inject(Injector);
   latestName = signal<string | null>('Ada');
-  profile = form({ name: field('Ada') });
+  form = form({ name: field('Ada') });
 
   constructor() {
     // This subscription ends automatically when the component is destroyed.
-    this.profile.name.onValueChange(value => this.latestName.set(value));
+    this.form.name.onValueChange(value => this.latestName.set(value));
   }
 
   observeLater() {
     // An explicit owner also works when registration happens outside injection context.
-    this.profile.onValueChange(value => this.latestName.set(value.name), {
+    this.form.onValueChange(value => this.latestName.set(value.name), {
       injector: this.injector,
     });
   }

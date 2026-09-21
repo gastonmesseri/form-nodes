@@ -7,7 +7,7 @@ title: 7. Submit the form
 Add a submission action to the root form options:
 
 ```ts
-myForm = form({
+form = form({
   // Account, profile, address, and contacts branches from previous steps...
 }, {
   debounce: 200,
@@ -42,17 +42,17 @@ The existing [`FormNodeDirective`](../reference/form-node-binding.md) import han
   templateUrl: './profile-editor.html',
 })
 export class ProfileEditor {
-  // Signals and myForm declaration...
+  // Signals and form declaration...
 }
 ```
 
 ```html
-<form [formNode]="myForm">
+<form [formNode]="form">
   <!-- Controls from previous steps... -->
 
   <button type="reset">Reset interaction state</button>
-  <button type="submit" [disabled]="myForm.submitting()">
-    {{ myForm.submitting() ? 'Saving…' : 'Save profile' }}
+  <button type="submit" [disabled]="form.submitting()">
+    {{ form.submitting() ? 'Saving…' : 'Save profile' }}
   </button>
 </form>
 ```

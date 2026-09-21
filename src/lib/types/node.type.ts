@@ -438,14 +438,14 @@ export type NodeApi = {
    * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
-   *     <input [formNode]="profile.name" />
-   *     <button (click)="profile.name.focus()">
+   *     <input [formNode]="form.name" />
+   *     <button (click)="form.name.focus()">
    *       Focus name
    *     </button>
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({ name: field('Ada') });
+   *   form = form({ name: field('Ada') });
    * }
    * ```
    */

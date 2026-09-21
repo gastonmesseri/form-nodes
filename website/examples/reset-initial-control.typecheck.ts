@@ -4,14 +4,14 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="myForm">
-      <input [formNode]="myForm.name" />
-      <button type="button" (click)="myForm.resetToInitial()">Restore initial values</button>
+    <form [formNode]="form">
+      <input [formNode]="form.name" />
+      <button type="button" (click)="form.resetToInitial()">Restore initial values</button>
     </form>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field('Marco', { debounce: 300 }),
   });
 }

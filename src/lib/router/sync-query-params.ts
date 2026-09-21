@@ -26,22 +26,22 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  * @Component({
  *   imports: [FormNodeDirective],
  *   template: `
- *     <input [formNode]="filters.search" />
+ *     <input [formNode]="form.search" />
  *     <p>{{ querySync.params.q() }}</p>
  *   `,
  * })
  * export class SearchPage {
- *   filters = form({
+ *   form = form({
  *     search: field(''),
  *     page: field(1),
  *   });
  *
  *   querySync = syncQueryParams({
  *     q: {
- *       source: this.filters.search,
+ *       source: this.form.search,
  *       clearOnDefault: true,
  *     },
- *     page: this.filters.page,
+ *     page: this.form.page,
  *   });
  * }
  * ```
@@ -56,7 +56,7 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  *   `,
  * })
  * export class StatePage {
- *   filters = form({
+ *   form = form({
  *     search: field(''),
  *   });
  *
@@ -64,7 +64,7 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  *
  *   querySync = syncQueryParams({
  *     state: {
- *       source: this.filters,
+ *       source: this.form,
  *       serializer: 'json',
  *     },
  *     page: {

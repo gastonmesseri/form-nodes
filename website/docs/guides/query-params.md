@@ -27,7 +27,7 @@ it does not become the most recently entered value. Parsing failures are also re
 ## Nodes and writable signals
 
 A map can mix `field()`, `form()`, `group()`, `array()`, `signal()`, and `linkedSignal()` sources.
-For a whole form or group, use `{ source: filters, serializer: 'json' }`. The entire value occupies one
+For a whole form or group, use `{ source: this.form, serializer: 'json' }`. The entire value occupies one
 query key. For separate query keys, bind its children individually. Object/number array nodes
 also use JSON or a custom serializer; string array nodes can use `'array'` for repeated keys.
 
@@ -58,7 +58,7 @@ asynchronous validation and rendering may still be pending. See the
 
 Keep the returned connection, as `querySync` in the component above. Its `params` object has a
 readonly signal for each configured key: `querySync.params.page()` returns `string | null`, while
-`filters.page()` returns the parsed field value. Query strings are already URL-decoded but have not
+`form.page()` returns the parsed field value. Query strings are already URL-decoded but have not
 passed through your serializer. Empty text is `''`; a missing key is `null`; repeated keys expose their
 first value. A malformed number remains visible as raw text even when the field uses its fallback.
 
@@ -129,7 +129,7 @@ provide a custom `QueryParamSerializer<number[]>`, as in this checked example:
 
 <CodeBlock language="ts" title="query-param-serializers.ts">{serializers}</CodeBlock>
 
-`querySync.params.tag()` returns the first raw string or null. Read `filters.tags()` for the
+`querySync.params.tag()` returns the first raw string or null. Read `form.tags()` for the
 complete parsed array. Use Angular Router directly to inspect query parameters outside the binding map.
 
 ## JSON
@@ -138,7 +138,7 @@ Use `serializer: 'json'` for the component's `options` group, or pass `queryPara
 The complete value is serialized with `JSON.stringify` and parsed with `JSON.parse`. Angular Router
 handles URL escaping; do not encode or decode the JSON yourself. For example, `{ "sort": "name" }`
 uses one parameter whose decoded value is `{"sort":"name"}`. `querySync.params.options()` returns
-that JSON text; `filters.options()` returns the parsed object.
+that JSON text; `form.options()` returns the parsed object.
 
 The JSON serializer supports objects, arrays, and JSON primitives. Unlike `'array'`, it serializes an
 empty array as `[]` without removing the key. An absent parameter uses the captured/configured

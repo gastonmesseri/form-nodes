@@ -47,11 +47,11 @@ Use it like a native control:
   selector: 'app-review-editor',
   imports: [FormNodeDirective, RatingControl],
   template: `
-    <app-rating [formNode]="myForm.rating" />
+    <app-rating [formNode]="form.rating" />
   `,
 })
 export class ReviewEditor {
-  myForm = form({
+  form = form({
     rating: field<number>(null, [required, between(1, 5)]),
     comment: field('', [maxLength(1_000)]),
   });

@@ -467,11 +467,11 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
  * @Component({
  *   imports: [FormNodeDirective],
  *   template: `
- *     <input [formNode]="profile.name" />
+ *     <input [formNode]="form.name" />
  *   `,
  * })
  * export class ProfilePage {
- *   profile = form({ name: field('Ada') });
+ *   form = form({ name: field('Ada') });
  * }
  * ```
  */
@@ -486,11 +486,11 @@ export const FormNodeDirective = _FormNode;
  * @Component({
  *   imports: [FormNodeDirective],
  *   template: `
- *     <input [formNode]="profile.name" />
+ *     <input [formNode]="form.name" />
  *   `,
  * })
  * export class ProfilePage {
- *   profile = form({ name: field('Ada') });
+ *   form = form({ name: field('Ada') });
  * }
  * ```
  */

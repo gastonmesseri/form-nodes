@@ -255,17 +255,17 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   imports: [FormNodeDirective],
   template: `
     <label for="roles">Roles</label>
-    <select id="roles" multiple [formNode]="myForm.selectedRoles">
+    <select id="roles" multiple [formNode]="form.selectedRoles">
       <option value="admin">Administrator</option>
       <option value="editor">Editor</option>
       <option value="viewer">Viewer</option>
     </select>
 
-    <p>Selected roles: {{ (myForm.selectedRoles() ?? []).join(', ') }}</p>
+    <p>Selected roles: {{ (form.selectedRoles() ?? []).join(', ') }}</p>
   `,
 })
 export class RolePicker {
-  myForm = form({
+  form = form({
     selectedRoles: field<string[]>([]),
   });
 }

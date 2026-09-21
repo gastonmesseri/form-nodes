@@ -23,18 +23,18 @@ import { FormNodeDirective, field, form, required } from '@ngblocks/form-nodes';
       Business customer
     </label>
 
-    <input [formNode]="myForm.customerName" />
+    <input [formNode]="form.customerName" />
 
-    @if (myForm.companyName.visible()) {
-      <input [formNode]="myForm.companyName" />
-      <input [formNode]="myForm.taxId" />
+    @if (form.companyName.visible()) {
+      <input [formNode]="form.companyName" />
+      <input [formNode]="form.taxId" />
     }
   `,
 })
 export class Checkout {
   readonly isBusiness = signal(false);
 
-  myForm = form({
+  form = form({
     customerName: field('', [required]),
     companyName: field('', {
       validators: [required],

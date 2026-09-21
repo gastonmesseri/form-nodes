@@ -184,12 +184,12 @@ parent; the rule does not read the first package or another row.
 Both forms of the generic are supported:
 
 ```ts
-ctx.parent<(typeof this.deliveryForm.packages)[number]>();
+ctx.parent<(typeof this.form.packages)[number]>();
 ctx.parent<DeliveryForm['packages'][number]>();
 ```
 
 Use the first inside the component and the second when an existing form type is available.
-`typeof this.deliveryForm.packages[0]` also works as the generic, but `[number]` communicates
+`typeof this.form.packages[0]` also works as the generic, but `[number]` communicates
 that the type describes any row. This is a type reference, not a runtime index lookup.
 Null and undefined are removed from the generic automatically; you do not need `NonNullable`.
 The result still includes `null` when the field has no parent, hence the optional chaining.

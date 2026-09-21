@@ -5,22 +5,22 @@ import { field, form, required, FormNodeDirective } from '@ngblocks/form-nodes';
   selector: 'app-document-editor',
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="upload">
+    <form [formNode]="form">
       <label>
         Cover image
-        <input type="file" accept="image/*" [formNode]="upload.cover" />
+        <input type="file" accept="image/*" [formNode]="form.cover" />
       </label>
       <p>{{ coverName() }}</p>
 
       <label>
         Attachments
-        <input type="file" multiple [formNode]="upload.attachments" />
+        <input type="file" multiple [formNode]="form.attachments" />
       </label>
-      @for (file of upload.attachments() ?? []; track file) {
+      @for (file of form.attachments() ?? []; track file) {
         <p>{{ file.name }} ({{ file.size }} bytes)</p>
       }
-      <button type="button" (click)="upload.cover.set(null)">Clear cover</button>
-      <button type="button" (click)="upload.resetToInitial()">Start over</button>
+      <button type="button" (click)="form.cover.set(null)">Clear cover</button>
+      <button type="button" (click)="form.resetToInitial()">Start over</button>
     </form>
 
     <label>
@@ -31,12 +31,12 @@ import { field, form, required, FormNodeDirective } from '@ngblocks/form-nodes';
   `,
 })
 export class DocumentEditor {
-  upload = form({
+  form = form({
     cover: field<File>(null, [required]),
     attachments: field<File[]>([]),
   });
 
   standaloneFile = signal<File | null>(null);
 
-  coverName = computed(() => this.upload.cover()?.name ?? 'No file selected');
+  coverName = computed(() => this.form.cover()?.name ?? 'No file selected');
 }

@@ -29,17 +29,17 @@ export class NodeToolsComponent {
   selector: 'app-profile',
   imports: [NodeStatusComponent, NodeToolsComponent],
   template: `
-    <app-node-status [node]="profile" />
+    <app-node-status [node]="form" />
     <app-node-tools
-      [field]="profile.name"
-      [group]="profile.preferences"
-      [form]="profile"
-      [array]="profile.contacts"
+      [field]="form.name"
+      [group]="form.preferences"
+      [form]="form"
+      [array]="form.contacts"
     />
   `,
 })
 export class ProfileComponent {
-  profile = form({
+  form = form({
     name: field('Marco'),
     preferences: group({ newsletter: field(true) }),
     contacts: array({ email: field('') }),

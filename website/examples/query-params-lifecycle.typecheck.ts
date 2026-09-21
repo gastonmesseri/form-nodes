@@ -13,7 +13,7 @@ import { syncQueryParams, type QueryParamsSync } from '@ngblocks/form-nodes/rout
 export class OptionalSyncPage {
   injector = inject(Injector);
 
-  filters = form({ search: field.strict('') });
+  form = form({ search: field.strict('') });
 
   problem = signal<string | null>(null);
 
@@ -23,7 +23,7 @@ export class OptionalSyncPage {
     this.querySync?.unsubscribe();
     this.problem.set(null);
     this.querySync = syncQueryParams({
-      q: { source: this.filters.search, defaultValue: '', clearOnDefault: true },
+      q: { source: this.form.search, defaultValue: '', clearOnDefault: true },
     }, {
       injector: this.injector,
       history: 'replace',

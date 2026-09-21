@@ -16,10 +16,10 @@ export class CompanySelector {
 
 @Component({
   imports: [FormNodeDirective, CompanySelector],
-  template: `<app-company-selector [formNode]="profile.company" />`,
+  template: `<app-company-selector [formNode]="form.company" />`,
 })
 export class ProfileEditor {
-  profile = form({
+  form = form({
     name: '',
     company: { companyId: 23, companyName: 'Apple' },
   });

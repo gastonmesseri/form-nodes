@@ -7,7 +7,7 @@ title: 5. Manage a dynamic array
 Start with a small form-object template:
 
 ```ts
-myForm = form({
+form = form({
   contacts: array({
     label: field(''),
     email: field(''),
@@ -24,7 +24,7 @@ Add `array` to the package import.
 Pass an initial count when the form should start with ready-to-edit items:
 
 ```ts
-myForm = form({
+form = form({
   contacts: array({
     label: field(''),
     email: field(''),
@@ -37,12 +37,12 @@ independent contact nodes from the template defaults. Basic structural operation
 directly on the array:
 
 ```ts
-this.myForm.contacts.push({
+this.form.contacts.push({
   label: 'Personal',
   email: 'me@example.com',
 });
-this.myForm.contacts.removeAt(0);
-this.myForm.contacts();
+this.form.contacts.removeAt(0);
+this.form.contacts();
 // Expected output:
 // [
 //   { label: '', email: '' },
@@ -55,7 +55,7 @@ this.myForm.contacts();
 Use `initialValue` when the array should start with complete domain values:
 
 ```ts
-myForm = form({
+form = form({
   contacts: array({
     label: field(''),
     email: field(''),
@@ -75,7 +75,7 @@ Each value initializes an independent item node created from the same template.
 Once the basic collection is clear, add stable domain identity and array-level validation:
 
 ```ts
-myForm = form({
+form = form({
   // Existing profile and address branches...
 
   contacts: array({
@@ -103,19 +103,19 @@ Track each node instance in Angular so structural moves retain their DOM and bin
 <section>
   <h2>Contacts</h2>
 
-  @for (contact of myForm.contacts; track contact; let index = $index) {
+  @for (contact of form.contacts; track contact; let index = $index) {
     <input [formNode]="contact.label" />
     <input type="email" [formNode]="contact.email" />
 
-    <button type="button" (click)="myForm.contacts.moveUp(index)">
+    <button type="button" (click)="form.contacts.moveUp(index)">
       Move up
     </button>
-    <button type="button" (click)="myForm.contacts.removeAt(index)">
+    <button type="button" (click)="form.contacts.removeAt(index)">
       Remove
     </button>
   }
 
-  <button type="button" (click)="myForm.contacts.push()">
+  <button type="button" (click)="form.contacts.push()">
     Add contact
   </button>
 </section>
@@ -124,14 +124,14 @@ Track each node instance in Angular so structural moves retain their DOM and bin
 Operations preserve the array's programmatic dirty state. New items use template defaults and start pristine and untouched.
 
 ```ts
-this.myForm.contacts.push({
+this.form.contacts.push({
   id: crypto.randomUUID(),
   label: 'Personal',
   email: '',
   primary: false,
 });
 
-this.myForm.contacts.swap(0, 1);
+this.form.contacts.swap(0, 1);
 ```
 
 ## 🔗 Related guides and reference {#related-guides-and-reference}

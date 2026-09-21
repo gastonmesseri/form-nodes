@@ -98,7 +98,7 @@ messages, wait for a submission attempt, and disable animation:
 
 ```html
 <form-node-errors
-  [node]="contact.email"
+  [node]="form.email"
   [maxMessages]="2"
   showWhen="submit"
   [animate]="false"

@@ -6,16 +6,16 @@ import { syncQueryParams } from '@ngblocks/form-nodes/router';
   template: '<button (click)="includeArchived()">Include archived</button>',
 })
 export class SavedSearchPage {
-  filters = form({
+  form = form({
     search: field.strict(''),
     includeArchived: field.strict(false),
   });
 
   querySync = syncQueryParams({
-    filters: { source: this.filters, serializer: 'json' },
+    filters: { source: this.form, serializer: 'json' },
   });
 
   includeArchived() {
-    this.filters.patch({ includeArchived: true });
+    this.form.patch({ includeArchived: true });
   }
 }

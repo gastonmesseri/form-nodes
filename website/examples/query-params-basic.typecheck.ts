@@ -5,19 +5,19 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <input placeholder="Search" [formNode]="filters.search" />
-    <input type="number" [formNode]="filters.page" />
+    <input placeholder="Search" [formNode]="form.search" />
+    <input type="number" [formNode]="form.page" />
     <p>Search in the URL: {{ querySync.params.q() }}</p>
   `,
 })
 export class SearchPage {
-  filters = form({
+  form = form({
     search: field(''),
     page: field(1),
   });
 
   querySync = syncQueryParams({
-    q: this.filters.search,
-    page: this.filters.page,
+    q: this.form.search,
+    page: this.form.page,
   });
 }

@@ -23,11 +23,11 @@ export class TextControl {
 @Component({
   imports: [FormNodeDirective, TextControl],
   template: `
-    <app-text-control [formNode]="profile.name" [disabled]="saving()" [readonly]="locked()" />
+    <app-text-control [formNode]="form.name" [disabled]="saving()" [readonly]="locked()" />
   `,
 })
 export class ProfileComponent {
-  profile = form({ name: field('Mark') });
+  form = form({ name: field('Mark') });
 
   saving = signal(false);
 

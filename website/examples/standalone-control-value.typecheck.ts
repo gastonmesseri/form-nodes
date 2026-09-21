@@ -20,9 +20,9 @@ import { field, form, required, FormNodeDirective, type FieldNode } from '@ngblo
 
     <label>
       Contact name
-      <input [formNode]="contact.name" [formNodeValue]="loadedName()" />
+      <input [formNode]="form.name" [formNodeValue]="loadedName()" />
     </label>
-    @if (contact.name.touched() && contact.name.invalid()) {
+    @if (form.name.touched() && form.name.invalid()) {
       <p>A contact name is required.</p>
     }
   `,
@@ -36,7 +36,7 @@ export class ContactEditor {
 
   loadedName = signal('Grace');
 
-  contact = form({
+  form = form({
     name: field('', required),
   });
 

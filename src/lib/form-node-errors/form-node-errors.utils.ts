@@ -15,7 +15,7 @@ export type FormNodeErrorsContext = {
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
-   *       [node]="profile.name"
+   *       [node]="form.name"
    *       showWhen="always"
    *     >
    *       <ng-template #message
@@ -27,7 +27,7 @@ export type FormNodeErrorsContext = {
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({
+   *   form = form({
    *     name: field('', [required]),
    *   });
    * }
@@ -44,7 +44,7 @@ export type FormNodeErrorsContext = {
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
-   *       [node]="profile.name"
+   *       [node]="form.name"
    *       showWhen="always"
    *     >
    *       <ng-template #message
@@ -56,7 +56,7 @@ export type FormNodeErrorsContext = {
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({
+   *   form = form({
    *     name: field('', [required]),
    *   });
    * }
@@ -73,7 +73,7 @@ export type FormNodeErrorsContext = {
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
-   *       [node]="profile.name"
+   *       [node]="form.name"
    *       showWhen="always"
    *     >
    *       <ng-template #message
@@ -85,7 +85,7 @@ export type FormNodeErrorsContext = {
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({
+   *   form = form({
    *     name: field('', [required]),
    *   });
    * }
@@ -102,7 +102,7 @@ export type FormNodeErrorsContext = {
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
-   *       [node]="profile.name"
+   *       [node]="form.name"
    *       showWhen="always"
    *     >
    *       <ng-template #message
@@ -114,7 +114,7 @@ export type FormNodeErrorsContext = {
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({
+   *   form = form({
    *     name: field('', [required]),
    *   });
    * }

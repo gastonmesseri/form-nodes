@@ -68,8 +68,8 @@ Array index types may include `undefined`; pass them directly without writing `N
 <CodeBlock language="ts" title="indexed-validator-parent.typecheck.ts">{indexedParentSource}</CodeBlock>
 
 `ctx.parent<DeliveryForm['packages'][number]>()` and
-`ctx.parent<(typeof this.deliveryForm.packages)[number]>()` both remove nullish members from the generic.
-`ctx.parent<typeof this.deliveryForm.packages[0]>()` also works, though `[number]` more clearly describes
+`ctx.parent<(typeof this.form.packages)[number]>()` both remove nullish members from the generic.
+`ctx.parent<typeof this.form.packages[0]>()` also works, though `[number]` more clearly describes
 any row type. The return still includes `null` for a missing parent and never includes `undefined`.
 The generic only describes the immediate parent; it does not select a row or look up index zero.
 
@@ -92,7 +92,7 @@ including its child nodes and parent navigation. Unlike a numeric lookup or `at(
 excludes `undefined`; actual lookups can still fail and must be checked.
 
 ```ts
-type PackageNode = ArrayItemNode<typeof deliveryForm.packages>;
+type PackageNode = ArrayItemNode<DeliveryEditor['form']['packages']>;
 ```
 
 Extract this type from an already inferred declaration. Referencing that same declaration's type

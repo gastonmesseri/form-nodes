@@ -8,15 +8,15 @@ import { validatorMessages } from './validator-message-catalog';
 @Component({
   selector: 'app-root',
   template: `
-    <label>Name <input [formNode]="profile.name"></label>
-    @if (profile.name.touched()) {
-      <p>{{ profile.name.getError('required')?.message }}</p>
+    <label>Name <input [formNode]="form.name"></label>
+    @if (form.name.touched()) {
+      <p>{{ form.name.getError('required')?.message }}</p>
     }
   `,
   imports: [FormNodeDirective],
 })
 class AppComponent {
-  profile = form({ name: field('', [required]) });
+  form = form({ name: field('', [required]) });
 }
 
 // main.ts

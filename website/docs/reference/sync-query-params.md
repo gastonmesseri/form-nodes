@@ -32,12 +32,12 @@ Router; this optional entry point requires it.
 
 ## Basic example {#basic-example}
 
-This search page synchronizes just two fields. The query key `q` maps to `filters.search`, so URL
+This search page synchronizes just two fields. The query key `q` maps to `form.search`, so URL
 names do not have to match form property names. Declare the sources before the connection.
 
 <CodeBlock language="ts" title="search-page.ts">{basicSource}</CodeBlock>
 
-Opening `/search?q=angular&page=3` sets `filters.search()` to `'angular'` and `filters.page()` to
+Opening `/search?q=angular&page=3` sets `form.search()` to `'angular'` and `form.page()` to
 `3` during initialization. Without those parameters, the fields start with `''` and `1`.
 Search edits replace the current history entry; page changes push an entry that Back can revisit.
 The component's injector automatically disconnects the helper when the component is destroyed.
@@ -77,7 +77,7 @@ The second argument supplies shared options, not another source.
 | Return | [`QueryParamsSync<K>`](./types/query-params-sync.md): readonly raw parameter signals, connection state, and `unsubscribe()`. |
 
 In the first example, `querySync` is inferred as `QueryParamsSync<'q' | 'page'>`.
-`querySync.params.page()` is `string | null`, while `filters.page()` is `number`. Only configured
+`querySync.params.page()` is `string | null`, while `form.page()` is `number`. Only configured
 keys are available under `params`; unrelated URL parameters are preserved without becoming members
 of the connection.
 

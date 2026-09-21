@@ -5,10 +5,10 @@ import { email, field, form, required, minLength, pattern, FormNodeErrors, FormN
   selector: 'app-styled-contact-form',
   imports: [FormNodeErrors, FormNodeDirective],
   template: `
-    <form [formNode]="contact">
+    <form [formNode]="form">
       <label for="styled-email">Email</label>
-      <input id="styled-email" type="email" [formNode]="contact.email" aria-describedby="styled-email-errors" />
-      <form-node-errors id="styled-email-errors" [node]="contact.email">
+      <input id="styled-email" type="email" [formNode]="form.email" aria-describedby="styled-email-errors" />
+      <form-node-errors id="styled-email-errors" [node]="form.email">
         <ng-template #message let-message>
           <span class="error-message">
             <span class="error-icon" aria-hidden="true">!</span>
@@ -18,8 +18,8 @@ import { email, field, form, required, minLength, pattern, FormNodeErrors, FormN
       </form-node-errors>
 
       <label for="styled-username">Username</label>
-      <input id="styled-username" [formNode]="contact.username" aria-describedby="styled-username-errors" />
-      <form-node-errors id="styled-username-errors" class="rose-errors" [node]="contact.username" [maxMessages]="2">
+      <input id="styled-username" [formNode]="form.username" aria-describedby="styled-username-errors" />
+      <form-node-errors id="styled-username-errors" class="rose-errors" [node]="form.username" [maxMessages]="2">
         <ng-template #message let-firstMessage let-messages="messages">
           @if (messages.length === 1) {
             <p class="error-message">{{ firstMessage }}</p>
@@ -45,7 +45,7 @@ import { email, field, form, required, minLength, pattern, FormNodeErrors, FormN
   `,
 })
 export class StyledContactForm {
-  contact = form({
+  form = form({
     email: field('', [required('Enter your email address.'), email]),
     username: field('', [required, minLength(4), pattern(/^[a-z]+$/)]),
   });

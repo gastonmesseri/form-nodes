@@ -18,12 +18,12 @@ export class DescriptionInput {
 @Component({
   imports: [DescriptionInput, FormNodeDirective],
   template: `
-    <app-description-input [formNode]="myForm.description"
+    <app-description-input [formNode]="form.description"
       (valueChange)="onDescriptionChange()" (touch)="onDescriptionTouch()" />
   `,
 })
 export class DescriptionEditor {
-  myForm = form({
+  form = form({
     description: field.strict(''),
   });
 
@@ -32,10 +32,10 @@ export class DescriptionEditor {
   descriptionTouched = false;
 
   onDescriptionChange() {
-    this.lastDescription = this.myForm.description();
+    this.lastDescription = this.form.description();
   }
 
   onDescriptionTouch() {
-    this.descriptionTouched = this.myForm.description.touched();
+    this.descriptionTouched = this.form.description.touched();
   }
 }

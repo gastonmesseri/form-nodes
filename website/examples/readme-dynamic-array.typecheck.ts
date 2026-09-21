@@ -5,21 +5,21 @@ import { array, email, field, form, FormNodeDirective, required } from '@ngblock
   selector: 'app-contacts',
   imports: [FormNodeDirective],
   template: `
-    @for (contact of myForm.contacts; track contact; let index = $index) {
+    @for (contact of form.contacts; track contact; let index = $index) {
       <fieldset>
         <legend>Contact {{ index + 1 }}</legend>
         <label>Name <input [formNode]="contact.name" /></label>
         <label>Email <input type="email" [formNode]="contact.email" /></label>
-        <button type="button" (click)="myForm.contacts.removeAt(index)">Remove</button>
+        <button type="button" (click)="form.contacts.removeAt(index)">Remove</button>
       </fieldset>
     }
 
-    <button type="button" (click)="myForm.contacts.push()">Add contact</button>
-    <p>{{ myForm.contacts.length() }} contacts</p>
+    <button type="button" (click)="form.contacts.push()">Add contact</button>
+    <p>{{ form.contacts.length() }} contacts</p>
   `,
 })
 export class ContactsComponent {
-  myForm = form({
+  form = form({
     contacts: array({
       name: field('', [required]),
       email: field('', [required, email]),

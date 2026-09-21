@@ -6,18 +6,18 @@ import { syncQueryParams } from '@ngblocks/form-nodes/router';
   template: '<button (click)="selectFilters()">Select filters</button>',
 })
 export class FilterPage {
-  filters = form({
+  form = form({
     tags: field.strict<string[]>([]),
     selectedIds: array(field.strict(0)),
   });
 
   querySync = syncQueryParams({
-    tag: { source: this.filters.tags, serializer: 'array' },
-    ids: { source: this.filters.selectedIds, serializer: 'json' },
+    tag: { source: this.form.tags, serializer: 'array' },
+    ids: { source: this.form.selectedIds, serializer: 'json' },
   });
 
   selectFilters() {
-    this.filters.tags.set(['angular', 'forms']);
-    this.filters.selectedIds.set([10, 20]);
+    this.form.tags.set(['angular', 'forms']);
+    this.form.selectedIds.set([10, 20]);
   }
 }

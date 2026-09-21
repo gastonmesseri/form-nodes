@@ -418,7 +418,7 @@ still belong to a known Angular lifecycle:
 export class ProfileEditor {
   private injector = inject(Injector);
 
-  profileForm = form({
+  form = form({
     displayName: field(''),
   }, {
     injector: this.injector,

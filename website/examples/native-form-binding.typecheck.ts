@@ -5,23 +5,23 @@ import { FormNodeDirective, email, field, form, required } from '@ngblocks/form-
   selector: 'app-account-editor',
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="accountForm">
+    <form [formNode]="form">
       <label>
         Email
-        <input type="email" [formNode]="accountForm.email" />
+        <input type="email" [formNode]="form.email" />
       </label>
 
-      @if (accountForm.email.touched() && accountForm.email.invalid()) {
-        <p>{{ accountForm.email.errors()[0]?.message }}</p>
+      @if (form.email.touched() && form.email.invalid()) {
+        <p>{{ form.email.errors()[0]?.message }}</p>
       }
 
       <button type="reset">Reset interaction state</button>
-      <button type="submit" [disabled]="accountForm.submitting()">Save</button>
+      <button type="submit" [disabled]="form.submitting()">Save</button>
     </form>
   `,
 })
 export class AccountEditor {
-  accountForm = form({
+  form = form({
     email: field('', [required, email]),
   }, {
     onSubmit: async value => {

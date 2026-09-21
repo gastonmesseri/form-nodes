@@ -37,12 +37,12 @@ export class DatePicker implements FormValueControl<string> {
 
 @Component({
   imports: [DatePicker, FormField],
-  template: `<app-date-picker [formField]="profile.birthDate" />`,
+  template: `<app-date-picker [formField]="form.birthDate" />`,
 })
 export class ProfileEditor {
   value = signal({ birthDate: '' });
 
-  profile = form(this.value, (path) => {
+  form = form(this.value, (path) => {
     required(path.birthDate);
   });
 }

@@ -1317,10 +1317,10 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   selector: 'app-profile-editor',
   imports: [FormNodeDirective],
-  template: `<input [formNode]="myForm.name" />`,
+  template: `<input [formNode]="form.name" />`,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field(''),
   });
 }

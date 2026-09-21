@@ -3,11 +3,11 @@ import { asyncValidator, equalTo, field, form, validator } from '@ngblocks/form-
 
 @Component({ selector: 'app-signup', template: '' })
 export class SignupComponent {
-  myForm = form({
+  form = form({
     password: field(''),
-    confirmation: field('', [validator(() => equalTo(this.myForm.password()))]),
+    confirmation: field('', [validator(() => equalTo(this.form.password()))]),
     username: field('', [asyncValidator(async () => {
-      return this.myForm.username() === 'admin' ? { kind: 'reserved' } : null;
+      return this.form.username() === 'admin' ? { kind: 'reserved' } : null;
     })]),
   });
 }

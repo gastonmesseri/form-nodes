@@ -5,7 +5,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   imports: [FormNodeDirective],
   template: `
     <textarea
-      [formNode]="myForm.description"
+      [formNode]="form.description"
       (formNodeControlValueChange)="onControlValueChange($event)"
       (formNodeValueChange)="onValueChange($event)"
     ></textarea>
@@ -14,7 +14,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   `,
 })
 export class DescriptionEditor {
-  myForm = form({
+  form = form({
     description: field.strict('', { debounce: 300 }),
   });
 

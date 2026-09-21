@@ -235,9 +235,9 @@ export type SyncQueryParamsOptions<TValues extends Record<string, unknown> = Rec
    *
    * @Component({ template: '' })
    * export class SearchPage {
-   *   filters = form({ q: field('') });
+   *   form = form({ q: field('') });
    *   query = syncQueryParams({
-   *     q: this.filters.q,
+   *     q: this.form.q,
    *   }, {
    *     onInitialUrlSync: ({ values }) => {
    *       console.log(values.q);
@@ -262,9 +262,9 @@ export type SyncQueryParamsOptions<TValues extends Record<string, unknown> = Rec
    *
    * @Component({ template: '' })
    * export class SearchPage {
-   *   filters = form({ q: field('') });
+   *   form = form({ q: field('') });
    *   query = syncQueryParams({
-   *     q: this.filters.q,
+   *     q: this.form.q,
    *   }, {
    *     onUrlSync: ({ reason, values }) => {
    *       console.log(reason, values.q);

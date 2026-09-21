@@ -55,15 +55,15 @@ import { form, field, required, FormNodeDirective } from '@ngblocks/form-nodes';
   selector: 'app-profile-editor',
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="myForm.username" />
-    <p>Hello {{ myForm.username() }}</p>
+    <input [formNode]="form.username" />
+    <p>Hello {{ form.username() }}</p>
 
-    <input [formNode]="myForm.email" />
-    <p>Your email is {{ myForm.email() }}</p>
+    <input [formNode]="form.email" />
+    <p>Your email is {{ form.email() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     username: field(''),
     email: field('', [required]),
   });
@@ -156,28 +156,28 @@ import { email, field, form, FormNodeDirective, minLength, required } from '@ngb
   selector: 'app-registration',
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="myForm">
+    <form [formNode]="form">
       <label>
         Name
-        <input [formNode]="myForm.name" />
+        <input [formNode]="form.name" />
       </label>
-      @if (myForm.name.touched()) {
-        @for (error of myForm.name.errors(); track error.kind) {
+      @if (form.name.touched()) {
+        @for (error of form.name.errors(); track error.kind) {
           <p>{{ error.message }}</p>
         }
       }
 
       <label>
         Email
-        <input type="email" [formNode]="myForm.email" />
+        <input type="email" [formNode]="form.email" />
       </label>
-      @if (myForm.email.touched()) {
-        @for (error of myForm.email.errors(); track error.kind) {
+      @if (form.email.touched()) {
+        @for (error of form.email.errors(); track error.kind) {
           <p>{{ error.message }}</p>
         }
       }
 
-      <button type="submit" [disabled]="myForm.submitting()">Register</button>
+      <button type="submit" [disabled]="form.submitting()">Register</button>
     </form>
 
     @if (registeredEmail()) {
@@ -188,7 +188,7 @@ import { email, field, form, FormNodeDirective, minLength, required } from '@ngb
 export class RegistrationComponent {
   registeredEmail = signal<string | null>(null);
 
-  myForm = form({
+  form = form({
     name: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   }, {
@@ -212,7 +212,7 @@ A few things to notice:
 5. A successful submission passes the typed form value to `onSubmit`. `onSubmitBlocked` can focus an invalid
    rendered control instead.
 
-Inside the component, `this.myForm.name()` reads the name and `this.myForm()` reads the complete
+Inside the component, `this.form.name()` reads the name and `this.form()` reads the complete
 object. You do not need subscriptions to keep those values current.
 
 For an even smaller introduction, see [Your first form](https://form-nodes.js.org/getting-started/first-form).
@@ -540,21 +540,21 @@ import { array, email, field, form, FormNodeDirective, required } from '@ngblock
   selector: 'app-contacts',
   imports: [FormNodeDirective],
   template: `
-    @for (contact of myForm.contacts; track contact; let index = $index) {
+    @for (contact of form.contacts; track contact; let index = $index) {
       <fieldset>
         <legend>Contact {{ index + 1 }}</legend>
         <label>Name <input [formNode]="contact.name" /></label>
         <label>Email <input type="email" [formNode]="contact.email" /></label>
-        <button type="button" (click)="myForm.contacts.removeAt(index)">Remove</button>
+        <button type="button" (click)="form.contacts.removeAt(index)">Remove</button>
       </fieldset>
     }
 
-    <button type="button" (click)="myForm.contacts.push()">Add contact</button>
-    <p>{{ myForm.contacts.length() }} contacts</p>
+    <button type="button" (click)="form.contacts.push()">Add contact</button>
+    <p>{{ form.contacts.length() }} contacts</p>
   `,
 })
 export class ContactsComponent {
-  myForm = form({
+  form = form({
     contacts: array({
       name: field('', [required]),
       email: field('', [required, email]),
@@ -591,8 +591,8 @@ submitWhen: 'valid',
 ```
 
 This is an options fragment: `accounts` represents your application's service. Binding
-`<form [formNode]="myForm">` runs the action on native submit. You can also call
-`await myForm.submit()` programmatically.
+`<form [formNode]="form">` runs the action on native submit. You can also call
+`await this.form.submit()` programmatically.
 
 - Submission marks the subtree touched and commits pending control values before checking validity.
 - Invalid forms are blocked. `submitWhen: 'valid'` also blocks pending validation; the default,
@@ -613,7 +613,7 @@ To delay committing user input, add `debounce` to a field declaration:
 name: field('', [required, minLength(2)], { debounce: 300 }),
 ```
 
-The input displays the pending control value immediately. `myForm.name()` continues to expose the
+The input displays the pending control value immediately. `this.form.name()` continues to expose the
 committed value until the delay ends. Use `value.control()` to inspect the pending display value,
 `debouncing()` to inspect the buffer, and `flush()` to commit it immediately.
 

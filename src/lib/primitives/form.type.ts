@@ -1330,14 +1330,14 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
-   *     <input [formNode]="profile.name" />
-   *     <button (click)="profile.focus()">
+   *     <input [formNode]="form.name" />
+   *     <button (click)="form.focus()">
    *       Focus name
    *     </button>
    *   `,
    * })
    * export class ProfilePage {
-   *   profile = form({ name: field('Ada') });
+   *   form = form({ name: field('Ada') });
    * }
    * ```
    */

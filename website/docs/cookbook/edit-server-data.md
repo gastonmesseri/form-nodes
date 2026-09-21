@@ -16,7 +16,7 @@ type CustomerResponse = {
   };
 };
 
-myForm = form({
+form = form({
   name: field(''),
   email: field('', [email]),
   address: {
@@ -29,7 +29,7 @@ async loadCustomer(id: string) {
   const response = await fetch(`/api/customers/${id}`);
   const customer = await response.json() as CustomerResponse;
 
-  this.myForm.reset(customer);
+  this.form.reset(customer);
 }
 ```
 
@@ -38,13 +38,13 @@ async loadCustomer(id: string) {
 Use `set()` when replacing the complete value while preserving interaction state:
 
 ```ts
-this.myForm.set(customer);
+this.form.set(customer);
 ```
 
 Use `patch()` for a partial server event:
 
 ```ts
-this.myForm.patch({
+this.form.patch({
   address: {
     city: 'Geneva',
   },

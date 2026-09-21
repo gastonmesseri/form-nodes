@@ -13,11 +13,11 @@ import { FormNodeDirective } from './form-node/form-node.directive';
  * @Component({
  *   imports: [FormNodesModule],
  *   template: `<input
- *     [formNode]="profile.name"
+ *     [formNode]="form.name"
  *   />`,
  * })
  * export class ProfileComponent {
- *   profile = form({ name: field('Marco') });
+ *   form = form({ name: field('Marco') });
  * }
  * ```
  */

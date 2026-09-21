@@ -7,7 +7,7 @@ title: 6. Validate asynchronously
 Start with an ordinary asynchronous function that returns either an error or `null`:
 
 ```ts
-myForm = form({
+form = form({
   username: field('', [
     asyncValidator(async ({ value }) => {
       const available = await api.isUsernameAvailable(value() ?? '');
@@ -27,7 +27,7 @@ An `async` function is only one way to produce that promise. The validator may r
 directly instead:
 
 ```ts
-myForm = form({
+form = form({
   username: field('', [
     asyncValidator(({ value }) => {
       return api.isUsernameAvailable(value() ?? '')
@@ -48,7 +48,7 @@ The same validator can add conditions, debounce, cancellation, and network-error
 real use case needs them:
 
 ```ts
-myForm = form({
+form = form({
   account: {
     username: field('', [
       required,
@@ -89,13 +89,13 @@ The validator:
 Render pending and error state like any other signal:
 
 ```html
-<input [formNode]="myForm.account.username" />
+<input [formNode]="form.account.username" />
 
-@if (myForm.account.username.pending()) {
+@if (form.account.username.pending()) {
   <p>Checking availability…</p>
 }
 
-@if (myForm.account.username.getError('usernameTaken'); as error) {
+@if (form.account.username.getError('usernameTaken'); as error) {
   <p class="error">{{ error.message }}</p>
 }
 ```

@@ -64,12 +64,12 @@ import { ANGULAR_FORMS_STATUS_CLASSES, FormNodeDirective, email, field, form, ma
     }),
   ],
   template: `
-    <form [formNode]="profileForm">
+    <form [formNode]="form">
       <div>
         <label for="email">Email</label>
-        <input id="email" type="email" pInputText [formNode]="profileForm.email" />
-        @if (profileForm.email.touched() && profileForm.email.invalid()) {
-          <small>{{ profileForm.email.errors()[0]?.message }}</small>
+        <input id="email" type="email" pInputText [formNode]="form.email" />
+        @if (form.email.touched() && form.email.invalid()) {
+          <small>{{ form.email.errors()[0]?.message }}</small>
         }
       </div>
 
@@ -81,30 +81,30 @@ import { ANGULAR_FORMS_STATUS_CLASSES, FormNodeDirective, email, field, form, ma
           optionLabel="name"
           optionValue="code"
           placeholder="Select a country"
-          [formNode]="profileForm.countryCode"
+          [formNode]="form.countryCode"
         />
-        @if (profileForm.countryCode.touched() && profileForm.countryCode.invalid()) {
-          <small>{{ profileForm.countryCode.errors()[0]?.message }}</small>
+        @if (form.countryCode.touched() && form.countryCode.invalid()) {
+          <small>{{ form.countryCode.errors()[0]?.message }}</small>
         }
       </div>
 
       <div>
         <label for="birth-date">Birth date</label>
-        <p-datepicker inputId="birth-date" [showIcon]="true" [formNode]="profileForm.birthDate" />
-        @if (profileForm.birthDate.touched() && profileForm.birthDate.invalid()) {
-          <small>{{ profileForm.birthDate.errors()[0]?.message }}</small>
+        <p-datepicker inputId="birth-date" [showIcon]="true" [formNode]="form.birthDate" />
+        @if (form.birthDate.touched() && form.birthDate.invalid()) {
+          <small>{{ form.birthDate.errors()[0]?.message }}</small>
         }
       </div>
 
       <div>
-        <p-checkbox inputId="terms" [binary]="true" [formNode]="profileForm.acceptedTerms" />
+        <p-checkbox inputId="terms" [binary]="true" [formNode]="form.acceptedTerms" />
         <label for="terms">I accept the terms</label>
-        @if (profileForm.acceptedTerms.touched() && profileForm.acceptedTerms.invalid()) {
-          <small>{{ profileForm.acceptedTerms.errors()[0]?.message }}</small>
+        @if (form.acceptedTerms.touched() && form.acceptedTerms.invalid()) {
+          <small>{{ form.acceptedTerms.errors()[0]?.message }}</small>
         }
       </div>
 
-      <p-button type="submit" label="Save profile" [disabled]="profileForm.submitting()" />
+      <p-button type="submit" label="Save profile" [disabled]="form.submitting()" />
     </form>
   `,
 })
@@ -115,7 +115,7 @@ export class PrimeNgProfileEditor {
     { name: 'United States', code: 'US' },
   ];
 
-  profileForm = form({
+  form = form({
     email: field('', [required, email]),
     countryCode: field('', [required]),
     birthDate: field<Date>(null, [maxDate(() => new Date())]),
@@ -191,9 +191,9 @@ an independent Form Nodes node. See
 ## ↩️ Disabled, focus, and reset {#disabled-focus-and-reset}
 
 - Disabled state is passed through PrimeNG's `ControlValueAccessor` contract.
-- `profileForm.countryCode.focus()` focuses its first rendered binding; a component without a
+- `form.countryCode.focus()` focuses its first rendered binding; a component without a
   specific focus hook falls back to its host.
-- `profileForm.reset()` resynchronizes PrimeNG controls and clears interaction state.
+- `form.reset()` resynchronizes PrimeNG controls and clears interaction state.
 - A native reset button inside the bound form delegates to the node reset.
 
 ## 🧪 Testing PrimeNG bindings {#testing-primeng-bindings}

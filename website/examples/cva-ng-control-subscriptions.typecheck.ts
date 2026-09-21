@@ -47,10 +47,10 @@ export class LegacyTextControl implements ControlValueAccessor {
 
 @Component({
   imports: [FormNodeDirective, LegacyTextControl],
-  template: `<app-legacy-text-control [formNode]="myForm.username" />`,
+  template: `<app-legacy-text-control [formNode]="form.username" />`,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     username: field('', [required]),
   });
 }

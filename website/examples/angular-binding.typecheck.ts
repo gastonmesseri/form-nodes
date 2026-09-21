@@ -7,24 +7,24 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   template: `
     <label>
       Name
-      <input #nameBinding="formNode" [formNode]="myForm.name" />
+      <input #nameBinding="formNode" [formNode]="form.name" />
     </label>
 
     <label>
       Age
-      <input type="number" [formNode]="myForm.age" />
+      <input type="number" [formNode]="form.age" />
     </label>
 
-    <p>{{ myForm.name() }} · {{ myForm.age() }}</p>
+    <p>{{ form.name() }} · {{ form.age() }}</p>
     <button type="button" (click)="focusName()">Focus name</button>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     name: field(''),
     age: field<number>(),
   });
-  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.myForm.name>>('nameBinding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.form.name>>('nameBinding');
 
   focusName() {
     this.nameBinding().focus();

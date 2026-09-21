@@ -21,20 +21,20 @@ export class SharedModule {}
   template: `
     <label>
       Name
-      <input [formNode]="profile.name">
+      <input [formNode]="form.name">
     </label>
 
-    @if (profile.name.touched() && profile.name.hasError('required')) {
-      <p>{{ profile.name.getError('required')?.message }}</p>
+    @if (form.name.touched() && form.name.hasError('required')) {
+      <p>{{ form.name.getError('required')?.message }}</p>
     }
 
-    <p>Current name: {{ profile.name() }}</p>
+    <p>Current name: {{ form.name() }}</p>
   `,
   imports: [SharedModule],
   styles: ['input.ng-touched.ng-invalid { outline: 2px solid crimson; }'],
 })
 export class AppComponent {
-  profile = form({
+  form = form({
     name: field('', [required]),
   });
 }

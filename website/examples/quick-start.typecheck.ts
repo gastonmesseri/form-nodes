@@ -5,15 +5,15 @@ import { form, field, required, FormNodeDirective } from '@ngblocks/form-nodes';
   selector: 'app-profile-editor',
   imports: [FormNodeDirective],
   template: `
-    <input [formNode]="myForm.username" />
-    <p>Hello {{ myForm.username() }}</p>
+    <input [formNode]="form.username" />
+    <p>Hello {{ form.username() }}</p>
 
-    <input [formNode]="myForm.email" />
-    <p>Your email is {{ myForm.email() }}</p>
+    <input [formNode]="form.email" />
+    <p>Your email is {{ form.email() }}</p>
   `,
 })
 export class ProfileEditor {
-  myForm = form({
+  form = form({
     username: field(''),
     email: field('', [required]),
   });

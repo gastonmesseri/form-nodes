@@ -5,11 +5,11 @@ import { field, form, FormNodesModule } from '@ngblocks/form-nodes';
   selector: 'app-profile-editor',
   imports: [FormNodesModule],
   template: `
-    <form [formNode]="profile">
-      <label>Name <input [formNode]="profile.name" /></label>
+    <form [formNode]="form">
+      <label>Name <input [formNode]="form.name" /></label>
     </form>
   `,
 })
 export class ProfileEditorComponent {
-  profile = form({ name: field('Marco') });
+  form = form({ name: field('Marco') });
 }

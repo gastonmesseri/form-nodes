@@ -5,28 +5,28 @@ import { email, field, form, FormNodeDirective, minLength, required } from '@ngb
   selector: 'app-registration',
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="myForm">
+    <form [formNode]="form">
       <label>
         Name
-        <input [formNode]="myForm.name" />
+        <input [formNode]="form.name" />
       </label>
-      @if (myForm.name.touched()) {
-        @for (error of myForm.name.errors(); track error.kind) {
+      @if (form.name.touched()) {
+        @for (error of form.name.errors(); track error.kind) {
           <p>{{ error.message }}</p>
         }
       }
 
       <label>
         Email
-        <input type="email" [formNode]="myForm.email" />
+        <input type="email" [formNode]="form.email" />
       </label>
-      @if (myForm.email.touched()) {
-        @for (error of myForm.email.errors(); track error.kind) {
+      @if (form.email.touched()) {
+        @for (error of form.email.errors(); track error.kind) {
           <p>{{ error.message }}</p>
         }
       }
 
-      <button type="submit" [disabled]="myForm.submitting()">Register</button>
+      <button type="submit" [disabled]="form.submitting()">Register</button>
     </form>
 
     @if (registeredEmail()) {
@@ -37,7 +37,7 @@ import { email, field, form, FormNodeDirective, minLength, required } from '@ngb
 export class RegistrationComponent {
   registeredEmail = signal<string | null>(null);
 
-  myForm = form({
+  form = form({
     name: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   }, {

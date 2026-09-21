@@ -15,8 +15,8 @@ native input or `[state]` inside a custom control using `useFormNodeState()`.
 
 ## Display errors below a native input {#display-errors}
 
-Import `FormNodeErrors` beside `FormNodeDirective`. The input binds `[formNode]="contact.email"`;
-the error component observes that same field through `[node]="contact.email"`.
+Import `FormNodeErrors` beside `FormNodeDirective`. The input binds `[formNode]="form.email"`;
+the error component observes that same field through `[node]="form.email"`.
 
 <CodeBlock language="ts" title="contact-form.component.ts">{errorsSource}</CodeBlock>
 

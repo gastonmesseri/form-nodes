@@ -22,12 +22,12 @@ export class TextControl {
 // profile.component.ts
 @Component({
   imports: [FormNodeDirective, TextControl],
-  template: `<app-text-control [formNode]="profile.name" />`,
+  template: `<app-text-control [formNode]="form.name" />`,
 })
 export class ProfileComponent {
   saving = signal(false);
 
-  profile = form({
+  form = form({
     name: field('', [required, minLength(3)], {
       // Experimental: only explicit state options; validator inputs are not synchronized.
       syncInputs: 'declared',

@@ -46,8 +46,8 @@ export class HookInput {
 
 @Component({
   imports: [FormNodeDirective, HookInput],
-  template: '<app-hook-input [formNode]="profile.name" />',
+  template: '<app-hook-input [formNode]="form.name" />',
 })
 export class ProfileComponent {
-  profile = form({ name: field('Mark') });
+  form = form({ name: field('Mark') });
 }

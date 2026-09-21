@@ -9,15 +9,15 @@ import { syncQueryParams } from '@ngblocks/form-nodes/router';
   `,
 })
 export class SearchPage {
-  filters = form({ search: field.strict(''), page: field.strict(1) });
+  form = form({ search: field.strict(''), page: field.strict(1) });
 
   initialSearch = signal('');
 
   restored = signal({ q: '', page: 1 });
 
   querySync = syncQueryParams({
-    q: this.filters.search,
-    page: { source: this.filters.page, serializer: 'integer', history: 'push' },
+    q: this.form.search,
+    page: { source: this.form.page, serializer: 'integer', history: 'push' },
   }, {
     onInitialUrlSync: ({ values }) => {
       this.initialSearch.set(values.q);

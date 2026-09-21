@@ -15,11 +15,11 @@ import { equalTo, field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   selector: 'app-password-editor',
   imports: [FormNodeDirective],
   template: `
-    <input type="password" [formNode]="myForm.password" />
-    <input type="password" [formNode]="myForm.confirmation" />
+    <input type="password" [formNode]="form.password" />
+    <input type="password" [formNode]="form.confirmation" />
 
-    @if (myForm.confirmation.touched()) {
-      @if (myForm.confirmation.getError('equalTo'); as error) {
+    @if (form.confirmation.touched()) {
+      @if (form.confirmation.getError('equalTo'); as error) {
         <p class="error">{{ error.message }}</p>
       }
     }
@@ -28,7 +28,7 @@ import { equalTo, field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 export class PasswordEditor {
   password = field('');
 
-  myForm = form({
+  form = form({
     password: this.password,
     confirmation: field('', [
       equalTo(() => this.password(), { message: 'Passwords must match.' }),
@@ -37,7 +37,7 @@ export class PasswordEditor {
 }
 ```
 
-The separate `password` reference avoids circular TypeScript inference while still becoming the exact child stored at `myForm.password`.
+The separate `password` reference avoids circular TypeScript inference while still becoming the exact child stored at `form.password`.
 
 `equalTo()` uses `Object.is()` and tracks the expected-value source. Changing the password therefore revalidates confirmation automatically. Its error omits both compared values so passwords do not leak into error summaries, logs, or translation callbacks.
 

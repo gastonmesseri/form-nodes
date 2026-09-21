@@ -48,11 +48,11 @@ export class EmailInput {
   selector: 'app-contact-editor',
   imports: [EmailInput, FormNodeDirective],
   template: `
-    <form [formNode]="contact">
-      <my-email-input inputId="primary-email" label="Primary email" [formNode]="contact.email" />
-      <my-email-input inputId="backup-email" label="Backup email (optional)" [formNode]="contact.backupEmail" [animateErrors]="false" />
+    <form [formNode]="form">
+      <my-email-input inputId="primary-email" label="Primary email" [formNode]="form.email" />
+      <my-email-input inputId="backup-email" label="Backup email (optional)" [formNode]="form.backupEmail" [animateErrors]="false" />
       <button type="submit">Continue</button>
-      <button type="button" (click)="contact.resetToInitial()">Start over</button>
+      <button type="button" (click)="form.resetToInitial()">Start over</button>
     </form>
 
     @if (submittedEmail(); as address) {
@@ -63,7 +63,7 @@ export class EmailInput {
 export class ContactEditor {
   submittedEmail = signal<string | null>(null);
 
-  contact = form({
+  form = form({
     email: field('', [required('Enter your primary email address.'), email]),
     backupEmail: field('', [email]),
   }, {
