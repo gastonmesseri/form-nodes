@@ -34,7 +34,13 @@ export class ValueSubscription {
 
   pendingValue: unknown;
 
-  constructor(public node: WeakRef<AnyNode>, public callback: ValueChangeCallback | undefined, public registry = valueSubscriptions, public onUnsubscribe?: () => void, public debounce = 0) {}
+  constructor(
+    public node: WeakRef<AnyNode>,
+    public callback: ValueChangeCallback | undefined,
+    public registry = valueSubscriptions,
+    public onUnsubscribe?: () => void,
+    public debounce = 0,
+  ) {}
 
   notify(value: unknown, node: AnyNode) {
     const callback = this.callback;

@@ -151,6 +151,8 @@ Keep a separate node binding only when the binding itself teaches something, suc
 
 When a documentation example binds `[formNode]`, prefer showing the associated node model and HTML together in one Angular `@Component` with an inline `template`. This keeps the view and view-model visually adjacent and gives the template HTML highlighting inside the TypeScript example. Keep a separate HTML fragment only when the component model is already unambiguous from the immediately surrounding example or when combining a large template and model would make the example harder to read.
 
+For website examples, name component event handler methods with the `on` prefix, such as `onTimeseriesCodeChange`, following the [website event handler naming convention](website.md#template-event-handler-names).
+
 Show the necessary injection context for hooks that require it and prefer modern signal-based Angular APIs.
 
 Name a component's single form member `form`: `form = form({ username: field('') })`.
