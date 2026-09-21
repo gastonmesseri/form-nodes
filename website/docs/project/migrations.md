@@ -9,7 +9,7 @@ import independentFieldSource from '!!raw-loader!../../examples/independent-fiel
 import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
 
-## Upcoming major release {#upcoming-major}
+## Moving to 6.0.0 {#version-6}
 
 ### Explicit control nodes {#explicit-control-nodes}
 

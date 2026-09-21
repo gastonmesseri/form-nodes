@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 6.0.0 — 2026-09-21 {#600--2026-09-21}
+
 ### Added
 
 - Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup. Invalid node bindings now explain how to use `[formNode]`.

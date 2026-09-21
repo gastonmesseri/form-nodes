@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-09-21
+
 ### Added
 
 - Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup. Invalid node bindings now explain how to use `[formNode]`.
@@ -444,7 +446,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.0.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v6.0.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -496,3 +498,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [4.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.5.0...v4.6.0
 
 [5.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.6.0...v5.0.0
+
+[6.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.0.0...v6.0.0
