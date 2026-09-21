@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.3.0 — 2026-09-21 {#530--2026-09-21}
+
 ### Added
 
 - Add `array(..., { initialLength })` to create independent items from template or factory defaults. Positional counts and values, and numeric `initialValue`, remain supported. Conflicting initial sources are rejected in types and at runtime.

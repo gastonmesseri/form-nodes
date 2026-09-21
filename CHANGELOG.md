@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.3.0] - 2026-09-21
+
 ### Added
 
 - Add `array(..., { initialLength })` to create independent items from template or factory defaults. Positional counts and values, and numeric `initialValue`, remain supported. Conflicting initial sources are rejected in types and at runtime.
@@ -453,7 +455,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.2.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.0...HEAD
+[5.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.1.0...v5.2.0
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
