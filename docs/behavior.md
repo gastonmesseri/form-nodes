@@ -187,8 +187,9 @@ declaration factories; Angular's schema/model API is not the public contract.
 
 `createFormPrimitives()` returns an isolated `field`, `form`, `group`, and `array` factory set.
 Its optional defaults include `nullable`, `validatorMessages`, `inheritInjector`, and
-`adoptBindingInjector`; the boolean policies retain their ordinary `true` defaults when omitted.
-The package-level factories retain their nullable-by-default behavior. A nullability default applies
+`adoptBindingInjector`; injector policies retain their ordinary `true` defaults when omitted.
+Omitting `nullable` infers field types like the package-level factories; `true` adds null and
+`false` requires nullability to be declared in the input type. A nullability default applies
 to direct fields, object field shorthands, dynamically added children, and nodes created later from
 array templates or factories. An explicit `field.strict()` or `field.nullable()` call takes precedence, and an existing
 node attached to a configured form retains the policy of the factory that originally created it.
@@ -283,7 +284,7 @@ const age = field<number>(23);
 const optionalName = field<string>();
 ```
 
-Fields are nullable by default. The examples above have types `FieldNode<string | null>`, `FieldNode<number | null>`, and `FieldNode<string | null>`. A field created without a value starts at `null`.
+Fields infer nullability from their generic and initial value. Non-nullish initial values do not add null. A field created without a value starts at `null`.
 
 A field created from the literal `null` or `undefined` without an explicit generic is inferred as
 `FieldNode<unknown>`. Their runtime values remain distinct: `null` stays `null`, while an explicitly
@@ -624,7 +625,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 
 - Field value types are inferred from their initial values or explicit generic arguments.
 - Form and group value types are recursively inferred from their descendants.
-- Concise field definitions infer the same widened nullable type as their equivalent `field()` call;
+- Concise field definitions infer the same widened value type and inferred nullability as their equivalent `field()` call;
   literal `null` and `undefined` infer `FieldNode<unknown>`.
 - Shorthand objects infer the same values and nested field access as explicit groups.
 - Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
@@ -635,51 +636,50 @@ Changes to any descendant are reflected reactively in every ancestor value.
 
 ## Field nullability
 
-Fields include `null` in their value type by default, independently of whether their initial value is null:
+`field()` preserves its explicit generic or infers its value type from the initial value.
+Null and undefined initial values may extend an explicit generic with their own type, but
+other mismatched values are rejected. Without a generic, nullish inputs produce `FieldNode<unknown>`.
 
-```ts
-const name = field('David');
-// Field<string | null>
+| Declaration | Value type | Initial value |
+| --- | --- | --- |
+| `field('')` or `field<string>('')` | `string` | `''` |
+| `field<string>(null)` | `string \| null` | `null` |
+| `field<string>(undefined)` | `string \| undefined` | `undefined` |
+| `field<string \| null>('')` | `string \| null` | `''` |
+| `field<string>()` | `string \| null` | `null` |
+| `field(null)`, `field(undefined)`, `field()` | `unknown` | Supplied value, or `null` when omitted |
 
-const emptyName = field<string>(null, []);
-// Field<string | null>
+`field<string>(123)` is rejected. Object properties must still satisfy their declared type;
+nullish widening applies to the field value, not recursively to object members. Ordinary
+primitive literals widen to string, number, or boolean; explicit literal unions are preserved.
+TypeScript's normal control-flow narrowing applies to initializer variables.
 
-const unspecified = field(null);
-const unspecifiedFromUndefined = field(undefined);
-// Both are Field<unknown>; they start at null and undefined respectively
-```
+The inferred type applies to reads, writes, reset values, equality, validators, value-change
+callbacks, parent aggregates, and array clones. Shorthand fields follow the same rule.
+`field.strict(value)` requires a non-nullish initial value and rejects nullish generic members.
+`field.nullable(value)` always adds null, preserves explicit undefined, and starts at null when
+called without an argument. Both methods override a configured factory's policy.
 
-The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators
-all use `TValue | null`. Supplying an explicitly typed `undefined` also adds `undefined` to those
-surfaces so the declared runtime value remains type-safe.
+Nullability is a TypeScript contract, not a runtime value filter. Bindings retain their existing
+empty-value behavior; declare nullable number/date fields when a control can emit null on clearing.
+A required validator changes validity, not the inferred value type.
 
-Use `field.strict()` to remove null from the field type:
+No-argument `reset()` preserves the current value and clears interaction state;
+`resetToInitial()` restores the declared initial value, including explicit undefined.
+No new injection-context requirement, validation trigger, or propagation rule is introduced.
 
-```ts
-const name = field.strict('David');
-// Field<string>
-
-name.set('Ana');
-// name.set(null); // TypeScript error
-```
-
-`field.strict(value)` always excludes `null`, while
-`field.nullable(value)` always includes `null`. Both overrides remain available on field factories
-returned by `createFormPrimitives()`, independently of their configured default.
-
-Per-field options do not include `nullable`; these methods are the only local nullability overrides.
-
-A strict field requires a non-null initial value. `field.strict<string>(null)` is rejected by TypeScript.
-
-Nullability intentionally does not change reset behavior. In line with this library's Signal Forms-inspired reset model, `reset()` without a value preserves the current value and clears interaction state. It does not reset nullable fields to null or non-nullable fields to their initial value. `reset(value)` always uses the supplied value.
-
-This differs from Angular Reactive Forms, where `nonNullable` also controls whether a no-argument reset returns to null or to the initial value. Angular Signal Forms instead derives nullability from the model type and does not provide a nullability option.
+Reference: Angular Signal Forms `v22.1.7` at
+`f3358f24b884e34d44cfb8ec3db53965153d61e1`,
+`packages/forms/signals/src/api/structure.ts` (`form<TModel>` preserves the model type), and
+`packages/forms/signals/test/node/field_node.spec.ts` (reset without a value and with null).
+Angular requires an existing model signal; this library additionally supports omitted initial
+values and nullish widening of an explicit generic as public factory conveniences.
 
 ### Container nullability
 
 The current public nullability model deliberately distinguishes leaf values from structural containers:
 
-- `field()` is nullable by default. Use `field.strict()` when `null` is not a valid field value.
+- `field()` infers nullability. Use `field.nullable()` when null must be accepted regardless of the initial value.
 - `form()` and `group()` always expose non-null object values. A structural object node cannot itself be replaced with `null` or `undefined`.
 - `array()` always exposes a non-null array value. It accepts `null` or `undefined` through complete-value inputs as an absence shorthand and normalizes either value to `[]`.
 
@@ -1470,9 +1470,8 @@ const age = field<number>(null, [adult]);
 ```
 
 `TValue` is the exact type returned by the node's `value()` signal; `validator()` does not alter its
-nullability. Since `field()` is nullable by default, standalone field validators normally include
-`null` in their model. A validator that excludes `null` can only be attached when the field is
-explicitly non-nullable:
+nullability. Include null or undefined only when the field type admits them. A validator that
+excludes null can be attached to inferred non-nullable fields such as `field(1)`:
 
 ```ts
 export const positive = validator<number>(({ value }) => {
@@ -1482,7 +1481,7 @@ export const positive = validator<number>(({ value }) => {
 const quantity = field.strict(1, [positive]);
 ```
 
-TypeScript rejects attaching `positive` to a default nullable field. Forms and arrays do not add
+TypeScript rejects attaching `positive` to an explicitly nullable field. Forms and arrays do not add
 `null` to their aggregate values, so their validators use the aggregate model directly, such as
 `validator<Profile>()` or `validator<readonly Item[]>()`.
 

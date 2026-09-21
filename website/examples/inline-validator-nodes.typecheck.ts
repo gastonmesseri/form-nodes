@@ -3,7 +3,7 @@ import { array, asyncValidator, field, form, group, validator } from '@ngblocks/
 const profile = form({
   email: field('', {
     validators: validator((ctx) => {
-      const email = ctx.node(); // Field<string | null>; identical to ctx.field()
+      const email = ctx.node(); // Field<string>; identical to ctx.field()
       return email.touched() && !ctx.value() ? { kind: 'missingEmail' } : null;
     }),
   }),

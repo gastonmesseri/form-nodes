@@ -3,7 +3,7 @@ import { Injector } from '@angular/core';
 import { field, form } from '@ngblocks/form-nodes';
 
 const profile = form({ name: field('Ada'), city: field('London') });
-const names: (string | null)[] = [];
+const names: string[] = [];
 const snapshots: ReturnType<typeof profile>[] = [];
 
 const stopName = profile.name.onValueChange(value => names.push(value));
@@ -25,7 +25,7 @@ assert.equal(snapshots.length, 2);
 stopProfile();
 
 const owner = Injector.create({ providers: [] });
-const ownedValues: (string | null)[] = [];
+const ownedValues: string[] = [];
 profile.name.onValueChange(value => ownedValues.push(value), { injector: owner });
 profile.name.set('Ada');
 owner.destroy();

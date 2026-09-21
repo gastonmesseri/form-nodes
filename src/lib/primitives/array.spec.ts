@@ -1048,7 +1048,7 @@ describe('array', () => {
 
   it('accepts nullable field values as trackBy keys', () => {
     const properties = array(
-      { city: field(''), country: field('') },
+      { city: field.nullable(''), country: field('') },
       [{ city: null, country: 'Unknown' }, { city: 'Zurich', country: 'Switzerland' }],
       { trackBy: value => value.city },
     );
@@ -2129,7 +2129,7 @@ describe('array patch replacement', () => {
 
   it('reconciles keyed complete rows, preserves reused state, and batches notifications', () => {
     const changed = vi.fn();
-    const people = array({ id: field.strict(''), name: field('', required), age: field<number>(undefined) }, {
+    const people = array({ id: field.strict(''), name: field('', required), age: field.nullable<number>(undefined) }, {
       initialValue: [{ id: 'a', name: 'Ada', age: 18 }, { id: 'b', name: 'Grace', age: 28 }],
       trackBy: 'id',
       onValueChange: changed,
@@ -2355,7 +2355,7 @@ it('rejects attached factory nodes without replacing their reset baseline', () =
 
 it('supports writable signal utilities without replacing array nodes or bypassing validation', () => {
   const profile = form({ users: array({ name: field('', required) }, { initialValue: 1 }) });
-  const writable: WritableSignal<{ name: string | null }[]> = profile.users;
+  const writable: WritableSignal<{ name: string }[]> = profile.users;
   const view = writable.asReadonly();
   const original = profile.users.at(0);
   expect(profile.invalid()).toBe(true);
@@ -2363,7 +2363,7 @@ it('supports writable signal utilities without replacing array nodes or bypassin
   expect(profile.users.at(0)).toBe(original);
   expect(profile.valid()).toBe(true);
   expect(view()).toEqual([{ name: 'Ada' }]);
-  const api: WritableSignal<{ name: string | null }[]> = profile.users.$api;
+  const api: WritableSignal<{ name: string }[]> = profile.users.$api;
   api.update(value => [...value, { name: '' }]);
   expect(view()).toEqual([{ name: 'Ada' }, { name: '' }]);
   expect(profile.users.length()).toBe(2);

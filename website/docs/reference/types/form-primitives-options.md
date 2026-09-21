@@ -19,7 +19,7 @@ Use for the defaults supplied to [`createFormPrimitives()`](../create-form-primi
 ## Declaration
 
 ```ts
-type FormPrimitivesOptions<TNullable extends boolean = true> = {
+type FormPrimitivesOptions<TNullable extends boolean | undefined = boolean | undefined> = {
     syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | {
         inputs: 'declared' | 'all' | readonly SyncInputName[];
         target?: 'all' | 'signal-controls' | 'cva' | undefined;
@@ -36,7 +36,7 @@ type FormPrimitivesOptions<TNullable extends boolean = true> = {
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNullable` | `boolean` | `true` |
+| `TNullable` | `boolean \| undefined` | `boolean \| undefined` |
 
 ## Declared members
 

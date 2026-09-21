@@ -28,14 +28,14 @@ const myForm = form({
   recentCompanies: [defaultCompany],
 });
 
-myForm.name(); // string | null
+myForm.name(); // string
 myForm.age(); // unknown
-myForm.siblings(); // number | null
-myForm.birthday(); // Date | null
+myForm.siblings(); // number
+myForm.birthday(); // Date
 myForm.sister(); // unknown
-myForm.address.city(); // string | null
-myForm.company.companyId(); // number | null
-myForm.roles(); // string[] | null
-myForm.recentCompanies(); // Company[] | null
+myForm.address.city(); // string
+myForm.company.companyId(); // number
+myForm.roles(); // string[]
+myForm.recentCompanies(); // Company[]
 myForm.roles.nodeType() === 'field'; // true
 myForm.recentCompanies.nodeType() === 'field'; // true

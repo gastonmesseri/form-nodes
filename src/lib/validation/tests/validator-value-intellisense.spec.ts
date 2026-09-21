@@ -57,7 +57,7 @@ it('displays inline validator values like the owning node value signal', () => {
       expect(hovers[0]).toBe(hovers[1]);
       expect(hovers[0]).toBe(hovers[2]);
       expect(hovers[0]).toContain('subField: number');
-      expect(hovers[0]).toContain('username: string | null');
+      expect(hovers[0]).toContain('username: string');
     }
   } finally {
     service.dispose();

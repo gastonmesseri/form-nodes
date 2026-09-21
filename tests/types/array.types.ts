@@ -21,8 +21,8 @@ const people = array({
 type _ArrayNodeType = Expect<Equal<ReturnType<typeof people.nodeType>, 'array'>>;
 const names = array(field(''), ['David']);
 const lockedNames = array(field(''), { disabled: 'Collection is locked' });
-type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string | null)[]>>;
-type _ControlValue = Expect<Equal<ReturnType<typeof names.value.control>, (string | null)[]>>;
+type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, string[]>>;
+type _ControlValue = Expect<Equal<ReturnType<typeof names.value.control>, string[]>>;
 type _StandaloneRoot = Expect<Equal<ReturnType<typeof names.root>, typeof names>>;
 lockedNames.disable('Temporarily unavailable');
 const matrix = array(array(field(0), []), [[1, 2]]);
@@ -37,14 +37,14 @@ const optionPeople = array({
 const optionNames = array(() => field(''), { initialValue: 2 });
 const directory = form({ people: array({ name: field('') }, 1) });
 
-type PersonValue = { id: string; name: string | null; age: number | null };
+type PersonValue = { id: string; name: string; age: number };
 type _PeopleValue = Expect<Equal<ReturnType<typeof people>, PersonValue[]>>;
-type _NameValue = Expect<Equal<ReturnType<typeof names>, (string | null)[]>>;
-type _MatrixValue = Expect<Equal<ReturnType<typeof matrix>, (number | null)[][]>>;
+type _NameValue = Expect<Equal<ReturnType<typeof names>, string[]>>;
+type _MatrixValue = Expect<Equal<ReturnType<typeof matrix>, number[][]>>;
 type _FormTemplateValue = Expect<Equal<ReturnType<typeof forms>, { enabled: boolean }[]>>;
-type _OptionPeopleValue = Expect<Equal<ReturnType<typeof optionPeople>, { id: string; name: string | null }[]>>;
-type _OptionNamesValue = Expect<Equal<ReturnType<typeof optionNames>, (string | null)[]>>;
-type _IndexedNameValue = Expect<Equal<ReturnType<NonNullable<typeof names[0]>>, string | null>>;
+type _OptionPeopleValue = Expect<Equal<ReturnType<typeof optionPeople>, { id: string; name: string }[]>>;
+type _OptionNamesValue = Expect<Equal<ReturnType<typeof optionNames>, string[]>>;
+type _IndexedNameValue = Expect<Equal<ReturnType<NonNullable<typeof names[0]>>, string>>;
 type _ArrayItemKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof names[0]>['keyInParent']>, number | null>>;
 type _ArrayFormKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof people[0]>['keyInParent']>, number | null>>;
 type _NestedArrayKeyInParent = Expect<Equal<ReturnType<typeof directory.people.keyInParent>, string>>;
@@ -54,7 +54,7 @@ type _NestedArrayRoot = Expect<Equal<ReturnType<typeof directory.people.root>, t
 type _MappedNames = Expect<Equal<ReturnType<typeof names.map<string | null>>, (string | null)[]>>;
 
 people.push({ id: 'two', name: 'Daniel', age: 35 });
-people.insert(0, { id: 'zero', name: null, age: null });
+people.insert(0, { id: 'zero', name: '', age: 0 });
 people.moveUp(1);
 people.moveDown(0);
 people.move(0, 1);
@@ -62,7 +62,7 @@ people.swap(0, 1);
 people.set([{ id: 'three', name: 'Ada', age: 37 }]);
 people.patch([{ id: 'grace', name: 'Grace', age: 30 }]);
 people.at(0)?.patch({ name: 'Grace' });
-people.update((value) => [...value, { id: 'four', name: null, age: null }]);
+people.update((value) => [...value, { id: 'four', name: '', age: 0 }]);
 people.focus({ preventScroll: true });
 
 people.set(null);
@@ -104,10 +104,10 @@ array(field(''), { onSubmitBlocked: () => undefined });
 array(field(''), { submitWhen: 'valid' });
 
 const draft = people.templateValue();
-type _TemplateValue = Expect<Equal<typeof draft, { id: string; name: string | null; age: number | null }>>;
+type _TemplateValue = Expect<Equal<typeof draft, { id: string; name: string; age: number }>>;
 type _TemplateFacadeValue = Expect<Equal<ReturnType<typeof people.$api.templateValue>, typeof draft>>;
-type _FieldTemplateValue = Expect<Equal<ReturnType<typeof names.templateValue>, string | null>>;
-type _NestedTemplateValue = Expect<Equal<ReturnType<typeof matrix.templateValue>, (number | null)[]>>;
+type _FieldTemplateValue = Expect<Equal<ReturnType<typeof names.templateValue>, string>>;
+type _NestedTemplateValue = Expect<Equal<ReturnType<typeof matrix.templateValue>, number[]>>;
 people.push(draft);
 const generated = array(() => ({ id: field.strict(1) }));
 type _FactoryTemplateValue = Expect<Equal<ReturnType<typeof generated.templateValue>, { id: number }>>;

@@ -31,16 +31,16 @@ export class ProfileEditor {
 }
 ```
 
-Fields are nullable by default. Use `field.strict('')` when a field should be non-nullable;
-its value type is `string` rather than `string | null`. See [Field nullability](../reference/field.md#nullability).
+Fields infer nullability from their initial value. Use `field.nullable('')` when null is allowed;
+this adds `null` to the inferred `string` type. See [Field nullability](../reference/field.md#nullability).
 
 For the declaration above, the inferred value is equivalent to:
 
 ```ts
 type ProfileValue = {
-  name: string | null;
+  name: string;
   age: number | null;
-  email: string | null;
+  email: string;
 };
 ```
 

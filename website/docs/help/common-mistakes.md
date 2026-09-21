@@ -70,19 +70,19 @@ myForm.shippingAddress.set(null);
 
 See [Object field or group](../guides/choosing-a-primitive.md#object-field-or-group).
 
-## ⚙️ Forgetting that fields are nullable by default {#forgetting-that-fields-are-nullable-by-default}
+## ⚙️ Forgetting to declare nullable fields {#forgetting-that-fields-are-nullable-by-default}
 
-An initial string produces `string | null`, not only `string`:
+An initial string produces `string`. Declare nullability when later writes may use null:
 
 ```ts
 const myForm = form({
-  displayName: field(''),
+  displayName: field.nullable(''),
 });
 
 myForm.displayName.set(null); // Valid.
 ```
 
-Handle `null` as a business value or opt out explicitly when it is genuinely invalid:
+Use inferred non-nullable fields or `field.strict()` when null is not part of the model:
 
 ```ts
 const myForm = form({

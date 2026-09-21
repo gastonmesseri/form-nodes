@@ -29,8 +29,8 @@ instructions when applying these library usage rules.
   Read state through signals such as `profile.valid()` and `profile.username.touched()`.
 - Call operations directly, such as `profile.patch(...)`. Use `profile.$api` when a child name
   collides with an API member, or when writing generic node infrastructure.
-- Fields are nullable by default. Choose explicit value types when inference cannot express the
-  domain. `field<number>(null)` declares a nullable numeric field; `field(null)` infers unknown.
+- Fields infer nullability from their generic and initial value. Choose explicit nullable types
+  or `field.nullable()` when the initial value cannot express the domain. `field<number>(null)` declares a nullable numeric field; `field(null)` infers unknown.
   Check the installed API for `field.strict()` or `createFormPrimitives({ nullable: false })`
   when non-nullable declarations are required.
 - Bind controls with `[formNode]` and import `FormNodeDirective` in the component. Do not add

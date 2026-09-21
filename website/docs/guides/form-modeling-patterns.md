@@ -121,12 +121,12 @@ initial value happens to be present.
 
 :::
 
-Fields are nullable by default because an input can commonly represent no value. Use
-`field.strict()` when the model must always contain a value:
+Fields infer nullability from their generic and initial value. Use `field.nullable()` when
+the model must also accept null:
 
 ```ts
 const accountForm = form({
-  username: field(''),       // string | null
+  username: field.nullable(''), // string | null
   email: field.strict(''),   // string
 });
 ```

@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Changed
+
+- **Breaking:** Infer `field()` value types from the generic and initial value instead of always adding `null`. Non-nullish defaults such as `field('')` now produce non-nullable fields; explicit nullish values add only their own type, and `field<T>()` still starts at `null`. Form/group shorthands, array templates, validators, and callbacks follow the inferred types. Unconfigured `createFormPrimitives()` uses the same inference; `nullable: true`, `field.nullable()`, and `field.strict()` remain explicit policies. Use `field.nullable(value)` or an explicit nullable generic to preserve nullable writes.
+
 ## 📦 4.6.0 — 2026-09-21 {#460--2026-09-21}
 
 ### Changed

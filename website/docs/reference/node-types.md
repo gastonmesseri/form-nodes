@@ -44,8 +44,9 @@ Describes one field. `TValue` is its complete value type, including `null` or `u
 those values are allowed. It can be a scalar, object, date, or array; an array-valued field
 does not become an [`ArrayNode`](./types/array-node.md).
 
-For example, `field('Marco')` infers [`FieldNode<string | null>`](./types/field-node.md), while `field.strict('Marco')`
-infers `FieldNode<string>`. A `FieldNode<string>` input requires the non-nullable contract.
+For example, `field('Marco')` infers [`FieldNode<string>`](./types/field-node.md), while
+`field.nullable('Marco')` infers `FieldNode<string | null>`. A `FieldNode<string>` input requires
+the non-nullable contract.
 Omit the generic argument (`FieldNode`) to accept fields with unrelated value types. Its value
 becomes `any`, so reads and writes no longer enforce a specific value shape. It still accepts
 only fields, not forms, groups, or arrays.

@@ -106,7 +106,7 @@ const setup = async (kind: Kind, debounce = false, disabled = false, suppressEqu
   const host = fixture.componentInstance;
   host.kind.set(kind);
   const initial = (kind === 'text' || kind === 'input') ? 'Ada' : kind === 'checkbox' ? false : kind === 'date' ? new Date(2025, 0, 10) : 'A';
-  const profile = form({ control: field(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: 'blur' as const } : {}) }) });
+  const profile = form({ control: field.nullable(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: 'blur' as const } : {}) }) });
   const node = profile.control;
   host.node.set(node);
   host.baseline.setValue(initial);
@@ -164,7 +164,7 @@ it.each(kinds)('matches Reactive Forms initial rendering and supports reset, reb
   await settle(fixture);
   expect(host.committed).toHaveLength(1);
   expect(host.immediate).toHaveLength(1);
-  const replacement = field(initial);
+  const replacement = field.nullable(initial);
   host.node.set(replacement);
   await settle(fixture);
   node.set(null);

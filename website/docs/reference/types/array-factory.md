@@ -19,7 +19,7 @@ Use when passing the configured array factory from [`createFormPrimitives()`](..
 ## Declaration
 
 ```ts
-interface ArrayFactory<TNullable extends boolean> {
+interface ArrayFactory<TNullable extends boolean | undefined> {
     (): ArrayNode<FieldNode<unknown>>;
     <TDefinition extends ArrayTemplate>(template: TDefinition & ArrayTemplateInput<TDefinition>, ...args: [
         validatorsOrOptions?: NoInfer<ValidatorSource<ConfiguredArrayValue<TDefinition, TNullable>, ArrayNode<ConfiguredArrayItem<TDefinition, TNullable>>>> | NoInfer<ArrayOptions<ConfiguredArrayValue<TDefinition, TNullable>, ArrayNode<ConfiguredArrayItem<TDefinition, TNullable>>>>
@@ -52,7 +52,7 @@ interface ArrayFactory<TNullable extends boolean> {
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNullable` | `boolean` | Required |
+| `TNullable` | `boolean \| undefined` | Required |
 
 ## Related reference
 

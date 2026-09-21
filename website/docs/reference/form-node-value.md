@@ -25,7 +25,7 @@ type MyFormValue = FormNodeValue<typeof myForm>;
 The same helper works for the complete form and each selected child. It preserves each node's
 value type recursively:
 
-- Ordinary fields include `null`; [`field.strict()`](./field.md#nullability) fields retain their non-nullable type.
+- Fields retain their inferred or declared nullability; [`field.nullable()`](./field.md#nullability) explicitly includes null.
 - Explicit `undefined`, literal unions, and application-specific object types are preserved.
 - Groups and nested forms produce nested objects.
 - Dynamic arrays produce arrays of their item values. An array-valued field retains its own field

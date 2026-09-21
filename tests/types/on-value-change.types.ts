@@ -4,25 +4,25 @@ import { Injector } from '@angular/core';
 import { field, form, group, array, createFormPrimitives, type FieldNode } from '../../src/public-api';
 
 field('', { onValueChange(value, node) {
-  expectTypeOf(value).toEqualTypeOf<string | null>();
-  expectTypeOf(node).toEqualTypeOf<FieldNode<string | null>>();
+  expectTypeOf(value).toEqualTypeOf<string>();
+  expectTypeOf(node).toEqualTypeOf<FieldNode<string>>();
   // @ts-expect-error The callback's node retains its value contract.
   node.set(1);
 } });
 field.strict(0, { onValueChange(value) { expectTypeOf(value).toEqualTypeOf<number>(); } });
 field(null, { onValueChange(value) { expectTypeOf(value).toEqualTypeOf<unknown>(); } });
 form({ name: field(''), count: field.strict(0) }, { onValueChange(value, node) {
-  expectTypeOf(value).toEqualTypeOf<{ name: string | null; count: number }>();
+  expectTypeOf(value).toEqualTypeOf<{ name: string; count: number }>();
   expectTypeOf(node.count()).toEqualTypeOf<number>();
   node.patch({ name: 'Ada' });
 } });
 group({ name: field('') }, { onValueChange(value, node) {
-  expectTypeOf(value).toEqualTypeOf<{ name: string | null }>();
-  expectTypeOf(node.name()).toEqualTypeOf<string | null>();
+  expectTypeOf(value).toEqualTypeOf<{ name: string }>();
+  expectTypeOf(node.name()).toEqualTypeOf<string>();
 } });
 array({ name: field('') }, { onValueChange(value, node) {
-  expectTypeOf(value).toEqualTypeOf<{ name: string | null }[]>();
-  expectTypeOf(node.at(0)?.name()).toEqualTypeOf<string | null | undefined>();
+  expectTypeOf(value).toEqualTypeOf<{ name: string }[]>();
+  expectTypeOf(node.at(0)?.name()).toEqualTypeOf<string | undefined>();
 } });
 array(field.strict(0), [1], { onValueChange(value, node) {
   expectTypeOf(value).toEqualTypeOf<number[]>();
@@ -37,7 +37,7 @@ primitives.form({ enabled: primitives.field(false) }, { onValueChange(value, nod
 
 const name = field('Ada');
 const stop = name.onValueChange((value, node) => {
-  expectTypeOf(value).toEqualTypeOf<string | null>();
+  expectTypeOf(value).toEqualTypeOf<string>();
   expectTypeOf(node).toEqualTypeOf<typeof name>();
   // @ts-expect-error A field subscriber retains the field value contract.
   node.set(42);
@@ -54,7 +54,7 @@ primitives.field('').onValueChange(value => expectTypeOf(value).toEqualTypeOf<st
 
 const profile = form({ name, onValueChange: field('child'), details: { age: field.strict(0) } });
 profile.$api.onValueChange((value, node) => {
-  expectTypeOf(value).toEqualTypeOf<{ name: string | null; onValueChange: string | null; details: { age: number } }>();
+  expectTypeOf(value).toEqualTypeOf<{ name: string; onValueChange: string; details: { age: number } }>();
   expectTypeOf(node).toEqualTypeOf<typeof profile>();
 });
 profile.name.onValueChange((_value, node) => expectTypeOf(node).toEqualTypeOf<typeof profile.name>());
@@ -65,7 +65,7 @@ profile.details.onValueChange((value, node) => {
 });
 const rows = array({ name: field('') });
 rows.onValueChange((value, node) => {
-  expectTypeOf(value).toEqualTypeOf<{ name: string | null }[]>();
+  expectTypeOf(value).toEqualTypeOf<{ name: string }[]>();
   expectTypeOf(node).toEqualTypeOf<typeof rows>();
 });
 owner.destroy();

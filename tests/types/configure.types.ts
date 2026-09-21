@@ -45,7 +45,7 @@ field.strict(1, { configure: api => expectTypeOf(api()).toEqualTypeOf<number>() 
 field.nullable('x', { configure: api => expectTypeOf(api()).toEqualTypeOf<string | null>() });
 const configured = createFormPrimitives();
 configured.group({ count: field(1) }, {
-  configure: ({ children }) => expectTypeOf(children.count()).toEqualTypeOf<number | null>(),
+  configure: ({ children }) => expectTypeOf(children.count()).toEqualTypeOf<number>(),
 });
 
 
@@ -75,7 +75,7 @@ class PageEditor {
         const indexed = ctx.parent<typeof this.pageForm.roles[0]>();
         const row = ctx.parent<(typeof this.pageForm.roles)[number]>();
         expectTypeOf(indexed).toEqualTypeOf(row);
-        expectTypeOf(row?.valueType()).toEqualTypeOf<number | null | undefined>();
+        expectTypeOf(row?.valueType()).toEqualTypeOf<number | undefined>();
         return row?.valueType() === 1 && !ctx.value() ? { kind: 'roleValue' } : null;
       }),
     }),

@@ -71,9 +71,9 @@ class DeclarationForms {
   });
 }
 const declarations = new DeclarationForms();
-type _Root = Expect<Equal<ReturnType<typeof declarations.root>, { name: string | null }>>;
-type _Branch = Expect<Equal<ReturnType<typeof declarations.branch>, { name: string | null }>>;
-type _Rows = Expect<Equal<ReturnType<typeof declarations.rows>, (string | null)[]>>;
+type _Root = Expect<Equal<ReturnType<typeof declarations.root>, { name: string }>>;
+type _Branch = Expect<Equal<ReturnType<typeof declarations.branch>, { name: string }>>;
+type _Rows = Expect<Equal<ReturnType<typeof declarations.rows>, string[]>>;
 type _Configured = Expect<Equal<ReturnType<typeof declarations.model>, { end: string; start: string; strict: string; nullable: string | null }>>;
 const checkedNumeric = validator<string | null>(({ value }) => value() ? null : { kind: 123 });
 field('', checkedNumeric);

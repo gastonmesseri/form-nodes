@@ -13,17 +13,17 @@ const profile = form({
 
 type ProfileValue = FormNodeValue<typeof profile>;
 // {
-//   name: string | null;
+//   name: string;
 //   country: string;
-//   address: { city: string | null };
-//   contacts: { email: string | null }[];
+//   address: { city: string };
+//   contacts: { email: string }[];
 // }
 
-type NameValue = FormNodeValue<typeof profile.name>; // string | null
-type AddressValue = FormNodeValue<typeof profile.address>; // { city: string | null }
-type ContactsValue = FormNodeValue<typeof profile.contacts>; // { email: string | null }[]
+type NameValue = FormNodeValue<typeof profile.name>; // string
+type AddressValue = FormNodeValue<typeof profile.address>; // { city: string }
+type ContactsValue = FormNodeValue<typeof profile.contacts>; // { email: string }[]
 
-const name: NameValue = null;
+const name: NameValue = 'Ada';
 const address: AddressValue = { city: 'Bern' };
 const contacts: ContactsValue = [{ email: 'marco@example.com' }];
 

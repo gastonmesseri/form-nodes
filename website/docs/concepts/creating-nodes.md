@@ -32,7 +32,7 @@ const myForm = form({
 });
 ```
 
-Fields are nullable by default. `myForm.name` is therefore [`FieldNode<string | null>`](../reference/types/field-node.md), even though its initial value is a string. Opt out when null is not a valid business value:
+Fields infer nullability from the generic and initial value. `myForm.name` is therefore [`FieldNode<string>`](../reference/types/field-node.md). `field.strict()` additionally rejects nullish initial values:
 
 ```ts
 const name = field.strict('');
@@ -41,8 +41,7 @@ name.set('Lia');
 // name.set(null); // TypeScript error
 ```
 
-Use [`createFormPrimitives({ nullable: false })`](../reference/create-form-primitives.md) when non-nullable fields and
-field shorthands should be the default throughout an application.
+Use `field.nullable('')` or [`createFormPrimitives({ nullable: true })`](../reference/create-form-primitives.md) to add null explicitly to fields and field shorthands.
 
 A field created without an initial value starts at `null`:
 
@@ -109,7 +108,7 @@ and dynamic collections require an explicit `array()`.
 
 <CodeBlock language="ts" title="declaration-shorthand-matrix.example.ts">{declarationShorthandMatrixSource}</CodeBlock>
 
-An empty array shorthand is also one atomic field and widens to `unknown[] | null`. Root
+An empty array shorthand is also one atomic field and widens to `unknown[]`. Root
 `array([])` is rejected because an empty array cannot describe an item-node template; use
 `array(field<T>())` for a dynamic collection. Definition objects reject symbol child keys,
 enumerable accessors, and `__proto__` before creating any node.

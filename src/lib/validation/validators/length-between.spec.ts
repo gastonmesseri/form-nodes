@@ -79,7 +79,7 @@ describe('lengthBetween', () => {
     const active = signal(true);
     const message = signal('Unsupported length');
     const error = vi.fn(() => ({ kind: 'length', message: message() }));
-    const node = field('abc', [lengthBetween(5, 1, { when: active, error })]);
+    const node = field.nullable('abc', [lengthBetween(5, 1, { when: active, error })]);
     expect(node.errors()).toMatchObject([{ kind: 'length', message: 'Unsupported length' }]);
     expect(error).toHaveBeenCalledTimes(1);
     message.set('Choose another length');

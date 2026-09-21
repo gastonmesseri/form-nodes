@@ -13,7 +13,7 @@ import createFormPrimitivesSource from '!!raw-loader!../../examples/create-form-
 with shared defaults. Use it to establish field nullability, translated validator messages, and
 injector inheritance policies once for an application or feature.
 
-The package-level factories remain nullable by default. Creating a configured set does not change
+The package-level factories infer nullability. Creating a configured set does not change
 them or any other configured set.
 
 ## 📐 Signature {#signature}
@@ -23,15 +23,17 @@ createFormPrimitives();
 createFormPrimitives(options?);
 ```
 
-The options object and every property are optional. Omitting `nullable` uses `true`; omitting either
-injector policy preserves its normal `true` default:
+The options object and every property are optional. Omitting `nullable` uses the same inference
+as `field()`: non-nullish defaults do not add null. Set `nullable: true` to always add null or
+`nullable: false` to require nullability in the declared input type. Omitting either injector
+policy preserves its normal `true` default:
 
 ```ts
 const defaultForms = createFormPrimitives();
 const explicitDefaultForms = createFormPrimitives({});
 
-defaultForms.field('');         // Field<string | null>
-explicitDefaultForms.field(''); // Field<string | null>
+defaultForms.field('');         // Field<string>
+explicitDefaultForms.field(''); // Field<string>
 ```
 
 ## 📝 Create non-nullable factories {#create-non-nullable-factories}

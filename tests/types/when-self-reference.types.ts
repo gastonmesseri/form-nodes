@@ -19,7 +19,7 @@ class Model {
 }
 const model = new Model();
 type _Boolean = Expect<Equal<typeof model.visible, Signal<boolean>>>;
-type _Value = Expect<Equal<ReturnType<typeof model.form>, { other: number | null; name: string | null; amount: number | null; code: string | null; text: string | null; number: number | null; date: Date | null; items: string[] | null }>>;
+type _Value = Expect<Equal<ReturnType<typeof model.form>, { other: number; name: string | null; amount: number; code: string | null; text: string; number: number; date: Date | null; items: string[] }>>;
 min(1, { when: context => {
   const value: number | null = context.value();
   return value !== null && value > 0;

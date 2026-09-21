@@ -102,7 +102,7 @@ describe('nullable native text binding', () => {
   });
 
   it('preserves established numeric parsing through clearing and reset but releases it on rebinding', () => {
-    const age = field<number>(23);
+    const age = field.nullable<number>(23);
     const { fixture, input, type } = setup(age);
     type('');
     expect(age()).toBeNull();
@@ -128,7 +128,7 @@ describe('nullable native text binding', () => {
   });
 
   it('switches representation after an explicit string value on the same binding', () => {
-    const value = field<string | number>(23);
+    const value = field.nullable<string | number>(23);
     const { fixture, type } = setup(value);
     value.set('text');
     fixture.detectChanges();

@@ -19,7 +19,7 @@ Use for a bundle returned by [`createFormPrimitives()`](../create-form-primitive
 ## Declaration
 
 ```ts
-type FormPrimitives<TNullable extends boolean = boolean> = {
+type FormPrimitives<TNullable extends boolean | undefined = boolean | undefined> = {
     field: FieldFactory<TNullable>;
     form: FormFactory<TNullable>;
     group: GroupFactory<TNullable>;
@@ -31,7 +31,7 @@ type FormPrimitives<TNullable extends boolean = boolean> = {
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNullable` | `boolean` | `boolean` |
+| `TNullable` | `boolean \| undefined` | `boolean \| undefined` |
 
 ## Related reference
 

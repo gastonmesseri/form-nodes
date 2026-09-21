@@ -162,8 +162,8 @@ Every array value, including an empty array, populated array, readonly tuple, or
 objects, becomes one [`FieldNode`](./types/field-node.md). Its interpretation never depends on its length or first item. To
 create a dynamic `ArrayNode` with independently addressable item nodes, declare `array(...)`
 explicitly. Use `field([...])` when making the atomic array-value intent visually explicit or when
-the field needs configuration. An empty `[]` shorthand infers `FieldNode<unknown[] | null>` instead of
-the unusably narrow `FieldNode<never[] | null>`; use `field<Item[]>([])` when the item type is known.
+the field needs configuration. An empty `[]` shorthand infers `FieldNode<unknown[]>` instead of
+the unusably narrow `FieldNode<never[]>`; use `field<Item[]>([])` when the item type is known.
 
 :::info Declaration property rules
 

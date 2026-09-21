@@ -13,10 +13,12 @@ let source = `import { field, form, array, createFormPrimitives, type FieldNode,
 type IborCode = 'DAILY' | 'MONTHLY' | null;
 const nullable = createFormPrimitives({ nullable: true });
 const strict = createFormPrimitives({ nullable: false });
+const inferred = createFormPrimitives();
 `;
 const positions = [];
 const factories = [
   'field', 'field.nullable', 'field.strict',
+  'inferred.field', 'inferred.field.nullable', 'inferred.field.strict',
   'nullable.field', 'nullable.field.nullable', 'nullable.field.strict',
   'strict.field', 'strict.field.nullable', 'strict.field.strict',
 ];

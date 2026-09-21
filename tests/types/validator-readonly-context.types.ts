@@ -7,8 +7,8 @@ const row = form({ name: field('Ada'), count: field(1) });
 type Row = typeof row;
 field('', validator((ctx) => {
   const parent = ctx.parent<Row>();
-  type _Name = Expect<Equal<ReturnType<NonNullable<typeof parent>['name']>, string | null>>;
-  type _Count = Expect<Equal<ReturnType<NonNullable<typeof parent>['$api']['children']['count']>, number | null>>;
+  type _Name = Expect<Equal<ReturnType<NonNullable<typeof parent>['name']>, string>>;
+  type _Count = Expect<Equal<ReturnType<NonNullable<typeof parent>['$api']['children']['count']>, number>>;
   parent?.name.value.committed();
   parent?.$api.children.count.value.control();
   // @ts-expect-error Validator value views are read-only, including explicitly typed parents.
@@ -30,8 +30,8 @@ const model = form({
   rows: array({ name: field('Ada'), count: field(1) }),
 }, { validators: validator((ctx) => {
   const node = ctx.node();
-  type _Collision = Expect<Equal<ReturnType<typeof node.valid>, string | null>>;
-  type _SetChild = Expect<Equal<ReturnType<typeof node.set>, number | null>>;
+  type _Collision = Expect<Equal<ReturnType<typeof node.valid>, string>>;
+  type _SetChild = Expect<Equal<ReturnType<typeof node.set>, number>>;
   const names: (string | null)[] = node.rows.map((item, index, rows) => {
     const atIndex: string | null | undefined = rows[index]?.name();
     void atIndex;

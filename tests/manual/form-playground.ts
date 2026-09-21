@@ -85,15 +85,20 @@ const myForm = form({
     c: field(true),
   }, [ctx => ctx.value() ? { kind: '' } : null]),
   myValo: field('', { syncInputs: false }),
-  myValidatedField: field(true, [])
+  myValidatedField: field(true, []),
+  mixedType: field<string>(null),
+  pureString: field<string>(''),
 }, {
   // equal: 'deep',
 });
 
+const to1 = myForm.mixedType.value();
+const to2 = myForm.pureString.value();
+
 myForm.myValo.validators({ resolve: true })
 
 myForm.someNesting.forEachChild(child => {
-  child.set('' as any);
+  child.reset();
 })
 
 const myComputed = computed(() => myForm());
@@ -114,9 +119,9 @@ myForm.someNesting.test()
 myForm.validators()[0]
 
 const myFormTyped = form({
-  username: field(''),
+  username: field.nullable(''),
   // age: field(''),
-  age: field(2),
+  age: field.nullable(2),
   // listA: field<string[]>([]),
   // listB: field<number[]>([]),
 });

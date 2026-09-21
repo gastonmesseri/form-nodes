@@ -37,8 +37,46 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('minimum length for empty strings', () => {
+  it('preserves nullish initial values and reset behavior with inferred field types outside injection', () => {
+    const name = field('Ada', required);
+    const nullable = field<string>(null, required);
+    const optional = field<string>(undefined, required);
+    const omitted = field<string>();
+    expect(name()).toBe('Ada');
+    expect(nullable()).toBeNull();
+    expect(optional()).toBeUndefined();
+    expect(omitted()).toBeNull();
+    expect(name.valid()).toBe(true);
+    expect(nullable.invalid()).toBe(true);
+    expect(optional.invalid()).toBe(true);
+
+    nullable.set('Grace');
+    optional.set('Lia');
+    name.set('');
+    name.markAsDirty();
+    name.markAsTouched();
+    expect(nullable.valid()).toBe(true);
+    expect(optional.valid()).toBe(true);
+    expect(name.invalid()).toBe(true);
+    name.reset();
+    expect(name()).toBe('');
+    expect(name.invalid()).toBe(true);
+    expect(name.dirty()).toBe(false);
+    expect(name.touched()).toBe(false);
+    expect(name.pending()).toBe(false);
+    name.resetToInitial();
+    nullable.resetToInitial();
+    optional.resetToInitial();
+    expect(name()).toBe('Ada');
+    expect(name.valid()).toBe(true);
+    expect(nullable()).toBeNull();
+    expect(nullable.invalid()).toBe(true);
+    expect(optional()).toBeUndefined();
+    expect(optional.invalid()).toBe(true);
+  });
+
   it('validates empty text while retaining nullish absence through edits and resets', () => {
-    const name = field<string>(undefined, [minLength(1)]);
+    const name = field.nullable<string>(undefined, [minLength(1)]);
     expect(name()).toBeUndefined();
     expect(name.valid()).toBe(true);
     expect(name.required()).toBe(false);
@@ -112,7 +150,7 @@ describe('minimum length for empty strings', () => {
     optional.set('');
     expect(optional.valid()).toBe(true);
 
-    const mandatory = field('', [required, minLength(1)]);
+    const mandatory = field.nullable('', [required, minLength(1)]);
     expect(mandatory.errors().map(error => error.kind)).toEqual(['required', 'minLength']);
     mandatory.set(' ');
     expect(mandatory.valid()).toBe(true);
@@ -489,7 +527,7 @@ describe('field', () => {
   it.each(['shallow', 'deep'] as const)('retains equal exposed values with %s equality while preserving control input', (equal) => {
     const initial = { name: 'Marco' };
     const validate = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
-    const name = field(initial, [validate], { equal });
+    const name = field.nullable(initial, [validate], { equal });
     const read = vi.fn(() => name());
     const observed = computed(read);
     expect(observed()).toBe(initial);
@@ -658,7 +696,7 @@ describe('field', () => {
   it('captures equality at construction and accepts legitimate undefined values', () => {
     const equal = vi.fn((a: number | null | undefined, b: number | null | undefined) => a === b);
     const options = { equal };
-    const value = field<number>(undefined, options);
+    const value = field.nullable<number>(undefined, options);
     expect(value()).toBeUndefined();
     expect(equal).not.toHaveBeenCalled();
     options.equal = vi.fn(() => true);
@@ -1088,7 +1126,7 @@ describe('field', () => {
     expect(validatedNullable.invalid()).toBe(true);
   });
 
-  it('defaults createFormPrimitives and its nullable option to nullable fields', () => {
+  it('preserves initial values across inferred configured factories', () => {
     const defaultField = createFormPrimitives().field('Marco');
     const emptyOptionsField = createFormPrimitives({}).field('Lia');
 
@@ -4035,7 +4073,7 @@ describe('presence and acceptance validation', () => {
 
   it('keeps requiredIf presence semantics when its condition changes', () => {
     const enabled = signal(true);
-    const node = field<boolean>(false, [requiredIf(() => enabled())]);
+    const node = field.nullable<boolean>(false, [requiredIf(() => enabled())]);
     expect(node.valid()).toBe(true);
     expect(node.required()).toBe(true);
     node.set(null);

@@ -7,16 +7,16 @@ const profile = form({
   people: array({ email: field('') }),
 }, {
   equal: (previous, next) => {
-    type Expected = { name: string | null; details: { active: boolean }; people: { email: string | null }[] };
+    type Expected = { name: string; details: { active: boolean }; people: { email: string }[] };
     type _Previous = Expect<Equal<typeof previous, Expected>>;
     type _Next = Expect<Equal<typeof next, Expected>>;
     return previous.name === next.name;
   },
 });
 type _Value = Expect<Equal<ReturnType<typeof profile>, {
-  name: string | null;
+  name: string;
   details: { active: boolean };
-  people: { email: string | null }[];
+  people: { email: string }[];
 }>>;
 group({ name: field('') }, [], { equal: (a, b) => a.name === b.name });
 form({ name: field('') }, [], { equal: 'shallow' });
@@ -31,7 +31,7 @@ group({ name: field.strict<string>('') }, groupOptions);
 // @ts-expect-error The comparator cannot change the inferred node value.
 form({ name: field('') }, { equal: (a: { name: number }, b: { name: number }) => a.name === b.name });
 // @ts-expect-error A nullable child remains nullable in the aggregate comparator.
-group({ name: field('') }, { equal: (a: { name: string }, b: { name: string }) => a.name === b.name });
+group({ name: field.nullable('') }, { equal: (a: { name: string }, b: { name: string }) => a.name === b.name });
 // @ts-expect-error Equality must return a boolean.
 form({ name: field('') }, { equal: () => 1 });
 // @ts-expect-error Unsupported comparison mode.
@@ -45,13 +45,13 @@ array({
   tags: array(field('')),
 }, {
   equal: (previous, next) => {
-    type Expected = { name: string | null; details: { active: boolean }; tags: (string | null)[] }[];
+    type Expected = { name: string; details: { active: boolean }; tags: string[] }[];
     type _Previous = Expect<Equal<typeof previous, Expected>>;
     type _Next = Expect<Equal<typeof next, Expected>>;
     return previous.length === next.length;
   },
   validators: (ctx) => {
-    type _Value = Expect<Equal<ReturnType<typeof ctx.value>, { name: string | null; details: { active: boolean }; tags: (string | null)[] }[]>>;
+    type _Value = Expect<Equal<ReturnType<typeof ctx.value>, { name: string; details: { active: boolean }; tags: string[] }[]>>;
     return null;
   },
 });
@@ -76,7 +76,7 @@ array(field(''), arrayOptions);
 // @ts-expect-error Equality receives the complete collection, not one item.
 array(field(''), { equal: (a: string, b: string) => a === b });
 // @ts-expect-error Nullable item values remain nullable in the comparator.
-array(field(''), { equal: (a: string[], b: string[]) => a.length === b.length });
+array(field.nullable(''), { equal: (a: string[], b: string[]) => a.length === b.length });
 // @ts-expect-error The comparator cannot change the inferred item value.
 array({ name: field('') }, { equal: (a: { name: number }[], b: { name: number }[]) => a.length === b.length });
 // @ts-expect-error Equality must return a boolean.

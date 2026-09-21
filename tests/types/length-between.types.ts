@@ -13,8 +13,8 @@ const profile = form({
   choices: field(new Set<string>(), [lengthBetween(1, 5, { message: () => 'Choose one to five items' })]),
   entries: field(new Map<string, number>(), [lengthBetween(1, 5)]),
 });
-type _Username = Expect<Equal<ReturnType<typeof profile.username>, string | null>>;
-type _Nickname = Expect<Equal<ReturnType<typeof profile.nickname>, string | null | undefined>>;
+type _Username = Expect<Equal<ReturnType<typeof profile.username>, string>>;
+type _Nickname = Expect<Equal<ReturnType<typeof profile.nickname>, string | undefined>>;
 const minimumError = profile.username.getError('minLength');
 type _Minimum = Expect<Equal<NonNullable<typeof minimumError>['minLength'], number>>;
 const maximumError = profile.username.getError('maxLength');

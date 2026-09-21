@@ -101,7 +101,7 @@ const setup = async (kind: Kind, debounce: boolean | (() => Promise<void>) = fal
   fixtures.push(fixture);
   const host = fixture.componentInstance;
   const initial = kind === 'ionic-input' ? 'Ada' : kind === 'bootstrap-rating' ? 2 : kind === 'bootstrap-time' ? { hour: 9, minute: 30, second: 0 } : false;
-  const profile = form({ control: field(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: typeof debounce === 'function' ? debounce : 'blur' as const } : {}) }) });
+  const profile = form({ control: field.nullable(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: typeof debounce === 'function' ? debounce : 'blur' as const } : {}) }) });
   host.kind.set(kind);
   host.node.set(profile.control);
   host.baseline.setValue(initial);
@@ -157,7 +157,7 @@ it.each(kinds)('matches Reactive Forms initialization and survives edits, parent
   await settle(fixture);
   expect(host.immediate).toHaveLength(1);
   expect(host.committed).toHaveLength(1);
-  const replacement = field(initial);
+  const replacement = field.nullable(initial);
   host.node.set(replacement);
   await settle(fixture);
   node.set(null);

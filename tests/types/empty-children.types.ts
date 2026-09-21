@@ -26,7 +26,7 @@ for (const record of records) {
 }
 const empty = form({});
 const age = empty.add('age', field(2));
-type _Added = Expect<Equal<ReturnType<typeof age>, number | null>>;
+type _Added = Expect<Equal<ReturnType<typeof age>, number>>;
 const inferred = form({ name: field(''), age: field(2) });
 inferred.forEachChild(child => {
   type _Declared = Expect<Equal<typeof child, typeof inferred.name | typeof inferred.age>>;

@@ -3,8 +3,8 @@ import { array, createFormPrimitives, field, form, type FieldOptions } from '../
 
 const nullable = field({ id: 1 }, {
   equal: (previous, next) => {
-    type _Previous = Expect<Equal<typeof previous, { id: number } | null>>;
-    type _Next = Expect<Equal<typeof next, { id: number } | null>>;
+    type _Previous = Expect<Equal<typeof previous, { id: number }>>;
+    type _Next = Expect<Equal<typeof next, { id: number }>>;
     return previous?.id === next?.id;
   },
 });
@@ -30,6 +30,6 @@ field('', { equal: 'loose' });
 // @ts-expect-error Equality must return a boolean.
 field('', { equal: () => 1 });
 // @ts-expect-error A nullable field comparator must accept null.
-field('Marco', { equal: (previous: string, next: string) => previous === next });
+field.nullable('Marco', { equal: (previous: string, next: string) => previous === next });
 // @ts-expect-error Comparators cannot change the inferred field value type.
 field.strict('Marco', { equal: (previous: number, next: number) => previous === next });

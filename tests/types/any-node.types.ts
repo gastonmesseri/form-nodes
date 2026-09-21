@@ -55,12 +55,12 @@ const invalidForm: FormNode = profile.preferences;
 
 const name: FieldNode<string> = field.strict('Marco');
 const details: FormNode<{ name: typeof name }> = form({ name });
-const address: GroupNode<{ city: FieldNode<string | null> }> = group({ city: field('Zurich') });
-const amounts: ArrayNode<FieldNode<number | null>> = array(field(0));
+const address: GroupNode<{ city: FieldNode<string> }> = group({ city: field('Zurich') });
+const amounts: ArrayNode<FieldNode<number>> = array(field(0));
 type _NameValue = Expect<Equal<ReturnType<typeof name>, string>>;
 type _DetailsValue = Expect<Equal<ReturnType<typeof details>, { name: string }>>;
-type _AddressValue = Expect<Equal<ReturnType<typeof address>, { city: string | null }>>;
-type _AmountsValue = Expect<Equal<ReturnType<typeof amounts>, (number | null)[]>>;
+type _AddressValue = Expect<Equal<ReturnType<typeof address>, { city: string }>>;
+type _AmountsValue = Expect<Equal<ReturnType<typeof amounts>, number[]>>;
 
 void [nodes, fields, forms, groups, arrays, invalidField, invalidForm];
 
@@ -87,7 +87,7 @@ genericGroup.$api.getError('required')?.targetNode.$api.add('country', field('CH
 type InferredFormChildren<TNode> = TNode extends FormNode<infer TChildren> ? TChildren : never;
 type InferredGroupChildren<TNode> = TNode extends GroupNode<infer TChildren> ? TChildren : never;
 type _FormChildren = Expect<Equal<InferredFormChildren<typeof details>, { name: typeof name }>>;
-type _GroupChildren = Expect<Equal<InferredGroupChildren<typeof address>, { city: FieldNode<string | null> }>>;
+type _GroupChildren = Expect<Equal<InferredGroupChildren<typeof address>, { city: FieldNode<string> }>>;
 
 // Generic infrastructure retains optional error metadata across every access path.
 declare const sharedNode: DynamicNode;

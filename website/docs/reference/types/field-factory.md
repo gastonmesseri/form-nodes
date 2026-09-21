@@ -19,18 +19,22 @@ Use when passing a configured field factory to shared declaration code. Its over
 ## Declaration
 
 ```ts
-type FieldFactory<TNullable extends boolean> = ([
+type FieldFactory<TNullable extends boolean | undefined> = ([
     TNullable
 ] extends [
     false
-] ? NonNullableFieldFactory : typeof import('./field').field) & FieldNullabilityOverrides;
+] ? NonNullableFieldFactory : [
+    TNullable
+] extends [
+    undefined
+] ? typeof import('./field').field : typeof import('./field').field.nullable) & FieldNullabilityOverrides;
 ```
 
 ## Type parameters
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNullable` | `boolean` | Required |
+| `TNullable` | `boolean \| undefined` | Required |
 
 ## Related reference
 

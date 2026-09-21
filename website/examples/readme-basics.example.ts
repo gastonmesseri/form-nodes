@@ -191,7 +191,7 @@ if (!application.age.valid() || application.name.disabled()) {
   throw new Error('Reactive state should recover when its dependencies change back.');
 }
 
-const nullableName = field('Ada');
+const nullableName = field.nullable('Ada');
 const strictName = field.strict('Ada');
 const deferredAge = field<number>(null);
 const acceptsNullable: FormNodeValue<typeof nullableName> = null;

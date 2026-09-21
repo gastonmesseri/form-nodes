@@ -20,7 +20,7 @@ const mixed = form({ username: field(''), age: field(2) });
 mixed.forEachChild(child => {
   type _Mixed = Expect<Equal<typeof child, typeof mixed.username | typeof mixed.age>>;
   const value = child();
-  type _Value = Expect<Equal<typeof value, string | number | null>>;
+  type _Value = Expect<Equal<typeof value, string | number>>;
   // @ts-expect-error A string is not accepted by the numeric member of the union.
   child.set('');
 });

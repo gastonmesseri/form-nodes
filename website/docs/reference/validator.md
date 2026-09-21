@@ -70,9 +70,10 @@ By default, the helper returns the original function with normal signal tracking
 `{ reactive: false }` to track the node value while sampling external signals without subscribing
 to their changes. Neither mode requires an injector or eagerly executes the callback.
 
-`TValue` must match the exact node value. Default fields normally include `null`; forms and arrays
-use their non-null aggregate values. A validator declared as `validator<number>()` therefore fits a
-field created with [`field.strict()`](./field.md#nullability).
+`TValue` must match the node value, including null or undefined when admitted by the field.
+A validator declared as `validator<number>()` fits `field(0)` or
+[`field.strict(0)`](./field.md#nullability); nullable fields need a validator that handles null.
+Forms and arrays use their aggregate models.
 
 ### ◆ Signature {#signature}
 

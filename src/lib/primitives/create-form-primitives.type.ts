@@ -112,20 +112,22 @@ export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
   ): FieldNode<TValue>;
 }
 
-export type FieldFactory<TNullable extends boolean> = ([TNullable] extends [false]
+export type FieldFactory<TNullable extends boolean | undefined> = ([TNullable] extends [false]
   ? NonNullableFieldFactory
-  : typeof import('./field').field) & FieldNullabilityOverrides;
+  : [TNullable] extends [undefined]
+    ? typeof import('./field').field
+    : typeof import('./field').field.nullable) & FieldNullabilityOverrides;
 
-type ConfiguredAddedNode<TDefinition, TParent extends AnyNode, TNullable extends boolean> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
+type ConfiguredAddedNode<TDefinition, TParent extends AnyNode, TNullable extends boolean | undefined> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
 
-export type ConfiguredForm<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
+export type ConfiguredForm<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean | undefined> = {
   add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
     readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   };
 } & FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
 
-export interface FormFactory<TNullable extends boolean> {
+export interface FormFactory<TNullable extends boolean | undefined> {
   /**
    * Creates an empty form while preserving configured defaults for later additions.
    *
@@ -149,7 +151,7 @@ export interface FormFactory<TNullable extends boolean> {
   ): ConfiguredForm<TDefinitions, TNullable>;
 }
 
-export interface GroupFactory<TNullable extends boolean> {
+export interface GroupFactory<TNullable extends boolean | undefined> {
   /**
    * Creates an empty group while preserving configured defaults for later additions.
    *
@@ -173,7 +175,7 @@ export interface GroupFactory<TNullable extends boolean> {
   ): ConfiguredGroup<TDefinitions, TNullable>;
 }
 
-export type ConfiguredGroup<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
+export type ConfiguredGroup<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean | undefined> = {
   add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
     readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
@@ -184,12 +186,12 @@ type ArrayTemplate = AnyNode | ObjectNodeDefinitions;
 type ArrayTemplateInput<TDefinition extends ArrayTemplate> = TDefinition extends AnyNode
   ? TDefinition
   : ObjectNodeDefinitionInputs<Extract<TDefinition, ObjectNodeDefinitions>>;
-type ConfiguredArrayItem<TDefinition, TNullable extends boolean> = NormalizedNodeWithDefault<TDefinition, TNullable>;
-type ConfiguredArrayValue<TDefinition, TNullable extends boolean> = ArrayValue<ConfiguredArrayItem<TDefinition, TNullable>>;
-type ArrayInitial<TDefinition, TNullable extends boolean> = number | ArraySet<ConfiguredArrayItem<TDefinition, TNullable>> | null | undefined;
+type ConfiguredArrayItem<TDefinition, TNullable extends boolean | undefined> = NormalizedNodeWithDefault<TDefinition, TNullable>;
+type ConfiguredArrayValue<TDefinition, TNullable extends boolean | undefined> = ArrayValue<ConfiguredArrayItem<TDefinition, TNullable>>;
+type ArrayInitial<TDefinition, TNullable extends boolean | undefined> = number | ArraySet<ConfiguredArrayItem<TDefinition, TNullable>> | null | undefined;
 type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
-export interface ArrayFactory<TNullable extends boolean> {
+export interface ArrayFactory<TNullable extends boolean | undefined> {
   /**
    * Creates an empty array using a configured unknown-valued field template initialized to null.
    *
@@ -236,7 +238,7 @@ export interface ArrayFactory<TNullable extends boolean> {
   ): ArrayNode<ConfiguredArrayItem<TDefinition, TNullable>>;
 }
 
-export type FormPrimitivesOptions<TNullable extends boolean = true> = {
+export type FormPrimitivesOptions<TNullable extends boolean | undefined = boolean | undefined> = {
   /**
    * Reactively copies node state and constraints into matching custom-control inputs. This is
    * one-way node-to-component synchronization; it does not enable value binding, execute
@@ -346,7 +348,8 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
   /**
    * Default nullability for fields created by this primitive set.
    *
-   * **Default:** `true`.
+   * **Default:** Infer nullability from the generic and initial value.
+   * Set true to always include null, or false to require it in the declared type.
    *
    * ```ts
    * const forms = createFormPrimitives({
@@ -407,7 +410,7 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
   adoptBindingInjector?: boolean;
 };
 
-export type FormPrimitives<TNullable extends boolean = boolean> = {
+export type FormPrimitives<TNullable extends boolean | undefined = boolean | undefined> = {
   field: FieldFactory<TNullable>;
   form: FormFactory<TNullable>;
   group: GroupFactory<TNullable>;

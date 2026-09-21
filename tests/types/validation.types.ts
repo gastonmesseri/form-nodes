@@ -13,7 +13,7 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 
 const name = field('David', [required, nameValidator]);
 const missingText = field<string>(undefined, [minLength(1, { when: ({ value }) => value() !== '' })]);
-type _MissingText = Expect<Equal<ReturnType<typeof missingText>, string | null | undefined>>;
+type _MissingText = Expect<Equal<ReturnType<typeof missingText>, string | undefined>>;
 form({ nickname: field<string>(undefined, [minLength(3)]) });
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
@@ -203,5 +203,5 @@ pattern(/^[a-z]+$/, { debounce: 300 });
 
 validator<string>((_context) => 'Choose another value');
 
-// @ts-expect-error a non-nullable validator cannot observe a field that is nullable by default
-field(1, [positive]);
+// @ts-expect-error a non-nullable validator cannot observe an explicitly nullable field
+field.nullable(1, [positive]);

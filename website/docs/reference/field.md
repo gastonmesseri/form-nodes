@@ -3,6 +3,7 @@ title: field()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 import fieldLiteralUnionSource from '!!raw-loader!../../examples/field-literal-union.example.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
@@ -138,37 +139,33 @@ field.nullable(initialValue?, options?);
 field.nullable(initialValue, validators, options?);
 ```
 
-Fields are nullable by default. The initial value still determines the non-null part of the type:
+`field()` infers nullability from its generic and initial value. It does not add null to a
+non-nullish initial value. `field.strict()` requires a non-nullish value; `field.nullable()`
+always adds null. Both methods also override configured factory policies.
 
-```ts
-const myForm = form({
-  name: field(''),        // Field<string | null>
-  age: field<number>(),   // Field<number | null>
-});
+| Declaration | Value type |
+| --- | --- |
+| `field('')` or `field<string>('')` | `string` |
+| `field<string>(null)` | `string \| null` |
+| `field<string>(undefined)` | `string \| undefined` |
+| `field<string \| null>('')` | `string \| null` |
+| `field<string>()` | `string \| null`, initially `null` |
+| `field.nullable('')` or `field.nullable<string>()` | `string \| null` |
+| `field.strict<string>(null)` or `field.strict<string>()` | Type error |
 
-myForm.name.set(null);
-```
+<CodeBlock language="ts" title="field-nullability.example.ts">{fieldNullabilitySource}</CodeBlock>
 
-Applications that prefer non-nullable fields by default can create an isolated primitive set with
-[`createFormPrimitives({ nullable: false })`](./create-form-primitives.md). The package-level `field()` remains
-nullable by default. Use the explicit field methods below for local overrides.
+The explicit generic remains the domain contract: `field<string>(123)` is rejected. Only null
+and undefined initial values can extend it. Object properties still need to match the generic;
+`field<{ name: string }>({ name: null })` is rejected. Initializer variables follow TypeScript's
+normal control-flow narrowing; use an explicit union or `field.nullable()` when future null
+values must be accepted even though the current value is non-null.
 
-Use the short methods when one declaration should be independent of that default:
-
-```ts
-const username = field.strict('');
-// Field<string>
-
-const nickname = field.nullable('');
-// Field<string | null>
-
-const nickname = field('');
-// Field<string | null>
-```
-
-Both methods are also available on the `field` returned by `createFormPrimitives()`. Their names
-describe the resulting field type: `strict()` always excludes `null`, while `nullable()` always
-includes it.
+[`createFormPrimitives()`](./create-form-primitives.md) uses the same inference when `nullable`
+is omitted. Set `nullable: true` to retain the previous nullable-by-default policy.
+The inferred type propagates to validators, equality, callbacks, writes, and parent values.
+This is a compile-time contract: native controls retain their existing empty-value behavior.
+Use nullable number/date fields when clearing their control can produce null.
 
 When the literal initial value is `null` or `undefined`, there is no concrete value from which
 TypeScript can infer a future type. Form Nodes uses `unknown`, rather than the unsafe `any`.
@@ -185,8 +182,8 @@ myForm.unspecified.set('Marco');
 myForm.unspecified.set(42);
 ```
 
-With an explicit generic, `field<T>(undefined)` includes both the default nullable value and the
-explicit initial value, producing `FieldNode<T | null | undefined>`.
+With an explicit generic, `field<T>(undefined)` preserves undefined and produces
+`FieldNode<T | undefined>`. `field.nullable<T>(undefined)` also adds null.
 
 The same distinction applies to an untyped `field()` from
 `createFormPrimitives({ nullable: false })`: it returns `FieldNode<unknown>` initialized to `null`.

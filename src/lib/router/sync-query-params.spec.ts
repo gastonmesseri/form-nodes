@@ -160,7 +160,7 @@ describe('syncQueryParams', () => {
 
   it('uses explicit serializers, reports malformed input, and distinguishes empty, repeated, and absent parameters', async () => {
     const { router, injector } = setup('/search?q=&page=invalid&tag=a&tag=b');
-    const search = field('fallback');
+    const search = field.nullable('fallback');
     const page = field(1);
     const tags = field.strict<string[]>([]);
     const onError = vi.fn();

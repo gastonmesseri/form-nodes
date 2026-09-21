@@ -186,12 +186,12 @@ results. See [Validation](../guides/validation.md) and
 
 ### ◆ Nullability {#nullability}
 
-Fields are nullable by default. The option changes the public value type as well as accepted
-writes:
+Fields infer nullability from the generic and initial value. `field.nullable()` explicitly adds
+null to the public value type and accepted writes:
 
 ```ts
 const profileForm = form({
-  displayName: field(''),            // string | null
+  displayName: field.nullable(''),   // string | null
   countryCode: field.strict('CH'),   // string
 });
 ```

@@ -17,18 +17,18 @@ type _Age = Expect<Equal<typeof age, number>>;
 const value = acceptWritable<ReturnType<typeof profile>>(profile);
 type _Form = Expect<Equal<typeof value, ReturnType<typeof profile>>>;
 const address = acceptWritable(profile.address);
-type _Group = Expect<Equal<typeof address, { city: string | null }>>;
+type _Group = Expect<Equal<typeof address, { city: string }>>;
 const users = acceptWritable<ReturnType<typeof profile.users>>(profile.users);
-type _Array = Expect<Equal<typeof users, { name: string | null }[]>>;
+type _Array = Expect<Equal<typeof users, { name: string }[]>>;
 const facade = acceptWritable<ReturnType<typeof profile>>(profile.$api);
 type _Facade = Expect<Equal<typeof facade, typeof value>>;
 acceptWritable(profile.age.$api);
 acceptWritable(profile.address.$api);
 acceptWritable(profile.users.$api);
 const nullable = acceptWritable(field(18));
-type _Nullable = Expect<Equal<typeof nullable, number | null>>;
+type _Nullable = Expect<Equal<typeof nullable, number>>;
 // @ts-expect-error Nullable fields cannot provide a non-nullable signal.
-const strict: WritableSignal<number> = field(18);
+const strict: WritableSignal<number> = field.nullable(18);
 // @ts-expect-error Readonly views do not expose writing operations.
 profile.asReadonly().set(profile());
 const readonlyAge: Signal<number> = profile.age.asReadonly();

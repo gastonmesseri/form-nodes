@@ -878,13 +878,13 @@ export interface NodeDefinitions {
  * >;
  * type NameValue = FormNodeValue<
  *   typeof profile.name
- * >; // string | null
+ * >; // string
  * type AddressValue = FormNodeValue<
  *   typeof profile.address
- * >; // { city: string | null }
+ * >; // { city: string }
  * type ContactsValue = FormNodeValue<
  *   typeof profile.contacts
- * >; // { email: string | null }[]
+ * >; // { email: string }[]
  * ```
  */
 export type FormNodeValue<TNode extends AnyNode> = ReturnType<TNode>;

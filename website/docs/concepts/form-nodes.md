@@ -21,7 +21,8 @@ Form Nodes represents every part of a form as a node:
 
 Every field, form, group, and array is an Angular `Signal<T>` of its exposed committed value.
 Pass a node directly to a utility that accepts `Signal<T>`; `isSignal(node)` also returns `true`.
-Nullable fields retain their nullable value type, so `field('Marco')` is a `Signal<string | null>`.
+Fields retain their inferred value type: `field('Marco')` is a `Signal<string>`, while
+`field.nullable('Marco')` is a `Signal<string | null>`.
 
 <CodeBlock language="ts">{SignalInteropExample}</CodeBlock>
 
@@ -44,8 +45,8 @@ needed. `.$api` supports the same contract without child-name collisions.
 
 <CodeBlock language="ts" title="writable-signal-interop.example.ts">{WritableSignalInteropExample}</CodeBlock>
 
-The utility's value type must match the node. `field(18)` accepts `null`, so it matches
-`WritableSignal<number | null>`; use `field.strict(18)` for `WritableSignal<number>`.
+The utility's value type must match the node. `field(18)` infers number, so it matches
+`WritableSignal<number>`; use `field.nullable(18)` for `WritableSignal<number | null>`.
 For forms and groups with children named `set`, `update`, or `asReadonly`, pass `node.$api`.
 Broad `AnyNode`, `FormNode`, and `GroupNode` annotations also use `.$api` because their child names
 are unknown. Concrete inferred types retain direct access when there is no collision.

@@ -14,7 +14,7 @@ describe('types', () => {
   });
 
   it('checks an aggregate value contract without replacing inferred child nodes', () => {
-    type Profile = { username: string | null; items: (string | null)[] };
+    type Profile = { username: string; items: string[] };
     const profile = form({
       username: field(''),
       items: array(field('')),
@@ -36,24 +36,24 @@ describe('types', () => {
       address: { city: 'Zurich' },
     });
 
-    expectTypeOf(profile.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.name()).toEqualTypeOf<string>();
     expectTypeOf(profile.age()).toEqualTypeOf<unknown>();
-    expectTypeOf(profile.siblings()).toEqualTypeOf<number | null>();
-    expectTypeOf(profile.birthday()).toEqualTypeOf<Date | null>();
+    expectTypeOf(profile.siblings()).toEqualTypeOf<number>();
+    expectTypeOf(profile.birthday()).toEqualTypeOf<Date>();
     expectTypeOf(profile.sister()).toEqualTypeOf<unknown>();
-    expectTypeOf(profile.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.address.city()).toEqualTypeOf<string>();
     expectTypeOf(profile()).toEqualTypeOf<{
-      name: string | null;
+      name: string;
       age: unknown;
-      siblings: number | null;
-      birthday: Date | null;
+      siblings: number;
+      birthday: Date;
       sister: unknown;
-      address: { city: string | null };
+      address: { city: string };
     }>();
 
     const arrays = form({ roles: ['admin'], empty: [] });
-    expectTypeOf(arrays.roles()).toEqualTypeOf<string[] | null>();
-    expectTypeOf(arrays.empty()).toEqualTypeOf<unknown[] | null>();
+    expectTypeOf(arrays.roles()).toEqualTypeOf<string[]>();
+    expectTypeOf(arrays.empty()).toEqualTypeOf<unknown[]>();
     expectTypeOf(arrays.roles.nodeType()).toEqualTypeOf<'field'>();
     expectTypeOf(arrays.empty.nodeType()).toEqualTypeOf<'field'>();
   });
@@ -83,8 +83,8 @@ describe('types', () => {
     });
     const son = profile.sons.at(0)!;
 
-    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string | null; age: number | null }[]>();
-    expectTypeOf(son.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string; age: number }[]>();
+    expectTypeOf(son.name()).toEqualTypeOf<string>();
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(son.name.form()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
@@ -97,18 +97,18 @@ describe('types', () => {
     });
     const son = profile.sons.at(0)!;
 
-    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string | null; age: number | null }[]>();
-    expectTypeOf(son.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string; age: number }[]>();
+    expectTypeOf(son.name()).toEqualTypeOf<string>();
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
-    expectTypeOf(profile.sons[0]?.name()).toEqualTypeOf<string | null | undefined>();
+    expectTypeOf(profile.sons[0]?.name()).toEqualTypeOf<string | undefined>();
     profile.sons.forEach((item, index, owner) => {
-      expectTypeOf(item.name()).toEqualTypeOf<string | null>();
+      expectTypeOf(item.name()).toEqualTypeOf<string>();
       expectTypeOf(index).toEqualTypeOf<number>();
       expectTypeOf(owner).toEqualTypeOf<typeof profile.sons>();
     });
     expectTypeOf([...profile.sons]).toEqualTypeOf<(typeof son)[]>();
-    expectTypeOf(profile.sons.map(item => item.name())).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(profile.sons.map(item => item.name())).toEqualTypeOf<(string)[]>();
     expectTypeOf(profile.sons.filter(item => item.age()! > 18)).toEqualTypeOf<(typeof son)[]>();
     expectTypeOf(profile.sons.find(item => item.age()! > 18)).toEqualTypeOf<typeof son | undefined>();
     expectTypeOf(profile.sons.findIndex(item => item.age()! > 18)).toEqualTypeOf<number>();
@@ -129,8 +129,8 @@ describe('types', () => {
     const names = array(field(''), ['Mono'], [validate], { disabled: true });
     const emptyNames = array(field(''), validate, { readonly: true });
 
-    expectTypeOf(names()).toEqualTypeOf<(string | null)[]>();
-    expectTypeOf(emptyNames()).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(names()).toEqualTypeOf<(string)[]>();
+    expectTypeOf(emptyNames()).toEqualTypeOf<(string)[]>();
     expectTypeOf(names.disabled()).toEqualTypeOf<boolean>();
   });
 
@@ -140,7 +140,7 @@ describe('types', () => {
       [{ city: 'Zurich', country: 'Switzerland' }],
     );
 
-    expectTypeOf(locations()).toEqualTypeOf<{ city: string | null; country: string | null }[]>();
+    expectTypeOf(locations()).toEqualTypeOf<{ city: string; country: string }[]>();
 
     if (false) {
       // @ts-expect-error every property declared by the template is required
@@ -156,7 +156,7 @@ describe('types', () => {
       [{ id: 'alex', name: 'Alex' }],
       {
         trackBy: (value, index) => {
-          expectTypeOf(value).toEqualTypeOf<{ id: string; name: string | null }>();
+          expectTypeOf(value).toEqualTypeOf<{ id: string; name: string }>();
           expectTypeOf(index).toEqualTypeOf<number>();
           return value.id;
         },
@@ -173,10 +173,10 @@ describe('types', () => {
     const matrix = array(() => array(() => field(0), 2), 2);
     const names = array(field('Marco'), []);
 
-    expectTypeOf(matrix()).toEqualTypeOf<(number | null)[][]>();
-    expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number | null>();
-    expectTypeOf(names()).toEqualTypeOf<(string | null)[]>();
-    expectTypeOf(names.push()()).toEqualTypeOf<string | null>();
+    expectTypeOf(matrix()).toEqualTypeOf<(number)[][]>();
+    expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number>();
+    expectTypeOf(names()).toEqualTypeOf<(string)[]>();
+    expectTypeOf(names.push()()).toEqualTypeOf<string>();
     expectTypeOf(names.push).toBeCallableWith('Lia');
   });
 
@@ -186,15 +186,15 @@ describe('types', () => {
     const names = array(field(''), ['Marco']);
 
     age.update((value) => {
-      expectTypeOf(value).toEqualTypeOf<number | null>();
+      expectTypeOf(value).toEqualTypeOf<number>();
       return (value ?? 0) + 1;
     });
     profile.update((value) => {
-      expectTypeOf(value).toEqualTypeOf<{ name: string | null; age: number | null }>();
+      expectTypeOf(value).toEqualTypeOf<{ name: string; age: number }>();
       return { ...value, name: 'Mark' };
     });
     names.update((value) => {
-      expectTypeOf(value).toEqualTypeOf<(string | null)[]>();
+      expectTypeOf(value).toEqualTypeOf<(string)[]>();
       return [...value, 'Lia'];
     });
   });
@@ -266,15 +266,15 @@ describe('types', () => {
       toString: field('toString'),
     });
 
-    expectTypeOf(colliding.apply()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.arguments()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.bind()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.call()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.caller()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.length()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.name()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.prototype()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.toString()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.apply()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.arguments()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.bind()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.call()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.caller()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.length()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.name()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.prototype()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.toString()).toEqualTypeOf<string>();
   });
 
   it('types each parent through the form that owns the node', () => {
@@ -287,9 +287,9 @@ describe('types', () => {
     const addressParent = profile.address.$api.parent();
     const cityParent = profile.address.city.$api.parent();
     if (nameParent && addressParent && cityParent) {
-      expectTypeOf(nameParent.name()).toEqualTypeOf<string | null>();
-      expectTypeOf(addressParent.address.city()).toEqualTypeOf<string | null>();
-      expectTypeOf(cityParent.city()).toEqualTypeOf<string | null>();
+      expectTypeOf(nameParent.name()).toEqualTypeOf<string>();
+      expectTypeOf(addressParent.address.city()).toEqualTypeOf<string>();
+      expectTypeOf(cityParent.city()).toEqualTypeOf<string>();
     }
   });
 
@@ -361,26 +361,26 @@ describe('types', () => {
       age: field(23),
       address: form({ city: field('Zurich') }),
     });
-    expectTypeOf(formGroup.age()).toEqualTypeOf<number | null>();
-    expectTypeOf(formGroup.name.value()).toEqualTypeOf<string | null>();
-    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.age()).toEqualTypeOf<number>();
+    expectTypeOf(formGroup.name.value()).toEqualTypeOf<string>();
+    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string>();
     expectTypeOf(formGroup()).toEqualTypeOf<{
-      name: string | null;
-      age: number | null;
-      address: { city: string | null };
+      name: string;
+      age: number;
+      address: { city: string };
     }>();
     expectTypeOf(formGroup.$api.value()).toEqualTypeOf<{
-      name: string | null;
-      age: number | null;
-      address: { city: string | null };
+      name: string;
+      age: number;
+      address: { city: string };
     }>();
   });
 
   it('types control-originated value buffering on fields', () => {
     const fieldNode = field('David', { debounce: 100 });
 
-    expectTypeOf(fieldNode.value.control()).toEqualTypeOf<string | null>();
-    expectTypeOf(fieldNode.$api.value.control()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.value.control()).toEqualTypeOf<string>();
+    expectTypeOf(fieldNode.$api.value.control()).toEqualTypeOf<string>();
     expectTypeOf(fieldNode.debouncing()).toEqualTypeOf<boolean>();
     expectTypeOf(fieldNode.value.control.set).toBeCallableWith('Daniel');
     expectTypeOf(fieldNode.flush).toBeCallableWith();
@@ -395,14 +395,14 @@ describe('types', () => {
     });
 
     expectTypeOf(formGroup.value()).toEqualTypeOf<{
-      age: number | null;
-      readonly: boolean | null;
-      disabled: string | null;
-      reset: string | null;
+      age: number;
+      readonly: boolean;
+      disabled: string;
+      reset: string;
     }>();
-    expectTypeOf(formGroup.disabled()).toEqualTypeOf<string | null>();
-    expectTypeOf(formGroup.readonly()).toEqualTypeOf<boolean | null>();
-    expectTypeOf(formGroup.reset()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.disabled()).toEqualTypeOf<string>();
+    expectTypeOf(formGroup.readonly()).toEqualTypeOf<boolean>();
+    expectTypeOf(formGroup.reset()).toEqualTypeOf<string>();
     expectTypeOf(formGroup.$api.disabled()).toEqualTypeOf<boolean>();
     expectTypeOf(formGroup.$api.readonly()).toEqualTypeOf<boolean>();
     expectTypeOf(formGroup.$api.reset).toBeCallableWith({
@@ -422,7 +422,7 @@ describe('types', () => {
 
     expectTypeOf(fieldNode.required()).toEqualTypeOf<boolean>();
     expectTypeOf(fieldNode.$api.required()).toEqualTypeOf<boolean>();
-    expectTypeOf(colliding.required()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.required()).toEqualTypeOf<string>();
     expectTypeOf(colliding.$api.required()).toEqualTypeOf<boolean>();
   });
 
@@ -438,7 +438,7 @@ describe('types', () => {
     expectTypeOf(formError?.kind).toEqualTypeOf<'formError' | undefined>();
     expectTypeOf(formError?.targetNode).toEqualTypeOf<typeof formGroup | undefined>();
     expectTypeOf(formError?.applicationData).toEqualTypeOf<unknown>();
-    expectTypeOf(colliding.getError()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.getError()).toEqualTypeOf<string>();
     expectTypeOf(colliding.$api.getError('missing')?.kind).toEqualTypeOf<'missing' | undefined>();
   });
 
@@ -449,14 +449,14 @@ describe('types', () => {
     });
     const colliding = form({ children: field('child'), age: field(23) });
 
-    expectTypeOf(profile.children.name()).toEqualTypeOf<string | null>();
-    expectTypeOf(profile.children.address.children.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.children.name()).toEqualTypeOf<string>();
+    expectTypeOf(profile.children.address.children.city()).toEqualTypeOf<string>();
     expectTypeOf(profile.$api.children).toEqualTypeOf<typeof profile.children>();
     // @ts-expect-error the explicit children map is readonly
     profile.$api.children.name = field('other');
-    expectTypeOf(colliding.children()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.$api.children.children()).toEqualTypeOf<string | null>();
-    expectTypeOf(colliding.$api.children.age()).toEqualTypeOf<number | null>();
+    expectTypeOf(colliding.children()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.$api.children.children()).toEqualTypeOf<string>();
+    expectTypeOf(colliding.$api.children.age()).toEqualTypeOf<number>();
   });
 
   it('infers shorthand nested groups', () => {
@@ -469,11 +469,11 @@ describe('types', () => {
         },
       },
     });
-    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string | null>();
-    expectTypeOf(formGroup.address.location.latitude()).toEqualTypeOf<number | null>();
+    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string>();
+    expectTypeOf(formGroup.address.location.latitude()).toEqualTypeOf<number>();
     expectTypeOf(formGroup.$api.value()).toEqualTypeOf<{
-      name: string | null;
-      address: { city: string | null; location: { latitude: number | null } };
+      name: string;
+      address: { city: string; location: { latitude: number } };
     }>();
     expectTypeOf(formGroup.$api.patch).toBeCallableWith({
       address: { location: { latitude: 47.3769 } },
@@ -483,7 +483,7 @@ describe('types', () => {
   it('types groups as structural object nodes without submission', () => {
     const address = group({ city: field('Zurich') });
 
-    expectTypeOf(address()).toEqualTypeOf<{ city: string | null }>();
+    expectTypeOf(address()).toEqualTypeOf<{ city: string }>();
     expectTypeOf(address.city.parent()).toEqualTypeOf<typeof address | null>();
     expectTypeOf(address.submitting()).toEqualTypeOf<boolean>();
   });
@@ -553,7 +553,7 @@ describe('types', () => {
     field('David', [asyncValidator({
       params: ({ value }) => ({ country: country(), name: value() }),
       validate: async ({ params }) => {
-        expectTypeOf(params).toEqualTypeOf<{ country: string; name: string | null }>();
+        expectTypeOf(params).toEqualTypeOf<{ country: string; name: string }>();
         return null;
       },
     })]);
@@ -567,8 +567,8 @@ describe('types', () => {
     formGroup.$api.setValidators([
       (context) => {
         expectTypeOf(context.value()).toEqualTypeOf<{
-          city: string | null;
-          age: number | null;
+          city: string;
+          age: number;
         }>();
         return null;
       },
@@ -581,8 +581,8 @@ describe('types', () => {
       {
         validators: [(context) => {
           expectTypeOf(context.value()).toEqualTypeOf<{
-            city: string | null;
-            age: number | null;
+            city: string;
+            age: number;
           }>();
           return null;
         }],
@@ -637,13 +637,13 @@ describe('types', () => {
       address: { city: field('Zurich') },
     });
 
-    expectTypeOf(age()).toEqualTypeOf<number | null>();
+    expectTypeOf(age()).toEqualTypeOf<number>();
     expectTypeOf(age.parent()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.get('age')).toEqualTypeOf<DynamicNode | undefined>();
     const dynamicKey: string = 'age';
     expectTypeOf(profile.get(dynamicKey)).toEqualTypeOf<DynamicNode | undefined>();
-    expectTypeOf(added.nickname()).toEqualTypeOf<string | null>();
-    expectTypeOf(added.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(added.nickname()).toEqualTypeOf<string>();
+    expectTypeOf(added.address.city()).toEqualTypeOf<string>();
     expectTypeOf(added.address.parent()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.remove('age')).toEqualTypeOf<DynamicNode | undefined>();
 
@@ -682,8 +682,8 @@ describe('types', () => {
 
   it('allows api as a child name and reserves $api', () => {
     const withApiChild = form({ api: field(1) });
-    expectTypeOf(withApiChild.api()).toEqualTypeOf<number | null>();
-    expectTypeOf(withApiChild.$api.value()).toEqualTypeOf<{ api: number | null }>();
+    expectTypeOf(withApiChild.api()).toEqualTypeOf<number>();
+    expectTypeOf(withApiChild.$api.value()).toEqualTypeOf<{ api: number }>();
 
     // @ts-expect-error '$api' is reserved
     form({ $api: field(1) });

@@ -1,14 +1,14 @@
 import { array, field, form, group, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type FormNodeValue } from '@ngblocks/form-nodes';
 
 type AddressChildren = {
-  city: FieldNode<string | null>;
-  postalCode: FieldNode<string | null>;
+  city: FieldNode<string>;
+  postalCode: FieldNode<string>;
 };
 
 type ProfileChildren = {
   username: FieldNode<string>;
   address: GroupNode<AddressChildren>;
-  roles: ArrayNode<FieldNode<string | null>>;
+  roles: ArrayNode<FieldNode<string>>;
 };
 
 const profile: FormNode<ProfileChildren> = form({
@@ -22,7 +22,7 @@ const profile: FormNode<ProfileChildren> = form({
 
 type ProfileValue = FormNodeValue<typeof profile>;
 type UsernameValue = FormNodeValue<typeof profile.username>; // string
-type RolesValue = FormNodeValue<typeof profile.roles>; // (string | null)[]
+type RolesValue = FormNodeValue<typeof profile.roles>; // string[]
 
 // typeof preserves the actual parent as well as the field's value type.
 type AttachedUsername = typeof profile.username;

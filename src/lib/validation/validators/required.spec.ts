@@ -22,8 +22,8 @@ describe('required', () => {
   });
 
   it('supports direct and options syntax', () => {
-    const directField = field('David', [required]);
-    const optionsField = field('David', [required({ message: 'Name is required' })]);
+    const directField = field.nullable('David', [required]);
+    const optionsField = field.nullable('David', [required({ message: 'Name is required' })]);
     directField.set(null);
     optionsField.set(null);
     expect(directField.errors()).toMatchObject([{ kind: 'required' }]);

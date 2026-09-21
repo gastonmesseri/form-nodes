@@ -11,8 +11,8 @@ group({ city: field('') }, { inheritInjector: false });
 group({ city: field('') }, { adoptBindingInjector: false });
 
 type AddressValue = {
-  city: string | null;
-  location: { latitude: number | null };
+  city: string;
+  location: { latitude: number };
 };
 
 type _Value = Expect<Equal<ReturnType<typeof address>, AddressValue>>;
@@ -46,19 +46,19 @@ type _NestedWorkflowRoot = Expect<Equal<ReturnType<typeof profile.independentWor
 type Company = { companyId: number; companyName: string };
 const company: Company = { companyId: 23, companyName: 'Apple' };
 const companyGroup = group({ company });
-type _TypedObjectGroup = Expect<Equal<ReturnType<typeof companyGroup.company>, { companyId: number | null; companyName: string | null }>>;
+type _TypedObjectGroup = Expect<Equal<ReturnType<typeof companyGroup.company>, { companyId: number; companyName: string }>>;
 
 class CompanyModel {
   companyId = 23;
 }
 const companyModel = new CompanyModel();
 const atomicCompanyGroup = group({ company: companyModel });
-type _ExplicitClassField = Expect<Equal<ReturnType<typeof atomicCompanyGroup.company>, CompanyModel | null>>;
+type _ExplicitClassField = Expect<Equal<ReturnType<typeof atomicCompanyGroup.company>, CompanyModel>>;
 type _GroupNodeType = Expect<Equal<ReturnType<typeof atomicCompanyGroup.nodeType>, 'group'>>;
 type _ClassFieldNodeType = Expect<Equal<ReturnType<typeof atomicCompanyGroup.company.nodeType>, 'field'>>;
 
 const dynamicZip = address.add('zip', field('8001'));
-type _DynamicZipValue = Expect<Equal<ReturnType<typeof dynamicZip>, string | null>>;
+type _DynamicZipValue = Expect<Equal<ReturnType<typeof dynamicZip>, string>>;
 address.get('zip');
 // @ts-expect-error dynamically added children are not direct properties
 address.zip;

@@ -457,6 +457,36 @@ describe('resolved validator queries', () => {
 });
 
 describe('form', () => {
+  it('preserves inferred and explicitly nullable field contracts through nested forms and array clones', () => {
+    const profile = form({
+      details: form({ name: field('', required), nickname: field.nullable('') }),
+      rows: array({ title: field(''), note: field<string>(null), code: field<string>(undefined) }),
+    });
+    profile.rows.push();
+    expect(profile()).toEqual({ details: { name: '', nickname: '' }, rows: [{ title: '', note: null, code: undefined }] });
+    expect(profile.invalid()).toBe(true);
+    profile.details.name.set('Ada');
+    profile.details.nickname.set(null);
+    profile.rows[0]!.note.set('A note');
+    profile.rows[0]!.code.set('A');
+    expect(profile.valid()).toBe(true);
+    profile.details.name.markAsDirty();
+    profile.details.name.markAsTouched();
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    profile.reset();
+    expect(profile().rows[0]).toEqual({ title: '', note: 'A note', code: 'A' });
+    expect(profile.details.name()).toBe('Ada');
+    expect(profile.dirty()).toBe(false);
+    expect(profile.touched()).toBe(false);
+    expect(profile.pending()).toBe(false);
+    profile.rows.push();
+    expect(profile.rows[1]!()).toEqual({ title: '', note: null, code: undefined });
+    profile.resetToInitial();
+    expect(profile()).toEqual({ details: { name: '', nickname: '' }, rows: [] });
+    expect(profile.invalid()).toBe(true);
+  });
+
   it('reactively selects the last live array item within a nested form', () => {
     const profile = form({
       details: form({ users: array({ name: field('', required) }, [{ name: 'Ada' }]) }),

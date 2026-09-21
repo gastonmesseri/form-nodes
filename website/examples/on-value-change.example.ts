@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { field, form } from '@ngblocks/form-nodes';
 
-const names: (string | null)[] = [];
-const snapshots: { name: string | null; city: string | null }[] = [];
+const names: string[] = [];
+const snapshots: { name: string; city: string }[] = [];
 
 const profile = form({
   name: field('Ada', {
@@ -33,7 +33,7 @@ profile(); // { name: 'Ada', city: 'London' }
 assert.deepEqual(names, ['Grace', 'Ada']);
 assert.equal(snapshots.length, 2);
 
-const queries: (string | null)[] = [];
+const queries: string[] = [];
 const search = form({
   query: field('', {
     debounce: 'blur',

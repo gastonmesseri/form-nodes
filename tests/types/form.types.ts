@@ -19,15 +19,15 @@ const profile = form({
 });
 
 type ProfileValue = {
-  name: string | null;
+  name: string;
   age: number;
-  address: { city: string | null };
+  address: { city: string };
 };
 
 type _CallableValue = Expect<Equal<ReturnType<typeof profile>, ProfileValue>>;
 type _ApiValue = Expect<Equal<ReturnType<typeof profile.$api.value>, ProfileValue>>;
 type _ControlValue = Expect<Equal<ReturnType<typeof profile.value.control>, ProfileValue>>;
-type _NestedValue = Expect<Equal<ReturnType<typeof profile.address.city>, string | null>>;
+type _NestedValue = Expect<Equal<ReturnType<typeof profile.address.city>, string>>;
 type _ChildParent = Expect<Equal<ReturnType<typeof profile.name.parent>, typeof profile | null>>;
 type _NestedRoot = Expect<Equal<ReturnType<typeof profile.address.city.form>, typeof profile | null>>;
 type _FormRoot = Expect<Equal<ReturnType<typeof profile.root>, typeof profile>>;
@@ -49,11 +49,11 @@ const objectValues = form({
   emptyType,
   calculate: (value: number) => value * 2,
 });
-type _RegExpField = Expect<Equal<ReturnType<typeof objectValues.expression>, RegExp | null>>;
-type _MapField = Expect<Equal<ReturnType<typeof objectValues.lookup>, Map<string, string> | null>>;
-type _ClassField = Expect<Equal<ReturnType<typeof objectValues.account>, Account | null>>;
-type _EmptyClassField = Expect<Equal<ReturnType<typeof objectValues.emptyType>, EmptyType | null>>;
-type _FunctionField = Expect<Equal<ReturnType<typeof objectValues.calculate>, ((value: number) => number) | null>>;
+type _RegExpField = Expect<Equal<ReturnType<typeof objectValues.expression>, RegExp>>;
+type _MapField = Expect<Equal<ReturnType<typeof objectValues.lookup>, Map<string, string>>>;
+type _ClassField = Expect<Equal<ReturnType<typeof objectValues.account>, Account>>;
+type _EmptyClassField = Expect<Equal<ReturnType<typeof objectValues.emptyType>, EmptyType>>;
+type _FunctionField = Expect<Equal<ReturnType<typeof objectValues.calculate>, ((value: number) => number)>>;
 
 type Company = {
   companyId: number;
@@ -64,10 +64,10 @@ const companyForm = form({
   inlineCompany: { companyId: 7, companyName: 'Google' },
   company: defaultCompany,
 });
-type _InlineCompanyValue = Expect<Equal<ReturnType<typeof companyForm.inlineCompany>, { companyId: number | null; companyName: string | null }>>;
-type _TypedCompanyValue = Expect<Equal<ReturnType<typeof companyForm.company>, { companyId: number | null; companyName: string | null }>>;
-type _InlineCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.inlineCompany.companyId>, number | null>>;
-type _TypedCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.company.companyId>, number | null>>;
+type _InlineCompanyValue = Expect<Equal<ReturnType<typeof companyForm.inlineCompany>, { companyId: number; companyName: string }>>;
+type _TypedCompanyValue = Expect<Equal<ReturnType<typeof companyForm.company>, { companyId: number; companyName: string }>>;
+type _InlineCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.inlineCompany.companyId>, number>>;
+type _TypedCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.company.companyId>, number>>;
 
 class User {}
 const user = new User();
@@ -84,11 +84,11 @@ interface CompanyInterface {
 }
 const interfaceCompany: CompanyInterface = { companyId: 23, companyName: 'Apple' };
 const interfaceCompanyForm = form({ company: { ...interfaceCompany } });
-type _SpreadInterfaceCompanyValue = Expect<Equal<ReturnType<typeof interfaceCompanyForm.company>, { companyId: number | null; companyName: string | null }>>;
+type _SpreadInterfaceCompanyValue = Expect<Equal<ReturnType<typeof interfaceCompanyForm.company>, { companyId: number; companyName: string }>>;
 
 declare const textOrDate: string | Date;
 const unionForm = form({ value: textOrDate });
-type _AtomicUnionField = Expect<Equal<ReturnType<typeof unionForm.value>, string | Date | null>>;
+type _AtomicUnionField = Expect<Equal<ReturnType<typeof unionForm.value>, string | Date>>;
 
 const uniqueValue = Symbol('value');
 const shorthandMatrix = form({
@@ -102,23 +102,23 @@ const shorthandMatrix = form({
   createdAt: new Date(),
   calculate: (value: number) => value * 2,
 } as const);
-type _ShorthandText = Expect<Equal<ReturnType<typeof shorthandMatrix.text>, string | null>>;
-type _ShorthandCount = Expect<Equal<ReturnType<typeof shorthandMatrix.count>, number | null>>;
-type _ShorthandBoolean = Expect<Equal<ReturnType<typeof shorthandMatrix.enabled>, boolean | null>>;
-type _ShorthandBigint = Expect<Equal<ReturnType<typeof shorthandMatrix.largeCount>, bigint | null>>;
-type _ShorthandSymbol = Expect<Equal<ReturnType<typeof shorthandMatrix.uniqueValue>, symbol | null>>;
+type _ShorthandText = Expect<Equal<ReturnType<typeof shorthandMatrix.text>, string>>;
+type _ShorthandCount = Expect<Equal<ReturnType<typeof shorthandMatrix.count>, number>>;
+type _ShorthandBoolean = Expect<Equal<ReturnType<typeof shorthandMatrix.enabled>, boolean>>;
+type _ShorthandBigint = Expect<Equal<ReturnType<typeof shorthandMatrix.largeCount>, bigint>>;
+type _ShorthandSymbol = Expect<Equal<ReturnType<typeof shorthandMatrix.uniqueValue>, symbol>>;
 type _ShorthandNull = Expect<Equal<ReturnType<typeof shorthandMatrix.empty>, unknown>>;
 type _ShorthandUndefined = Expect<Equal<ReturnType<typeof shorthandMatrix.missing>, unknown>>;
-type _ShorthandDate = Expect<Equal<ReturnType<typeof shorthandMatrix.createdAt>, Date | null>>;
+type _ShorthandDate = Expect<Equal<ReturnType<typeof shorthandMatrix.createdAt>, Date>>;
 
 const momentForm = form({ appointment: moment('2026-09-03T14:30:00Z') });
-type _MomentField = Expect<Equal<ReturnType<typeof momentForm.appointment>, Moment | null>>;
+type _MomentField = Expect<Equal<ReturnType<typeof momentForm.appointment>, Moment>>;
 
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
 profile.patch({ address: { city: 'Geneva' } });
 profile.update((value) => ({ ...value, age: value.age + 1 }));
 profile.reset();
-profile.reset({ name: null, age: 42, address: { city: null } });
+profile.reset({ name: '', age: 42, address: { city: '' } });
 profile.focus({ preventScroll: true });
 profile.disable('Profile is locked');
 
@@ -156,8 +156,8 @@ profile.patch({ unknown: true });
 // @ts-expect-error nested field value has the wrong type
 profile.patch({ address: { city: 42 } });
 const apiCollision = form({ api: field('child api') });
-type _ApiCollision = Expect<Equal<ReturnType<typeof apiCollision.api>, string | null>>;
-type _ApiCollisionEscapeHatch = Expect<Equal<ReturnType<typeof apiCollision.$api.value>, { api: string | null }>>;
+type _ApiCollision = Expect<Equal<ReturnType<typeof apiCollision.api>, string>>;
+type _ApiCollisionEscapeHatch = Expect<Equal<ReturnType<typeof apiCollision.$api.value>, { api: string }>>;
 
 // @ts-expect-error $api is the reserved form API escape hatch
 form({ $api: field('reserved') });
@@ -173,12 +173,12 @@ const collisions = form({
   root: field('root'),
 });
 
-type _ReadonlyCollision = Expect<Equal<ReturnType<typeof collisions.readonly>, boolean | null>>;
-type _ResetCollision = Expect<Equal<ReturnType<typeof collisions.reset>, string | null>>;
-type _NameCollision = Expect<Equal<ReturnType<typeof collisions.name>, string | null>>;
-type _ApplyCollision = Expect<Equal<ReturnType<typeof collisions.apply>, string | null>>;
-type _FocusCollision = Expect<Equal<ReturnType<typeof collisions.focus>, string | null>>;
-type _RootCollision = Expect<Equal<ReturnType<typeof collisions.root>, string | null>>;
+type _ReadonlyCollision = Expect<Equal<ReturnType<typeof collisions.readonly>, boolean>>;
+type _ResetCollision = Expect<Equal<ReturnType<typeof collisions.reset>, string>>;
+type _NameCollision = Expect<Equal<ReturnType<typeof collisions.name>, string>>;
+type _ApplyCollision = Expect<Equal<ReturnType<typeof collisions.apply>, string>>;
+type _FocusCollision = Expect<Equal<ReturnType<typeof collisions.focus>, string>>;
+type _RootCollision = Expect<Equal<ReturnType<typeof collisions.root>, string>>;
 type _ApiReadonlyUnaffected = Expect<Equal<ReturnType<typeof collisions.$api.readonly>, boolean>>;
 type _ApiRootUnaffected = Expect<Equal<ReturnType<typeof collisions.$api.root>, typeof collisions>>;
 
@@ -187,7 +187,7 @@ profile.children.name = field('Replacement');
 
 const dynamicAge = profile.add('dynamicAge', field(23));
 type _DynamicGet = Expect<Equal<ReturnType<typeof profile.get>, DynamicNode | undefined>>;
-type _ExactAddedNode = Expect<Equal<ReturnType<typeof dynamicAge>, number | null>>;
+type _ExactAddedNode = Expect<Equal<ReturnType<typeof dynamicAge>, number>>;
 // @ts-expect-error dynamically added children are not direct properties
 profile.dynamicAge;
 // @ts-expect-error undeclared child names must not compile

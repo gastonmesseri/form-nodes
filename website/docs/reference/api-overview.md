@@ -60,7 +60,7 @@ follow the references below, especially [node value views](./node-value.md),
 ### ◆ field() {#field}
 
 Creates one leaf node. Its value can be a string, number, date, object, array, or any other
-application type. Fields are nullable by default.
+application type. Nullability follows the generic and initial value.
 
 ```ts
 const myForm = form({
@@ -75,8 +75,8 @@ multi-select. It intentionally has no per-item nodes or structural operations.
 
 Main exports: `field`, `FieldNode`, `FieldApi`, and `FieldOptions`.
 
-Use `createFormPrimitives({ nullable: false })` to obtain application-scoped factories whose fields and
-shorthands are non-nullable by default. Explicit field options always take precedence.
+Use `createFormPrimitives({ nullable: true })` to add null to application-scoped fields and
+shorthands. Explicit `field.strict()` and `field.nullable()` calls take precedence.
 
 ### ◆ form() {#form}
 

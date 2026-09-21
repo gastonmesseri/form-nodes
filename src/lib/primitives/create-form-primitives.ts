@@ -35,8 +35,8 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  *
  * @param options Defaults shared by the returned primitive factories.
  */
-export const createFormPrimitives = <const TNullable extends boolean = true>(options: FormPrimitivesOptions<TNullable> = {}): FormPrimitives<TNullable> => {
-  const defaultNullable = options.nullable ?? true;
+export const createFormPrimitives = <const TNullable extends boolean | undefined = undefined>(options: FormPrimitivesOptions<TNullable> = {}): FormPrimitives<TNullable> => {
+  const defaultNullable = options.nullable;
   const defaultNodeOptions = {
     syncInputs: options.syncInputs,
     bindInputOutputPairs: options.bindInputOutputPairs,
@@ -64,9 +64,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     const value = args.length === 0 ? null : args[0];
     const validatorsOrOptions = args[1] as ValidatorSource<unknown> | FieldOptions<unknown> | undefined;
     const separateOptions = args[2] as FieldOptions<unknown> | undefined;
-    const createField = value === null || value === undefined || defaultNullable
-      ? field.nullable as (...args: any[]) => AnyNode
-      : field.strict as (...args: any[]) => AnyNode;
+    const createField = (defaultNullable === true ? field.nullable : field) as (...args: any[]) => AnyNode;
     if (isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined) {
       return registerDefaults(createField(value, validatorsOrOptions, mergeNodeOptions(separateOptions)));
     }

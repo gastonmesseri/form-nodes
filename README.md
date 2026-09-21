@@ -325,13 +325,15 @@ for the complete value flow and reset rules.
 
 ## 🧩 Types and nullability
 
-Fields are nullable by default. An initial string determines the non-null part of the type, but
-`null` remains an accepted value. Choose `field.strict()` to exclude it:
+Fields infer nullability from the generic and initial value. Use `field.nullable()` when null
+should be accepted even with a non-null initial value:
 
 ```ts
-field('Ada');            // Field<string | null>
-field.strict('Ada');     // Field<string>
-field<number>(null);     // Field<number | null>, initially null
+field('Ada');             // Field<string>
+field<string>(null);      // Field<string | null>, initially null
+field<number>(null);      // Field<number | null>, initially null
+field.nullable('Ada');    // Field<string | null>, initially 'Ada'
+field.strict<string>(''); // Field<string>
 ```
 
 Specify a generic when the initial value does not describe the intended type. For example,
@@ -344,8 +346,8 @@ To derive an API payload type from an existing model:
 import type { FormNodeValue } from '@ngblocks/form-nodes';
 
 type ProfileValue = FormNodeValue<typeof profile>;
-// { name: string | null; email: string | null;
-//   address: { city: string | null; country: string | null } }
+// { name: string; email: string;
+//   address: { city: string; country: string } }
 ```
 
 `FormNodeValue` works with fields, groups, arrays, and forms. Applications that prefer a different

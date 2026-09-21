@@ -21,9 +21,9 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
  * Parameterless callbacks accept unchecked returns to support class form self-references.
  * Callbacks receiving a context retain checked synchronous results and composition types.
  *
- * `TValue` is the exact value observed by the validator. Because `field()` is nullable by default,
- * its standalone validators normally use a type such as `number | null`. Omit `null` only for a
- * field created with `field.strict()`. Form and array nodes use their non-null aggregate models.
+ * `TValue` is the exact value observed by the validator. Include null or undefined when the
+ * field declares or infers those values. For example, `field(0)` uses number, while
+ * `field<number>(null)` uses number | null. Form and array nodes use their aggregate models.
  *
  * ```ts
  * export const isAdult = validator<

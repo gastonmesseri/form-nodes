@@ -60,8 +60,8 @@ type _NullableProfileValue = Expect<Equal<ReturnType<typeof nullableProfile>, { 
 
 const defaultNullableProfile = defaultForms.form({ name: '' });
 const emptyOptionsNullableProfile = emptyOptionsForms.form({ name: '' });
-type _DefaultNullableProfileValue = Expect<Equal<ReturnType<typeof defaultNullableProfile>, { name: string | null }>>;
-type _EmptyOptionsNullableProfileValue = Expect<Equal<ReturnType<typeof emptyOptionsNullableProfile>, { name: string | null }>>;
+type _DefaultNullableProfileValue = Expect<Equal<ReturnType<typeof defaultNullableProfile>, { name: string }>>;
+type _EmptyOptionsNullableProfileValue = Expect<Equal<ReturnType<typeof emptyOptionsNullableProfile>, { name: string }>>;
 
 const defaultProfile = nullableForms.form({ name: field.strict('') });
 type _ExplicitNodeWins = Expect<Equal<ReturnType<typeof defaultProfile>, { name: string }>>;

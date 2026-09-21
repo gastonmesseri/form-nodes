@@ -34,7 +34,7 @@ class Model {
   active = computed(() => this.checkout.enabled() === true);
 }
 const model = new Model();
-type Accepted = Expect<Equal<ReturnType<typeof model.checkout.accepted>, boolean | null>>;
+type Accepted = Expect<Equal<ReturnType<typeof model.checkout.accepted>, boolean>>;
 
 // @ts-expect-error Custom messages and replacement errors are mutually exclusive.
 requiredTrue({ message: 'Accept the terms.', error: { kind: 'consent' } });

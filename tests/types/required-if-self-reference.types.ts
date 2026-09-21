@@ -13,7 +13,7 @@ class Model {
 }
 const model = new Model();
 type _Boolean = Expect<Equal<typeof model.visible, Signal<boolean>>>;
-type _Value = Expect<Equal<ReturnType<typeof model.form>, { other: number | null; subType: string | null }>>;
+type _Value = Expect<Equal<ReturnType<typeof model.form>, { other: number; subType: string | null }>>;
 const node: FieldNode<string | null> = model.form.subType;
 // @ts-expect-error self-references must not erase field write types
 model.form.other.set('wrong');

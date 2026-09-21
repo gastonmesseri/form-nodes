@@ -4,51 +4,51 @@ import { asyncValidator, createFormPrimitives, field, form, required, validator,
 
 const profile = form({
   email: field('', [(ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     ctx.field().touched();
-    type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string | null>>;
+    type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string>>;
     return null;
   }]),
 });
 field('', { validators: (ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
   return null;
 } });
 field('', { validators: [required, null, validator((ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
-  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string | null>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string>>;
   return null;
 })] });
 field('', [asyncValidator(async (ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
-  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string | null>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string>>;
   return null;
 }, {
   when: (ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     return true;
   },
   onError: (_error, ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     return null;
   },
 })]);
 field('', { validators: asyncValidator({
   when: (ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     return true;
   },
   params: (ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     return { email: ctx.value() };
   },
   validate: async (ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
-    type _Params = Expect<Equal<typeof ctx.params, { email: string | null }>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
+    type _Params = Expect<Equal<typeof ctx.params, { email: string }>>;
     return null;
   },
   onError: (_error, ctx) => {
-    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
     return null;
   },
 }) });
@@ -70,7 +70,7 @@ field.nullable(0, { validators: asyncValidator(async (ctx) => {
   return null;
 }) });
 field<string>(undefined, [(ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null | undefined>>>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | undefined>>>>;
   return null;
 }]);
 field(null, [(ctx) => {
@@ -100,13 +100,13 @@ configured.field.strict('', [validator((ctx) => {
   return null;
 })]);
 profile.email.setValidators((ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
   return null;
 });
 field('', [validator((ctx) => {
-  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+  type _Node = Expect<Equal<ReturnType<typeof ctx.field>, ValidatorNodeView<FieldNode<string>>>>;
   return [(inner) => {
-    type _Nested = Expect<Equal<ReturnType<typeof inner.field>, ValidatorNodeView<FieldNode<string | null>>>>;
+    type _Nested = Expect<Equal<ReturnType<typeof inner.field>, ValidatorNodeView<FieldNode<string>>>>;
     return null;
   }];
 })]);
@@ -156,7 +156,7 @@ field.strict(new PrivateValue(), [(ctx) => {
   return null;
 }]);
 field(new Date(), [asyncValidator(async (ctx) => {
-  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, Date | null>>;
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, Date>>;
   return null;
 })]);
 field.strict<readonly [string, number]>(['entry', 1], [(ctx) => {

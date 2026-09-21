@@ -12,7 +12,7 @@ type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
 // Put value-bearing generic overloads before undefined-only ones for string-literal completions.
 
 /**
- * Creates a nullable field whose future value type is not yet known.
+ * Creates a field whose future value type is not yet known.
  *
  * Literal `null` and `undefined` initial values both use this safe inference. Use an explicit
  * generic such as `field<string>(null)` when the eventual value type is known.
@@ -36,7 +36,7 @@ export function field(
     ]
 ): FieldNode<unknown>;
 /**
- * Creates a nullable field whose future value type is not yet known from an `undefined` initial value.
+ * Creates a field whose future value type is not yet known from an `undefined` initial value.
  *
  * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
  *
@@ -57,15 +57,35 @@ export function field(
     ]
 ): FieldNode<unknown>;
 /**
- * Creates a nullable field from an initial value and optional configuration.
+ * Creates a field whose value type follows the generic or initial value.
  *
- * The inferred value type includes `null`. Omitting the value initializes the field to `null`.
- * Use `field.strict()` when the field must remain non-nullable.
+ * Null and undefined are included only when declared or supplied initially.
+ * Use `field.nullable()` to always include null or `field.strict()` to reject nullish inputs.
  *
  * ```ts
  * const name = field('Marco');
- *
  * name(); // 'Marco'
+ * ```
+ *
+ * @param value Initial committed value.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
+ */
+export function field<TValue>(
+  value: TValue,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | NoInfer<FieldOptions<TValue>>]
+    | [
+      validators: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | undefined,
+      options: NoInfer<FieldOptions<TValue>> | undefined
+    ]
+): FieldNode<TValue>;
+/**
+ * Creates a field that also accepts null when the initial value may be null.
+ *
+ * ```ts
+ * const name = field<string>(null);
+ * name(); // null
+ * name.set('Ada');
  * ```
  *
  * @param value Initial committed value.
@@ -74,24 +94,49 @@ export function field(
 export function field<TValue>(
   value: TValue | null,
   ...args:
-    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | NoInfer<FieldOptions<TValue | null>>]
     | [
       validators: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | undefined,
-      options: NoInfer<NullableFieldOptions<TValue>> | undefined
+      options: NoInfer<FieldOptions<TValue | null>> | undefined
     ]
 ): FieldNode<TValue | null>;
 /**
- * Creates a nullable field that preserves an explicitly typed `undefined` initial value.
+ * Creates a field that preserves an explicit undefined initial value.
+ * Null is included only if the generic already declares it.
  *
  * ```ts
  * const name = field<string>(undefined);
  * name(); // undefined
  * name.set('Ada');
- * name(); // 'Ada'
  * ```
+ *
+ * @param value Initial committed value.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function field<TValue>(
-  value: undefined,
+  value: TValue | undefined,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | undefined, FieldNode<TValue | undefined>>> | NoInfer<FieldOptions<TValue | undefined>>]
+    | [
+      validators: NoInfer<ValidatorSource<TValue | undefined, FieldNode<TValue | undefined>>> | undefined,
+      options: NoInfer<FieldOptions<TValue | undefined>> | undefined
+    ]
+): FieldNode<TValue | undefined>;
+/**
+ * Creates a field from an initial value that may be null or undefined.
+ *
+ * ```ts
+ * const initial: string | null | undefined =
+ *   JSON.parse('null');
+ * const name = field<string>(initial);
+ * name(); // null
+ * ```
+ *
+ * @param value Initial committed value.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
+ */
+export function field<TValue>(
+  value: TValue | null | undefined,
   ...args:
     | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
     | [
@@ -99,7 +144,15 @@ export function field<TValue>(
       options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
     ]
 ): FieldNode<TValue | null | undefined>;
-export function field<TValue>(): FieldNode<TValue | null>;
+/**
+ * Creates a field initialized to null. Without a generic, its value type is unknown.
+ *
+ * ```ts
+ * const name = field<string>();
+ * name(); // null
+ * ```
+ */
+export function field<TValue = unknown>(): FieldNode<TValue | null>;
 export function field<TValue>(
   value?: TValue,
   validatorsOrOptions?: ValidatorSource<NoInfer<TValue>, FieldNode<NoInfer<TValue>>> | FieldOptions<NoInfer<TValue>>,
@@ -155,9 +208,8 @@ export namespace field {
   /**
    * Creates a field that includes `null`, independently of the configured default.
    *
-   * The package-level `field()` is already nullable by default, so `field<string>()` returns
-   * `FieldNode<string | null>`. Use `field.nullable()` to make that choice explicit or to override a
-   * non-nullable `createFormPrimitives()` default.
+   * Includes null even when the initial value is non-null. Omitting the value initializes to null.
+   * Overrides the default inference or a non-nullable `createFormPrimitives()` policy.
    *
    * ```ts
    * const defaultName = field<string>();

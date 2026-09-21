@@ -28,7 +28,7 @@ class MessageForm {
 }
 
 const model = new MessageForm();
-type _Value = Expect<Equal<ReturnType<typeof model.myForm.name>, string | null>>;
+type _Value = Expect<Equal<ReturnType<typeof model.myForm.name>, string>>;
 type _Errors = Expect<Equal<ReturnType<typeof model.myForm.name.errors>[number], ValidationErrorWithTargetNode<typeof model.myForm.name>>>;
 
 // @ts-expect-error Public errors remain objects, even when validators return messages.

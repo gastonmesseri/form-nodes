@@ -29,21 +29,21 @@ const shorthand = form({
   companies: [{ companyId: 23, companyName: 'Apple' }],
 });
 
-type _String = Expect<Equal<ReturnType<typeof shorthand.text>, string | null>>;
-type _Number = Expect<Equal<ReturnType<typeof shorthand.count>, number | null>>;
-type _Boolean = Expect<Equal<ReturnType<typeof shorthand.enabled>, boolean | null>>;
-type _Bigint = Expect<Equal<ReturnType<typeof shorthand.largeCount>, bigint | null>>;
-type _Symbol = Expect<Equal<ReturnType<typeof shorthand.token>, symbol | null>>;
-type _Date = Expect<Equal<ReturnType<typeof shorthand.createdAt>, Date | null>>;
+type _String = Expect<Equal<ReturnType<typeof shorthand.text>, string>>;
+type _Number = Expect<Equal<ReturnType<typeof shorthand.count>, number>>;
+type _Boolean = Expect<Equal<ReturnType<typeof shorthand.enabled>, boolean>>;
+type _Bigint = Expect<Equal<ReturnType<typeof shorthand.largeCount>, bigint>>;
+type _Symbol = Expect<Equal<ReturnType<typeof shorthand.token>, symbol>>;
+type _Date = Expect<Equal<ReturnType<typeof shorthand.createdAt>, Date>>;
 type _Null = Expect<Equal<ReturnType<typeof shorthand.empty>, unknown>>;
 type _Undefined = Expect<Equal<ReturnType<typeof shorthand.missing>, unknown>>;
-type _NestedObject = Expect<Equal<ReturnType<typeof shorthand.nested>, { city: string | null }>>;
-type _ClassInstance = Expect<Equal<ReturnType<typeof shorthand.user>, User | null>>;
-type _Array = Expect<Equal<ReturnType<typeof shorthand.roles>, string[] | null>>;
-type _EmptyArray = Expect<Equal<ReturnType<typeof shorthand.emptyList>, unknown[] | null>>;
-type _ReadonlyEmptyArray = Expect<Equal<ReturnType<typeof shorthand.readonlyEmptyList>, readonly unknown[] | null>>;
-type _ReadonlyTuple = Expect<Equal<ReturnType<typeof shorthand.coordinates>, readonly [47.37, 8.54] | null>>;
-type _ObjectArray = Expect<Equal<ReturnType<typeof shorthand.companies>, Array<{ companyId: number; companyName: string }> | null>>;
+type _NestedObject = Expect<Equal<ReturnType<typeof shorthand.nested>, { city: string }>>;
+type _ClassInstance = Expect<Equal<ReturnType<typeof shorthand.user>, User>>;
+type _Array = Expect<Equal<ReturnType<typeof shorthand.roles>, string[]>>;
+type _EmptyArray = Expect<Equal<ReturnType<typeof shorthand.emptyList>, unknown[]>>;
+type _ReadonlyEmptyArray = Expect<Equal<ReturnType<typeof shorthand.readonlyEmptyList>, readonly unknown[]>>;
+type _ReadonlyTuple = Expect<Equal<ReturnType<typeof shorthand.coordinates>, readonly [47.37, 8.54]>>;
+type _ObjectArray = Expect<Equal<ReturnType<typeof shorthand.companies>, Array<{ companyId: number; companyName: string }>>>;
 
 const dynamic = form({ fixed: '' });
 const dynamicCount = dynamic.add('count', 1);
@@ -55,25 +55,25 @@ const dynamicBatch = dynamic.add({
   address: { city: 'Zurich' },
 });
 
-type _DynamicNumber = Expect<Equal<ReturnType<typeof dynamicCount>, number | null>>;
+type _DynamicNumber = Expect<Equal<ReturnType<typeof dynamicCount>, number>>;
 type _DynamicNull = Expect<Equal<ReturnType<typeof dynamicEmpty>, unknown>>;
-type _DynamicClassInstance = Expect<Equal<ReturnType<typeof dynamicUser>, User | null>>;
-type _DynamicArray = Expect<Equal<ReturnType<typeof dynamicRoles>, string[] | null>>;
-type _DynamicBoolean = Expect<Equal<ReturnType<typeof dynamicBatch.enabled>, boolean | null>>;
-type _DynamicGroup = Expect<Equal<ReturnType<typeof dynamicBatch.address>, { city: string | null }>>;
+type _DynamicClassInstance = Expect<Equal<ReturnType<typeof dynamicUser>, User>>;
+type _DynamicArray = Expect<Equal<ReturnType<typeof dynamicRoles>, string[]>>;
+type _DynamicBoolean = Expect<Equal<ReturnType<typeof dynamicBatch.enabled>, boolean>>;
+type _DynamicGroup = Expect<Equal<ReturnType<typeof dynamicBatch.address>, { city: string }>>;
 
 const dynamicGroup = group({ fixed: '' });
 const dynamicCategory = dynamicGroup.add('category', 'all');
 const dynamicGroupBatch = dynamicGroup.add({ page: 1, range: { minimum: 0 } });
 
-type _DynamicGroupString = Expect<Equal<ReturnType<typeof dynamicCategory>, string | null>>;
-type _DynamicGroupNumber = Expect<Equal<ReturnType<typeof dynamicGroupBatch.page>, number | null>>;
-type _DynamicNestedGroup = Expect<Equal<ReturnType<typeof dynamicGroupBatch.range>, { minimum: number | null }>>;
+type _DynamicGroupString = Expect<Equal<ReturnType<typeof dynamicCategory>, string>>;
+type _DynamicGroupNumber = Expect<Equal<ReturnType<typeof dynamicGroupBatch.page>, number>>;
+type _DynamicNestedGroup = Expect<Equal<ReturnType<typeof dynamicGroupBatch.range>, { minimum: number }>>;
 
 const dynamicPreferences = dynamic.add({ preferences: { roles: ['admin'] } });
 const dynamicGroupRoles = dynamicGroup.add('roles', ['admin']);
-type _DynamicNestedArray = Expect<Equal<ReturnType<typeof dynamicPreferences.preferences.roles>, string[] | null>>;
-type _DynamicGroupArray = Expect<Equal<ReturnType<typeof dynamicGroupRoles>, string[] | null>>;
+type _DynamicNestedArray = Expect<Equal<ReturnType<typeof dynamicPreferences.preferences.roles>, string[]>>;
+type _DynamicGroupArray = Expect<Equal<ReturnType<typeof dynamicGroupRoles>, string[]>>;
 
 const shorthandRows = array({ name: '', age: 0, roles: ['viewer'], address: { city: '' } }, {
   initialValue: [{ name: 'Marco', age: 36, roles: ['admin'], address: { city: 'Zurich' } }],
@@ -81,20 +81,20 @@ const shorthandRows = array({ name: '', age: 0, roles: ['viewer'], address: { ci
 const shorthandRow = shorthandRows[0]!;
 
 type _ArrayShorthandItem = Expect<Equal<ReturnType<typeof shorthandRow>, {
-  name: string | null;
-  age: number | null;
-  roles: string[] | null;
-  address: { city: string | null };
+  name: string;
+  age: number;
+  roles: string[];
+  address: { city: string };
 }>>;
-type _ArrayShorthandName = Expect<Equal<ReturnType<typeof shorthandRow.name>, string | null>>;
-type _ArrayShorthandAge = Expect<Equal<ReturnType<typeof shorthandRow.age>, number | null>>;
-type _ArrayShorthandRoles = Expect<Equal<ReturnType<typeof shorthandRow.roles>, string[] | null>>;
-type _ArrayShorthandAddress = Expect<Equal<ReturnType<typeof shorthandRow.address>, { city: string | null }>>;
+type _ArrayShorthandName = Expect<Equal<ReturnType<typeof shorthandRow.name>, string>>;
+type _ArrayShorthandAge = Expect<Equal<ReturnType<typeof shorthandRow.age>, number>>;
+type _ArrayShorthandRoles = Expect<Equal<ReturnType<typeof shorthandRow.roles>, string[]>>;
+type _ArrayShorthandAddress = Expect<Equal<ReturnType<typeof shorthandRow.address>, { city: string }>>;
 
 const factoryRows = array(() => ({ name: '', user: new User() }), 1);
 const factoryRow = factoryRows[0]!;
-type _ArrayFactoryShorthandName = Expect<Equal<ReturnType<typeof factoryRow.name>, string | null>>;
-type _ArrayFactoryClassInstance = Expect<Equal<ReturnType<typeof factoryRow.user>, User | null>>;
+type _ArrayFactoryShorthandName = Expect<Equal<ReturnType<typeof factoryRow.name>, string>>;
+type _ArrayFactoryClassInstance = Expect<Equal<ReturnType<typeof factoryRow.user>, User>>;
 
 array({ roles: ['admin'] });
 // @ts-expect-error a root array is not an object-item template
@@ -120,9 +120,9 @@ type _PreservedField = Expect<Equal<ReturnType<typeof mixed.explicitField.nodeTy
 type _PreservedGroup = Expect<Equal<ReturnType<typeof mixed.explicitGroup.nodeType>, 'group'>>;
 type _PreservedForm = Expect<Equal<ReturnType<typeof mixed.explicitForm.nodeType>, 'form'>>;
 type _PreservedArray = Expect<Equal<ReturnType<typeof mixed.explicitArray.nodeType>, 'array'>>;
-type _MixedConcise = Expect<Equal<ReturnType<typeof mixed.concise>, number | null>>;
-type _MixedNestedConcise = Expect<Equal<ReturnType<typeof mixed.nested.concise>, boolean | null>>;
-type _MixedNestedExplicit = Expect<Equal<ReturnType<typeof mixed.nested.explicit>, Date | null>>;
+type _MixedConcise = Expect<Equal<ReturnType<typeof mixed.concise>, number>>;
+type _MixedNestedConcise = Expect<Equal<ReturnType<typeof mixed.nested.concise>, boolean>>;
+type _MixedNestedExplicit = Expect<Equal<ReturnType<typeof mixed.nested.explicit>, Date>>;
 
 const literalDefinition = {
   status: 'draft',
@@ -130,9 +130,9 @@ const literalDefinition = {
   nested: { enabled: false },
 } as const;
 const literalForm = form(literalDefinition);
-type _ConstStringWidening = Expect<Equal<ReturnType<typeof literalForm.status>, string | null>>;
-type _ConstNumberWidening = Expect<Equal<ReturnType<typeof literalForm.attempts>, number | null>>;
-type _ConstBooleanWidening = Expect<Equal<ReturnType<typeof literalForm.nested.enabled>, boolean | null>>;
+type _ConstStringWidening = Expect<Equal<ReturnType<typeof literalForm.status>, string>>;
+type _ConstNumberWidening = Expect<Equal<ReturnType<typeof literalForm.attempts>, number>>;
+type _ConstBooleanWidening = Expect<Equal<ReturnType<typeof literalForm.nested.enabled>, boolean>>;
 
 type ProfileDefinition = {
   readonly name: string;
@@ -145,8 +145,8 @@ const satisfiedDefinition = {
   preferences: { theme: 'dark' },
 } as const satisfies ProfileDefinition;
 const satisfiedForm = form(satisfiedDefinition);
-type _SatisfiedName = Expect<Equal<ReturnType<typeof satisfiedForm.name>, string | null>>;
-type _SatisfiedTheme = Expect<Equal<ReturnType<typeof satisfiedForm.preferences.theme>, string | null>>;
+type _SatisfiedName = Expect<Equal<ReturnType<typeof satisfiedForm.name>, string>>;
+type _SatisfiedTheme = Expect<Equal<ReturnType<typeof satisfiedForm.preferences.theme>, string>>;
 
 type OptionalProfile = {
   readonly nickname?: string;
@@ -154,13 +154,13 @@ type OptionalProfile = {
 };
 declare const optionalProfile: OptionalProfile;
 const optionalForm = form({ profile: optionalProfile });
-type _OptionalValue = Expect<Equal<ReturnType<typeof optionalForm.profile>, { readonly nickname?: string | null; readonly age: number | null }>>;
+type _OptionalValue = Expect<Equal<ReturnType<typeof optionalForm.profile>, { readonly nickname?: string; readonly age: number }>>;
 
 declare const textOrDate: string | Date;
 declare const countOrMissing: number | undefined;
 const unionForm = form({ textOrDate, countOrMissing });
-type _AtomicUnion = Expect<Equal<ReturnType<typeof unionForm.textOrDate>, string | Date | null>>;
-type _NullableUnion = Expect<Equal<ReturnType<typeof unionForm.countOrMissing>, number | null | undefined>>;
+type _AtomicUnion = Expect<Equal<ReturnType<typeof unionForm.textOrDate>, string | Date>>;
+type _NullableUnion = Expect<Equal<ReturnType<typeof unionForm.countOrMissing>, number | undefined>>;
 
 type Company = {
   companyId: number;
@@ -168,7 +168,7 @@ type Company = {
 };
 const company: Company = { companyId: 23, companyName: 'Apple' };
 const predeclaredForm = form({ company });
-type _PredeclaredObject = Expect<Equal<ReturnType<typeof predeclaredForm.company>, { companyId: number | null; companyName: string | null }>>;
+type _PredeclaredObject = Expect<Equal<ReturnType<typeof predeclaredForm.company>, { companyId: number; companyName: string }>>;
 
 form({
   name: '',
@@ -176,8 +176,8 @@ form({
 }, {
   validators: ({ value, node }) => {
     const api = node().$api;
-    type _ValueContext = Expect<Equal<ReturnType<typeof value>, { name: string | null; age: number | null }>>;
-    type _ApiContext = Expect<Equal<ReturnType<typeof api.value>, { name: string | null; age: number | null }>>;
+    type _ValueContext = Expect<Equal<ReturnType<typeof value>, { name: string; age: number }>>;
+    type _ApiContext = Expect<Equal<ReturnType<typeof api.value>, { name: string; age: number }>>;
     return value().name && value().age! >= 18 ? null : { kind: 'invalidProfile' };
   },
 });
@@ -187,7 +187,7 @@ group({
   postcode: field(8000),
 }, {
   validators: ({ value }) => {
-    type _GroupValueContext = Expect<Equal<ReturnType<typeof value>, { city: string | null; postcode: number | null }>>;
+    type _GroupValueContext = Expect<Equal<ReturnType<typeof value>, { city: string; postcode: number }>>;
     return value().city ? null : { kind: 'missingCity' };
   },
 });
@@ -202,11 +202,11 @@ const nestedValueForm = form({
   },
 });
 type _MaterializedNestedValue = Expect<Equal<ReturnType<typeof nestedValueForm>, {
-  name: string | null;
+  name: string;
   address: {
     city: string;
     details: {
-      country: string | null;
+      country: string;
     };
   };
 }>>;

@@ -35,7 +35,7 @@ if (profile.users.at(0)?.username() !== 'Ada') {
 
 // Use the API facade when a child name shadows an operation.
 const labels = form({ set: field('draft') });
-const writable: WritableSignal<{ set: string | null }> = labels.$api;
+const writable: WritableSignal<{ set: string }> = labels.$api;
 writable.set({ set: 'published' });
 if (labels.set() !== 'published') {
   throw new Error('The API facade must preserve child-name collisions.');

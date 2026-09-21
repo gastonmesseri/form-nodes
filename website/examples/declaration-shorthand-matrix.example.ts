@@ -16,9 +16,9 @@ const profile = form({
   }),
 }, {});
 
-const name: FieldNode<string | null> = profile.name;
-const roles: FieldNode<string[] | null> = profile.roles;
-const address: GroupNode<{ city: FieldNode<string | null> }, typeof profile> = profile.address;
+const name: FieldNode<string> = profile.name;
+const roles: FieldNode<string[]> = profile.roles;
+const address: GroupNode<{ city: FieldNode<string> }, typeof profile> = profile.address;
 
 if (profile.name() !== '' || profile.age() !== 0 || profile.roles()?.[0] !== 'reader') {
   throw new Error('Atomic shorthand values should normalize to fields and preserve their values.');

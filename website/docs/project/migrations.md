@@ -5,7 +5,36 @@ title: Migration guides
 # Migration guides {#migration-guides}
 
 import CodeBlock from '@theme/CodeBlock';
+import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
+
+## Moving to 5.0.0: inferred field nullability {#inferred-field-nullability}
+
+**Breaking, unreleased:** `field('')` now produces `FieldNode<string>` instead of
+`FieldNode<string | null>`. The same inference applies to form/group shorthands and array
+templates, including dynamically added children. Validators, callbacks, aggregate values,
+and extracted `FormNodeValue` types follow the resulting field types.
+
+If the domain accepts null, replace `field(value)` with `field.nullable(value)` or declare a
+nullable generic such as `field<string | null>('')`. `field<string>(null)` remains valid.
+For configured factories, `createFormPrimitives({ nullable: true })` preserves the previous
+nullable policy for that factory's fields and shorthands; separately created nodes retain
+their own types. Omitting the option now uses inferred nullability.
+
+<CodeBlock language="ts" title="field-nullability.example.ts">{fieldNullabilitySource}</CodeBlock>
+
+`field<T>(undefined)` now adds only undefined, producing `T | undefined`. Use
+`field.nullable<T>(undefined)` or a generic containing null if both are needed.
+Omitted values still start at null: `field<T>()` produces `T | null`. Untyped nullish calls
+still produce `FieldNode<unknown>`. `field.strict()` still requires a non-nullish initial value.
+Non-nullish values incompatible with the generic, such as `field<string>(123)`, remain errors.
+
+Update manually declared payload types and standalone validators to match the intended domain.
+Keep null in validator types for nullable fields; `required` does not remove null from a type.
+Declare nullable number/date fields when their controls can emit null on clearing. The change
+does not filter runtime writes, alter binding empty values, or change validation or reset rules:
+`reset()` preserves the current value and clears interaction state; `resetToInitial()` restores
+the original value, including explicit undefined.
 
 ## Moving to 4.0.0: minimum length checks empty text {#minimum-length-empty-text}
 

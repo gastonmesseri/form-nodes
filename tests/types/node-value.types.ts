@@ -4,9 +4,9 @@ import type { Equal, Expect } from './assert.types';
 
 const profile = form({ name: field.strict('Ada'), age: field(42) });
 const view: NodeValueSignal<{ name: string; age: number | null }> = profile.value;
-type _Committed = Expect<Equal<ReturnType<typeof profile.value.committed>, { name: string; age: number | null }>>;
+type _Committed = Expect<Equal<ReturnType<typeof profile.value.committed>, { name: string; age: number }>>;
 type _Control = Expect<Equal<ReturnType<typeof profile.value.control>, ReturnType<typeof profile>>>;
-profile.value.committed.set({ name: 'Grace', age: null });
+profile.value.committed.set({ name: 'Grace', age: 0 });
 profile.value.control.set({ name: 'Grace', age: 37 });
 profile.name.value.committed.set('Grace');
 profile.name.value.control.set('Ada');

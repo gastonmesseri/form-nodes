@@ -13,10 +13,10 @@ const rows = acceptSignal(array(field.strict(0)));
 declare const node: AnyNode;
 acceptSignal(node);
 
-type _Nullable = Expect<Equal<typeof nullable, string | null>>;
+type _Nullable = Expect<Equal<typeof nullable, string>>;
 type _Strict = Expect<Equal<typeof strict, string>>;
 type _Unknown = Expect<Equal<typeof unknown, unknown>>;
-type _Profile = Expect<Equal<typeof profile, { name: string | null }>>;
+type _Profile = Expect<Equal<typeof profile, { name: string }>>;
 type _Address = Expect<Equal<typeof address, { city: string }>>;
 type _Rows = Expect<Equal<typeof rows, number[]>>;
 
@@ -33,6 +33,6 @@ const exposedValue = acceptSignal(field('').value);
 const controlValue = acceptSignal(field('').value.control);
 const committedValue = acceptSignal(field('').value.committed);
 
-type _ExposedValue = Expect<Equal<typeof exposedValue, string | null>>;
-type _ControlValue = Expect<Equal<typeof controlValue, string | null>>;
-type _CommittedValue = Expect<Equal<typeof committedValue, string | null>>;
+type _ExposedValue = Expect<Equal<typeof exposedValue, string>>;
+type _ControlValue = Expect<Equal<typeof controlValue, string>>;
+type _CommittedValue = Expect<Equal<typeof committedValue, string>>;

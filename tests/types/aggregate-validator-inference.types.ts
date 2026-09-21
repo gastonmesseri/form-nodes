@@ -2,18 +2,18 @@ import type { Equal, Expect } from './assert.types';
 import type { ValidatorNodeView } from '../../src/lib/validation/validator-node-view.type';
 import { array, asyncValidator, createFormPrimitives, field, form, group, validator, type ArrayNode, type FieldNode, type FormNode, type GroupNode } from '../../src/public-api';
 
-type Children = { name: FieldNode<string | null> };
+type Children = { name: FieldNode<string> };
 const definitions = { name: field('') };
 form(definitions, { validators: (ctx) => {
   type _Node = Expect<Equal<ReturnType<typeof ctx.node>, ValidatorNodeView<FormNode<Children>>>>;
-  const name: string | null = ctx.node().name();
+  const name: string = ctx.node().name();
   void name;
   type _Alias = Expect<Equal<typeof ctx.field, typeof ctx.node>>;
   return null;
 } });
 form({ name: field('') }, [validator((ctx) => {
   type _Node = Expect<Equal<ReturnType<typeof ctx.node>, ValidatorNodeView<FormNode<Children>>>>;
-  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, { name: string | null }>>;
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, { name: string }>>;
   return null;
 })]);
 form({ name: field('') }, { validators: asyncValidator(async (ctx) => {
@@ -27,7 +27,7 @@ form({ name: field('') }, { validators: asyncValidator({
   },
   validate: async (ctx) => {
     type _Node = Expect<Equal<ReturnType<typeof ctx.node>, ValidatorNodeView<FormNode<Children>>>>;
-    type _Params = Expect<Equal<typeof ctx.params, string | null>>;
+    type _Params = Expect<Equal<typeof ctx.params, string>>;
     return null;
   },
   when: (ctx) => {
@@ -104,9 +104,9 @@ configured.array({ name: '' }, { validators: asyncValidator({
   },
 }) });
 // A reusable helper still accepts forms whose child names collide with native function members.
-const reusable = validator<{ name: string | null }>(ctx => ctx.value().name ? null : { kind: 'required' });
+const reusable = validator<{ name: string }>(ctx => ctx.value().name ? null : { kind: 'required' });
 form({ name: field('') }, [reusable]);
 group({ name: field('') }, [reusable]);
-const reusableAsync = asyncValidator<{ name: string | null }>(async () => null);
+const reusableAsync = asyncValidator<{ name: string }>(async () => null);
 form({ name: field('') }, [reusableAsync]);
 group({ name: field('') }, [reusableAsync]);

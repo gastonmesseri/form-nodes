@@ -127,7 +127,7 @@ if (lengthFailure?.maxLength !== 5 || lengthFailure.actual !== 6) {
 const writableProfile = form({ age: field.strict(18), users: array({ name: field('') }) });
 const writableAge: WritableSignal<number> = writableProfile.age;
 const writableForm: WritableSignal<ReturnType<typeof writableProfile>> = writableProfile;
-const writableUsers: WritableSignal<{ name: string | null }[]> = writableProfile.users;
+const writableUsers: WritableSignal<{ name: string }[]> = writableProfile.users;
 const readonlyAge: Signal<number> = writableAge.asReadonly();
 writableAge.update(value => value + 1);
 writableForm.set({ age: readonlyAge(), users: [] });

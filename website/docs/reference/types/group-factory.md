@@ -19,7 +19,7 @@ Use when passing the configured group factory from [`createFormPrimitives()`](..
 ## Declaration
 
 ```ts
-interface GroupFactory<TNullable extends boolean> {
+interface GroupFactory<TNullable extends boolean | undefined> {
     (): ConfiguredGroup<{}, TNullable>;
     <TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>, ...args: [
         validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>
@@ -34,7 +34,7 @@ interface GroupFactory<TNullable extends boolean> {
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNullable` | `boolean` | Required |
+| `TNullable` | `boolean \| undefined` | Required |
 
 ## Related reference
 

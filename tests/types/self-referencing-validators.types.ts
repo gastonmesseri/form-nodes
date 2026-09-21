@@ -52,10 +52,10 @@ class DeclarationVariants {
 const variants = new DeclarationVariants();
 type _Strict = Expect<Equal<ReturnType<typeof variants.model.strict>, string>>;
 type _Nullable = Expect<Equal<ReturnType<typeof variants.model.nullable>, string | null>>;
-type _Inferred = Expect<Equal<ReturnType<typeof variants.model.inferred>, string | null>>;
+type _Inferred = Expect<Equal<ReturnType<typeof variants.model.inferred>, string>>;
 type _Unknown = Expect<Equal<ReturnType<typeof variants.model.unknown>, unknown>>;
 type _Options = Expect<Equal<ReturnType<typeof variants.model.options>, string | null>>;
-type _Undefined = Expect<Equal<ReturnType<typeof variants.model.undefined>, string | null | undefined>>;
+type _Undefined = Expect<Equal<ReturnType<typeof variants.model.undefined>, string | undefined>>;
 type _Configured = Expect<Equal<ReturnType<typeof variants.model.configured>, string>>;
 type _ConfiguredNullable = Expect<Equal<ReturnType<typeof variants.model.configuredNullable>, string | null>>;
 
@@ -80,11 +80,11 @@ class AggregateVariants {
 
 }
 const aggregates = new AggregateVariants();
-type _Root = Expect<Equal<ReturnType<typeof aggregates.root>, { name: string | null }>>;
-type _FormOptions = Expect<Equal<ReturnType<typeof aggregates.options>, { name: string | null }>>;
-type _Group = Expect<Equal<ReturnType<typeof aggregates.branch>, { name: string | null }>>;
-type _Array = Expect<Equal<ReturnType<typeof aggregates.rows>, { name: string | null }[]>>;
-type _ConfiguredRoot = Expect<Equal<ReturnType<typeof aggregates.configured>, { name: string | null }>>;
+type _Root = Expect<Equal<ReturnType<typeof aggregates.root>, { name: string }>>;
+type _FormOptions = Expect<Equal<ReturnType<typeof aggregates.options>, { name: string }>>;
+type _Group = Expect<Equal<ReturnType<typeof aggregates.branch>, { name: string }>>;
+type _Array = Expect<Equal<ReturnType<typeof aggregates.rows>, { name: string }[]>>;
+type _ConfiguredRoot = Expect<Equal<ReturnType<typeof aggregates.configured>, { name: string }>>;
 
 // Explicitly omitted options retain the existing positional call signatures.
 field('', [required], undefined);
@@ -101,16 +101,16 @@ form({ name: field('') }, { disabled: true }, { hidden: true });
 // @ts-expect-error Array options cannot be supplied twice after positional initial data.
 array({ name: field('') }, 1, { disabled: true }, { hidden: true });
 
-type _FactoryRows = Expect<Equal<ReturnType<typeof aggregates.factoryRows>, { name: string | null }[]>>;
-type _PositionalRows = Expect<Equal<ReturnType<typeof aggregates.positionalRows>, { name: string | null }[]>>;
-type _ConfiguredGroup = Expect<Equal<ReturnType<typeof aggregates.configuredGroup>, { name: string | null }>>;
-type _ConfiguredRows = Expect<Equal<ReturnType<typeof aggregates.configuredRows>, { name: string | null }[]>>;
+type _FactoryRows = Expect<Equal<ReturnType<typeof aggregates.factoryRows>, { name: string }[]>>;
+type _PositionalRows = Expect<Equal<ReturnType<typeof aggregates.positionalRows>, { name: string }[]>>;
+type _ConfiguredGroup = Expect<Equal<ReturnType<typeof aggregates.configuredGroup>, { name: string }>>;
+type _ConfiguredRows = Expect<Equal<ReturnType<typeof aggregates.configuredRows>, { name: string }[]>>;
 
 const status = field<'draft' | 'published' | 'archived'>('archived', [
   oneOf(['draft', 'published']),
   equalTo('draft'),
 ]);
-type _Status = Expect<Equal<ReturnType<typeof status>, 'draft' | 'published' | 'archived' | null>>;
+type _Status = Expect<Equal<ReturnType<typeof status>, 'draft' | 'published' | 'archived'>>;
 field<1 | 2>(2, [equalTo(1), oneOf([1])]);
 field<'draft' | 'published'>('draft', { validators: [oneOf(['draft']), equalTo('published')] });
 const standaloneOptions = oneOf(['draft', 'published'], { when: ({ value }) => {
@@ -215,12 +215,12 @@ type _CompleteForm = Expect<Equal<ReturnType<typeof complete.myForm>, {
   value3: string | null;
   value4: string | null;
   value5: string | null;
-  some: string | null;
-  some1: string | null;
-  some2: string | null;
-  some3: string | null;
+  some: string;
+  some1: string;
+  some2: string;
+  some3: string;
   some4: string | null;
-  some5: string | null;
+  some5: string;
 }>>;
 // @ts-expect-error Returning a validator array must preserve the field's string value contract.
 complete.myForm.some4.set(123);
