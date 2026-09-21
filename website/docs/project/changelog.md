@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.6.0 — 2026-09-21 {#460--2026-09-21}
+
 ### Changed
 
 - Support negative indexes in `array().at()`: `-1` selects the last live item node and `-2` the previous one. Index normalization now follows `Array.prototype.at()`, including fractional indexes and `NaN`; out-of-range indexes return `undefined`.
