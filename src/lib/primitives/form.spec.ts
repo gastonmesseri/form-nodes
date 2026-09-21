@@ -457,6 +457,48 @@ describe('resolved validator queries', () => {
 });
 
 describe('form', () => {
+  it('reactively selects the last live array item within a nested form', () => {
+    const profile = form({
+      details: form({ users: array({ name: field('', required) }, [{ name: 'Ada' }]) }),
+    });
+    const users = profile.details.users;
+    const last = computed(() => users.at(-1));
+    const lastName = computed(() => last()?.name());
+    const ada = last()!;
+
+    expect(lastName()).toBe('Ada');
+    expect(profile.valid()).toBe(true);
+    expect(profile.dirty()).toBe(false);
+    expect(profile.touched()).toBe(false);
+
+    users.push({ name: '' });
+    const added = last()!;
+    expect(added).toBe(users[1]);
+    expect(lastName()).toBe('');
+    expect(profile.valid()).toBe(false);
+
+    added.name.set('Lia');
+    expect(lastName()).toBe('Lia');
+    expect(profile().details.users).toEqual([{ name: 'Ada' }, { name: 'Lia' }]);
+    expect(profile.valid()).toBe(true);
+
+    users.move(0, 1);
+    expect(last()).toBe(ada);
+    expect(lastName()).toBe('Ada');
+    expect(ada.path()).toEqual(['details', 'users', '1']);
+
+    users.removeAt(1);
+    expect(last()).toBe(added);
+    expect(lastName()).toBe('Lia');
+    expect(profile.dirty()).toBe(false);
+    expect(profile.touched()).toBe(false);
+
+    users.clear();
+    expect(last()).toBeUndefined();
+    expect(lastName()).toBeUndefined();
+    expect(profile().details.users).toEqual([]);
+  });
+
   it('enumerates an initially empty record through add, updates, and removal', () => {
     const parent = form({ record: form({}) });
     const record = parent.record;

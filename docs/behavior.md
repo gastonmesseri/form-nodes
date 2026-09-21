@@ -2243,7 +2243,7 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 
 - Calling the array node or `value()` returns the aggregated value array with its concrete item-value type.
 - `items()` returns the current readonly node array.
-- `at(index)` returns one typed item or `undefined`.
+- `at(index)` returns the current live typed item node or `undefined`, following `Array.prototype.at()`: negative indexes count backward from the current length (`-1` is the last item), fractional indexes truncate toward zero, and `NaN` selects index zero. Infinite indexes, indexes outside either end, and reads on an empty array return `undefined`. Reads track collection changes without changing values, validation, or interaction state.
 - Numeric property access such as `sons[0]` returns the same typed node as `sons.at(0)` while the array node remains callable.
 - Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `moveUp()`, `moveDown()`, `move()`, `swap()`, `clear()`, `set()`, or `reset()`.
 - `forEach()` iterates item nodes and receives `(item, index, arrayNode)` like the native array method.
@@ -2262,6 +2262,13 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - Item paths use decimal index segments such as `['sons', '0', 'name']`.
 - Items resolve `form()` to their nearest explicit form and `root()` to the array's complete
   structural root. An explicit form item owns its own workflow.
+
+The negative-index lookup contract was checked against Angular Signal Forms `v22.1.7`
+(`f3358f24b884e34d44cfb8ec3db53965153d61e1`), specifically
+`packages/forms/signals/src/field/proxy.ts`, `field/structure.ts`, and
+`packages/forms/signals/test/node/field_proxy.spec.ts`. Angular exposes child lookup and
+reactive array iteration but no `at()` method; this library intentionally adds native-array
+lookup semantics over its existing live item collection.
 
 The array-style read methods are convenience shortcuts, not separate collection state. Their purpose is to make common node queries less verbose. Except for the callback's third argument, these calls are behaviorally equivalent to reading `items()` and invoking the corresponding native array method:
 

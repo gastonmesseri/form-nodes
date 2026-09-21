@@ -465,6 +465,26 @@ describe('array', () => {
     expect(() => { delete (sons as any)[0]; }).toThrow(TypeError);
   });
 
+  it.each<[number, number | undefined]>([
+    [0, 0], [1, 1], [2, 2], [-1, 2], [-2, 1], [-3, 0],
+    [3, undefined], [-4, undefined], [Infinity, undefined], [-Infinity, undefined],
+    [1.9, 1], [-1.9, 2], [0.9, 0], [-0.9, 0], [-0, 0], [NaN, 0],
+  ])('resolves at(%s) using native array index semantics', (index, expectedIndex) => {
+    const items = array(field(''), ['Ada', 'Lia', 'Max']);
+    const expected = expectedIndex === undefined ? undefined : items[expectedIndex];
+
+    expect(items.at(index)).toBe(expected);
+    expect(items.$api.at(index)).toBe(expected);
+  });
+
+  it('returns undefined for at() reads on empty arrays', () => {
+    const items = array(field(''));
+
+    expect(items.at(0)).toBeUndefined();
+    expect(items.at(-1)).toBeUndefined();
+    expect(items.at(NaN)).toBeUndefined();
+  });
+
   it('iterates node snapshots through forEach, for-of, spread, and Array.from', () => {
     const sons = array({ name: field('') }, [{ name: 'Mono' }, { name: 'Lia' }]);
     const visited: Array<{ node: typeof sons[0]; index: number; owner: typeof sons }> = [];

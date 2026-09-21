@@ -584,13 +584,21 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   asReadonly(): Signal<ArrayValue<TItem>>;
   /**
    * Returns the live item node at `index`, or `undefined` when no item exists there.
+   * Negative indexes count from the end: `-1` selects the last item.
+   * Like `Array.prototype.at()`, fractional indexes truncate toward zero,
+   * `NaN` selects index zero, and infinite or out-of-range indexes return `undefined`.
    *
    * ```ts
    * const items = array(field(''), {
    *   initialValue: ['Ada', 'Lia', 'Max'],
    * });
    * items.at(0)?.(); // 'Ada'
+   * items.at(-1)?.(); // 'Max'
+   * items.at(-2)?.(); // 'Lia'
+   * items.at(-4); // undefined
    * ```
+   *
+   * @reactive Tracks the current item collection.
    */
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   /**

@@ -143,7 +143,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `keyInParent` | Property or array index under which this array is stored, or `null` when it is a root array. |
 | `value` | Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array independently of current item values and structure. |
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
-| `at` | Returns the live item node at `index`, or `undefined` when no item exists there. |
+| `at` | Returns the live item node at `index`, or `undefined` when no item exists there. Negative indexes count from the end: `-1` selects the last item. Like `Array.prototype.at()`, fractional indexes truncate toward zero, `NaN` selects index zero, and infinite or out-of-range indexes return `undefined`. |
 | `forEach` | Invokes `callback` once for each current item node, in index order. |
 | `map` | Transforms each current item node and returns the collected results without changing the array. |
 | `filter` | Returns the current item nodes accepted by a type-guard predicate. |

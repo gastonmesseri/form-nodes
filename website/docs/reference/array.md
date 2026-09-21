@@ -3,6 +3,7 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import arrayAtSource from '!!raw-loader!../../examples/array-at.example.ts';
 import arrayTemplateValueSource from '!!raw-loader!../../examples/array-template-value.example.ts';
 import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
@@ -549,7 +550,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Item access and collection** | |
 | [`templateValue()`](#templatevalue) | Returns a typed, independent item value without adding a row. |
-| [`at(index)`](#at) | Returns the live item node at an index, or `undefined`. |
+| [`at(index)`](#at) | Returns the live item node at an index, counting negative indexes from the end, or `undefined`. |
 | [`forEach(callback)`](#foreach) | Invokes a callback once for every current item node. |
 | [`map(callback)`](#map) | Maps item nodes into a new plain array. |
 | [`filter(predicate)`](#filter) | Returns item nodes accepted by the predicate. |
@@ -1386,22 +1387,18 @@ already belongs to another parent is rejected.
 
 **Signature:** `at(index: number): ItemNode | undefined`
 
-Returns the live node at an index, or `undefined` when that index does not exist.
+Returns the current live node at an index. Negative indexes count backward from the end:
+`-1` selects the last item, `-2` the previous item, and `-length()` the first item.
+An empty collection or an index outside either end returns `undefined`.
 
-```ts
-const users = array({
-  username: field(''),
-  active: field(false),
-}, {
-  initialValue: [
-    { username: 'ada', active: true },
-    { username: 'grace', active: false },
-  ],
-});
+Index conversion follows `Array.prototype.at()`: fractional indexes truncate toward zero,
+`NaN` selects index zero, and either infinity returns `undefined`.
 
-users.at(1)?.username(); // 'grace'
-users.at(20); // undefined
-```
+<CodeBlock language="ts" title="array-at.example.ts">{arrayAtSource}</CodeBlock>
+
+Inside a `computed()` or template, `at(-1)` tracks the current collection, so the selected
+node follows additions, removals, and reordering. It returns the existing node instance;
+its methods update the same item and propagate normally to its parent form.
 
 #### – forEach() {#foreach}
 

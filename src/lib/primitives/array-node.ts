@@ -648,7 +648,7 @@ export class ArrayNode<TItem extends AnyNode> {
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
       value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: ArraySet<TItem> | null | undefined) => this.set(next), (next: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(next))),
-      at: index => this.items()[index] as ArrayItemNode<TItem> | undefined,
+      at: index => this.items().at(index) as ArrayItemNode<TItem> | undefined,
       forEach: callback => this.forEach(callback),
       map: callback => this.getItemSnapshot().map((item, index) => callback(item, index, this.node)),
       filter: ((predicate: Parameters<ArrayApi<TItem>['filter']>[0]) => this.filter(predicate)) as ArrayApi<TItem>['filter'],
