@@ -206,9 +206,9 @@ it('emits one typed value per native checkbox, date and selection edit in Chromi
   fixture.destroy();
 });
 
-it('binds independent fields and form children through production AOT inputs and outputs', async () => {
+it('binds standalone values and explicit nodes through production AOT inputs and outputs', async () => {
   const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
-  const fixture = TestBed.createComponent(module.AotExplicitNodeHost);
+  const fixture = TestBed.createComponent(module.AotStandaloneValueHost);
   fixture.detectChanges();
   const host = fixture.componentInstance;
   const standalone = fixture.nativeElement.querySelector('#standalone') as HTMLInputElement;
@@ -224,7 +224,7 @@ it('binds independent fields and form children through production AOT inputs and
   fixture.detectChanges();
   expect(host.name()).toBe('Lin');
   expect(host.custom()).toBe('AOT value');
-  host.profile.name.set('Server');
+  host.source.set('Server');
   fixture.detectChanges();
   expect(explicit.value).toBe('Server');
   expect(host.profile.name()).toBe('Server');

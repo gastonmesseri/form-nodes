@@ -96,6 +96,10 @@ An independent field remains a separate root even when its control appears insid
 `<form>`. Declare it as a child of `form()` when it should participate in that form's value,
 validation, submission, and reset. Use one shared field for all controls in a radio group.
 
+If you need to supply a raw value without declaring a node, see the
+[`[formNodeValue]` input](../reference/form-node-binding.md#value-input). Control edits update its
+independent field without assigning the application source.
+
 ## 🔌 Native controls {#native-controls}
 
 The directive synchronizes value, disabled, readonly, required, name, and applicable constraint state. DOM input updates use `value.control.set()`, mark the field dirty, and follow its debounce. Blur marks it touched.

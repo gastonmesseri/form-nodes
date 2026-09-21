@@ -48,7 +48,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `formNodeValueChange` | Control-originated value after it is committed, respecting debounce and flush. Programmatic node writes do not emit. Synchronous state is current in the handler; asynchronous validation may still be pending. |
-| `formNodeChange` | Short name for formNodeValueChange. Both names share the same committed-value output. Emits control-originated values after debounce; programmatic writes do not emit. Listen with (formNodeChange) alongside [formNode], not [(formNode)]. |
+| `formNodeChange` | Short name for formNodeValueChange. Both names share the same committed-value output. Emits control-originated values after debounce; programmatic writes do not emit. Listen with (formNodeChange) alongside [formNode]. |
 | `formNodeControlValueChange` | Latest parsed value received from the selected control adapter, before waiting for debounce. This does not guarantee a physical user interaction: custom controls can emit from code. |
 | `formNodeSubmit` | Native submission attempt on a form() binding, after preparing values and interaction state, before the validation gate and declared action. Emits even without onSubmit or when blocked. Programmatic submit() does not emit. Async listeners are not awaited. |
 | `formNodeSubmitBlocked` | Native attempt rejected by submitWhen, including pending validation with 'valid'. Emits after formNodeSubmit, even without a declared onSubmit action. Concurrent attempts, group bindings, and programmatic submit() do not emit this output. |

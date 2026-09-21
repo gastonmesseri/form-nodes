@@ -10,15 +10,11 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
-## 📦 6.0.0 — 2026-09-21 {#600--2026-09-21}
+## 📦 5.1.0 — 2026-09-21 {#510--2026-09-21}
 
 ### Added
 
 - Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup. Invalid node bindings now explain how to use `[formNode]`.
-
-### Removed
-
-- **Breaking:** Remove the `formNodeValue` input and its implicit-field mode, including `[(formNodeValue)]` and combinations with `[formNode]`. Declare a `field()` or a child of `form()`, bind it with `[formNode]`, and use node setters for programmatic updates. Both `(formNodeChange)` and `(formNodeValueChange)` remain supported committed-value events.
 
 ## 📦 5.0.0 — 2026-09-21 {#500--2026-09-21}
 

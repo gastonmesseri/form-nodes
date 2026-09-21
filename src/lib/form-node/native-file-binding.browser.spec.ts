@@ -11,6 +11,7 @@ import { required } from '../validation/validators/required';
 import { registerSignalInputForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNodeValue', '_formNodeValue');
 registerSignalOutputForJit(FormNodeDirective, 'formNodeValueChange');
 registerSignalOutputForJit(FormNodeDirective, 'formNodeControlValueChange');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
@@ -167,13 +168,13 @@ describe('native file bindings', () => {
     expect(commits).toHaveBeenCalledTimes(1);
   });
 
-  it('supports independent File[] fields and programmatic clearing', () => {
+  it('supports standalone two-way File[] values and programmatic clearing', () => {
     @Component({
-      template: `<input type="file" multiple [formNode]="files"><output>{{ files()[0]?.name }}</output>`,
+      template: `<input type="file" multiple [(formNodeValue)]="files"><output>{{ files()[0]?.name }}</output>`,
       imports: [FormNodeDirective],
     })
     class Host {
-      files = field<File[]>([]);
+      files = signal<File[]>([]);
     }
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();

@@ -4,6 +4,7 @@ title: "[formNode] directive"
 
 import CodeBlock from '@theme/CodeBlock';
 import basicBindingSource from '!!raw-loader!../../examples/form-node-binding-basic.typecheck.ts';
+import valueInputSource from '!!raw-loader!../../examples/form-node-value-input.typecheck.ts';
 import templateActionsSource from '!!raw-loader!../../examples/form-node-template-actions.typecheck.ts';
 import bindingQuerySource from '!!raw-loader!../../examples/form-node-query.typecheck.ts';
 import submitSource from '!!raw-loader!../../examples/form-node-submit.typecheck.ts';
@@ -27,6 +28,7 @@ Bind a node, listen to control edits, or attach the directive to `<form>` for su
 | Template API | Example | What it does |
 | --- | --- | --- |
 | [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
+| [`[formNodeValue]`](#value-input) | `[formNodeValue]="suggestedName()"` | Supplies a raw value to an independent field or to the explicitly bound node. |
 | [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="saveDraft($event)"` | Receives the committed value after debounce. |
 | [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="recordAttempt($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
 | [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="showErrors($event)"` | Reports an attempt rejected by `submitWhen`. |
@@ -114,6 +116,41 @@ recognized custom component that models their complete value.
 | CVA component | Compatible field or aggregate node | Uses `ControlValueAccessor` interoperability |
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
+
+## Value input {#value-input}
+
+`[formNodeValue]="value"` supplies a raw value through the same `FormNodeDirective`.
+Without an explicit `[formNode]`, the binding creates one independent field. Control edits update
+that field and emit the value outputs; they do not assign the supplied application value.
+
+<CodeBlock language="ts" title="suggested-name-editor.component.ts">{valueInputSource}</CodeBlock>
+
+The example starts with `Ada`. Editing changes `control.node()()` while `suggestedName()` keeps
+its supplied value. A later change to `suggestedName` updates the control. Unrelated change
+detection does not overwrite local edits.
+
+| Inputs | Bound node |
+| --- | --- |
+| `[formNodeValue]` | One independent field initialized from the supplied value. |
+| `[formNode]` and `[formNodeValue]` | The supplied node, updated from the value input. |
+| `[formNode]="undefined"` with `[formNodeValue]` | The independent field. |
+
+The value can be `null` or `undefined`; objects, arrays, and functions remain atomic field values.
+With an explicit node, the supplied value must be assignable to that node's value type.
+`control.node()` retains the node's type, or exposes `FieldNode<T>` for an independent value of
+type `T`. A native `<form>` still requires an explicit form or group node.
+
+Source changes use programmatic `set()`: they preserve dirty and touched state, cancel pending
+input, and run normal validation and node value callbacks without emitting control-change outputs.
+Rebinding applies the current source value to the new node and moves binding state, contributed
+errors, and injector ownership. Deferred outputs from the old node are ignored. Returning to an
+undefined node reuses the original independent field and applies the current source value.
+
+The independent field has no structural parent, so an ancestor form does not aggregate, submit,
+or reset it. `control.reset()` retains the committed value and clears interaction and pending
+input; `control.node().resetToInitial()` restores the first field initialization value. Neither
+operation assigns the application source. Prefer an explicit `field()` for declared validators,
+debounce, or participation in a larger form.
 
 ## 🔔 Value outputs {#value-outputs}
 

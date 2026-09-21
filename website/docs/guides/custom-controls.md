@@ -281,6 +281,8 @@ used with Angular 22 Signal Forms.
 Bind an independent `field()` with `[formNode]` when the control does not belong to a larger
 form. `useFormNodeState()` and its error contributions observe that field in the same way as a
 form child. See [Independent fields](./control-binding.md#standalone-values) for an example.
+The same controls also support the [`[formNodeValue]` input](../reference/form-node-binding.md#value-input);
+`useFormNodeState()` then observes the independent field created by the binding.
 
 ## Built-in error presentation {#built-in-error-presentation}
 

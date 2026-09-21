@@ -2525,24 +2525,43 @@ The tolerant `group()` native-form binding is a deliberate library extension: An
 does not expose an equivalent public distinction between this library's structural group and
 submission-owning form.
 
+## Standalone value binding with `[formNodeValue]`
+
+`FormNodeDirective` also matches `[formNodeValue]`. With no `formNode` input, or an explicit
+`undefined` node, it lazily creates one field from the raw source value. The field retains the
+source type, including null/undefined, and treats objects, arrays, and functions atomically.
+The field uses the host injector and has no structural parent; ancestor forms do not aggregate,
+validate, submit, or reset it. An explicit node is reused without allocating an internal field.
+A native form still requires an explicit form/group node; invalid node inputs remain errors.
+
+Input changes synchronize before control setup through programmatic `set()`. Subsequent source
+changes preserve interaction state, cancel pending input, and follow ordinary validation and
+committed-value callback behavior without emitting either control output. User edits use the
+existing adapter pipeline: dirty/control value update immediately, touched changes on blur/touch,
+and committed output respects debounce. A one-way source remains unchanged and does not overwrite
+local edits on unrelated renders. A two-way echo of an emitted value is ignored so it cannot
+cancel a newer pending draft. Source identity is compared with `Object.is`; node equality remains
+authoritative for committed values.
+
+Rebinding applies the latest source to the newly active node, moves control/error registrations
+and injector leases, and suppresses deferred output from the former node. Returning to standalone
+mode reuses the same internal field. Destruction releases binding-owned registrations and errors;
+internal validation has host-injector ownership. The exported binding's `node()` and
+`useFormNodeState()` observe the currently active node. Reset retains the current committed value;
+reset-to-initial restores the first internal-field initialization value. Neither emits a source
+update. These APIs introduce no form-registration-by-name mechanism.
+
+Angular reference: `v22.1.7`, commit `f3358f24b884e34d44cfb8ec3db53965153d61e1`.
+Inspected `packages/forms/signals/src/directive/control_cva.ts`,
+`packages/forms/signals/src/directive/form_field.ts`, and
+`packages/forms/signals/test/web/form_field.spec.ts` (field rebinding, control-value tracking,
+CVA loopback prevention, native/custom debounce, and reset of pending input).
+The automatic field and its optional explicit-node override are deliberate Form Nodes API
+extensions, not Angular Signal Forms behavior. Field reset and parent-state semantics stay unchanged.
+
 ## Control binding with `[formNode]`
 
-Form Nodes binds explicit nodes through the required `[formNode]` input. The directive does not
-create an implicit field or synchronize a separate value input. Independent controls declare a
-`field()`; controls within a form bind its child nodes. Programmatic updates use node setters,
-which preserve the existing validation, debounce cancellation, and interaction rules without
-emitting control-change outputs. Rebinding uses the new node's own value and state, moves binding
-registrations and errors, and suppresses deferred output from the former node.
-
-Reference for explicit-node synchronization: Angular v22.1.7
-(`f3358f24b884e34d44cfb8ec3db53965153d61e1`),
-`packages/forms/signals/src/directive/form_field.ts`, `src/directive/control_cva.ts`, and
-`test/web/form_field.spec.ts` under `packages/forms/signals` (field input rebinding, native and
-custom control debounce, and reset of pending input). Angular's control-value tracking avoids
-CVA loopback; this removal retains the existing adapters and state transitions. Form Nodes'
-public node and output APIs remain its own design.
-
-The `$field` adapter has been removed.
+Form Nodes binds its own nodes through `[formNode]`. The `$field` adapter has been removed.
 `useFormNodeState()` still observes independently created Angular Signal Forms through `[formField]`;
 it does not create or synchronize a second Angular form tree for Form Nodes nodes.
 
@@ -3627,7 +3646,7 @@ fallback intentionally extends that metadata-only behavior; it does not register
 ## Binding value outputs
 
 The short `formNodeChange` name is an additive alias; `formNodeValueChange` remains supported
-as the same committed-value output. `[formNode]` receives a node, not its value. With strict
+and powers `[(formNodeValue)]`. `[formNode]` still receives a node, not its value. With strict
 template checking, accidental `[(formNode)]` on a string field fails because Angular unwraps
 the writable signal to a string. Invalid runtime inputs fail before control binding with a
 message recommending `[formNode]`. This is value validation, not template
@@ -4205,7 +4224,7 @@ not define this API contract.
   a new `File[]` snapshot, including `[]` for an empty selection. Files retain their identity;
   distinct files with matching metadata are still distinct values. Multiple selections use a
   leaf `field<File[]>`, not an aggregate `array()` node.
-- File controls bound through `[formNode]` use this conversion.
+- Both explicit `[formNode]` and standalone `[formNodeValue]` bindings use this conversion.
   Input and change events share normal parsing, equality, dirty, validation, and debounce
   handling. Duplicate events for the same identities and order do not emit twice. Blur marks
   touched and flushes blur debounce; submission flushes pending selections. Picker cancellation

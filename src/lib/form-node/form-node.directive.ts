@@ -1,8 +1,10 @@
 import { NgControl } from '@angular/forms';
-import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, output, type OnInit, type Signal } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, output, untracked, type OnInit, type Signal, type OnChanges } from '@angular/core';
 
 import { shallowEqual } from '../utils/shallow-equal';
+import type { FieldNode } from '../primitives/field.type';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
+import { createFieldNode } from '../primitives/field-node';
 import type { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
@@ -20,11 +22,17 @@ import type { CustomControlEvents } from './adapters/signal-forms-control/custom
 import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
 import { FORM_NODE_INTEROP, createFormNodeInterop, injectFormNodeNgControl } from './form-node-interop';
 
+const UNSET_VALUE = Symbol('unset formNodeValue');
+
+// Angular's template type constructor defaults an omitted node generic to any.
+// Infer standalone field values from the value input in that case.
+type BoundNode<TNode extends AnyNode, TValue> = 0 extends (1 & TNode) ? FieldNode<TValue> : [TNode] extends [never] ? FieldNode<TValue> : TNode;
+
 /** Public injection token for the nearest Form Nodes control binding. */
 export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE');
 
 @Directive({
-  selector: '[formNode]',
+  selector: '[formNode],[formNodeValue]',
   standalone: true,
   providers: [
     { provide: FORM_NODE, useExisting: forwardRef(() => _FormNode) },
@@ -42,8 +50,14 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
   outputs: ['formNodeChange'],
   exportAs: 'formNode',
 })
-export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBinding<TNode>, OnInit {
-  formNodeInput = input.required<TNode>({ alias: 'formNode' });
+export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implements FormNodeBinding<BoundNode<TNode, TValue>>, OnInit, OnChanges {
+  formNodeInput = input<TNode | undefined>(undefined, { alias: 'formNode' });
+
+  /** Supplies a value to the explicit node or an independent, lazily created field. */
+  _formNodeValue = input<TValue | typeof UNSET_VALUE, TValue & NodeValue<BoundNode<NoInfer<TNode>, NoInfer<TValue>>>>(UNSET_VALUE, {
+    alias: 'formNodeValue',
+    transform: value => value,
+  });
 
   /**
    * Control-originated value after it is committed, respecting debounce and flush.
@@ -69,12 +83,12 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * }
    * ```
    */
-  formNodeValueChange = output<NodeValue<TNode>>();
+  formNodeValueChange = output<NodeValue<BoundNode<TNode, TValue>>>();
 
   /**
    * Short name for formNodeValueChange. Both names share the same committed-value output.
    * Emits control-originated values after debounce; programmatic writes do not emit.
-   * Listen with (formNodeChange) alongside [formNode], not [(formNode)].
+   * Listen with (formNodeChange) alongside [formNode].
    *
    * ```ts
    * import { Component } from '@angular/core';
@@ -121,7 +135,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * }
    * ```
    */
-  formNodeControlValueChange = output<NodeValue<TNode>>();
+  formNodeControlValueChange = output<NodeValue<BoundNode<TNode, TValue>>>();
 
   /**
    * Native submission attempt on a form() binding, after preparing values and interaction state,
@@ -147,7 +161,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * }
    * ```
    */
-  formNodeSubmit = output<FormNodeSubmitEvent<TNode>>();
+  formNodeSubmit = output<FormNodeSubmitEvent<BoundNode<TNode, TValue>>>();
 
   /**
    * Native attempt rejected by submitWhen, including pending validation with 'valid'.
@@ -173,7 +187,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * }
    * ```
    */
-  formNodeSubmitBlocked = output<FormNodeSubmitEvent<TNode>>();
+  formNodeSubmitBlocked = output<FormNodeSubmitEvent<BoundNode<TNode, TValue>>>();
 
   injector = inject(Injector);
 
@@ -203,6 +217,12 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   bindingGeneration = 0;
 
+  private _standaloneNode: FieldNode<TValue> | undefined;
+
+  private _synchronizedNode: BoundNode<TNode, TValue> | undefined;
+
+  private _synchronizedValue: unknown = UNSET_VALUE;
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /**
@@ -222,7 +242,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * }
    * ```
    */
-  node = computed<TNode>(() => this.field);
+  node = computed<BoundNode<TNode, TValue>>(() => this.field);
 
   /**
    * Errors visible to this binding, excluding errors owned by another binding.
@@ -237,8 +257,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
    * });
    * ```
    */
-  errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]> = computed(() => {
-    const errors = this.node().$api.errors() as readonly ValidationErrorWithTargetNode<TNode>[];
+  errors: Signal<readonly ValidationErrorWithTargetNode<BoundNode<TNode, TValue>>[]> = computed(() => {
+    const errors = this.node().$api.errors() as readonly ValidationErrorWithTargetNode<BoundNode<TNode, TValue>>[];
     return errors.filter(error => !error.formNode || error.formNode === this);
   }, { equal: shallowEqual });
 
@@ -261,6 +281,19 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     }, { injector: this.injector });
   }
 
+  ngOnChanges() {
+    const value = this._formNodeValue();
+    if (value === UNSET_VALUE) return;
+    untracked(() => {
+      const node = this.node();
+      if (node !== this._synchronizedNode || !Object.is(value, this._synchronizedValue)) {
+        node.$api.set(value);
+      }
+      this._synchronizedNode = node;
+      this._synchronizedValue = value;
+    });
+  }
+
   ngOnInit() {
     if (this.nativeForm) {
       this.requireObjectNode();
@@ -271,7 +304,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
       this.connectNativeEvents();
       return;
     }
-    const context: ControlAdapterContext<TNode> = {
+    const context: ControlAdapterContext<BoundNode<TNode, TValue>> = {
       binding: this,
       renderer: this.renderer,
       getNgControl: () => this.ngControl,
@@ -297,20 +330,24 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     const generation = this.bindingGeneration;
     let receiving = true;
     let committed = false;
-    let committedValue: NodeValue<TNode>;
+    let committedValue: NodeValue<BoundNode<TNode, TValue>>;
     const emitCommitted = () => {
       const binding = bindingRef.deref();
       if (!binding || binding.destroyRef.destroyed || binding.node() !== node || binding.bindingGeneration !== generation) return;
       if (!Object.is(api._value(), committedValue)) return;
-      const value = node() as NodeValue<TNode>;
+      const value = node() as NodeValue<BoundNode<TNode, TValue>>;
+      if (binding._formNodeValue() !== UNSET_VALUE) {
+        binding._synchronizedNode = node;
+        binding._synchronizedValue = value;
+      }
       binding.formNodeValueChange.emit(value);
     };
     api._setControlValue(value, () => {
-      committedValue = api._value() as NodeValue<TNode>;
+      committedValue = api._value() as NodeValue<BoundNode<TNode, TValue>>;
       committed = true;
       if (!receiving) emitCommitted();
     });
-    this.formNodeControlValueChange.emit(api._controlValue() as NodeValue<TNode>);
+    this.formNodeControlValueChange.emit(api._controlValue() as NodeValue<BoundNode<TNode, TValue>>);
     receiving = false;
     if (committed) emitCommitted();
   }
@@ -328,12 +365,12 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     const api = this.requireObjectNode();
     if (api.nodeType() === 'form') {
       const form = this.node();
-      let payload: FormNodeSubmitEvent<TNode>;
+      let payload: FormNodeSubmitEvent<BoundNode<TNode, TValue>>;
       void (api as typeof api & {
         _submitFromControl(notifications: { attempted(): void; blocked(): void }): Promise<boolean>;
       })._submitFromControl({
         attempted: () => {
-          payload = { value: form() as NodeValue<TNode>, form, event };
+          payload = { value: form() as NodeValue<BoundNode<TNode, TValue>>, form, event };
           this.formNodeSubmit.emit(payload);
         },
         blocked: () => this.formNodeSubmitBlocked.emit(payload),
@@ -383,13 +420,19 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   /**
    * Field, group, form, or array node currently bound to the host control.
    */
-  get field(): TNode {
-    const node = this.formNodeInput();
+  get field(): BoundNode<TNode, TValue> {
+    let node: AnyNode | undefined = this.formNodeInput();
+    if (node === undefined && this._formNodeValue() !== UNSET_VALUE) {
+      this._standaloneNode ??= untracked(() => {
+        return createFieldNode(this._formNodeValue() as TValue, [], { injector: this.injector });
+      });
+      node = this._standaloneNode;
+    }
     // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
     if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
       throw new Error('formNode: a field, form, group, or array node is required. Use [formNode] to bind a node, not [(formNode)].');
     }
-    return node;
+    return node as BoundNode<TNode, TValue>;
   }
 
   /** Observable `NgControl` view exposed only through Angular dependency injection. */
@@ -436,6 +479,9 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
 /**
  * Public Angular directive for binding native and custom controls to a node.
+ * `[formNodeValue]` supplies an external value and creates one independent field when
+ * `[formNode]` is absent or undefined. Source changes preserve interaction state and do not
+ * emit value outputs. Control edits emit committed and pending value events.
  * CVAs receive their initial value and optional disabled state synchronously during setup,
  * before child initialization. Subsequent model-to-view updates run through Angular effects;
  * they are not guaranteed to render before a programmatic node setter returns.

@@ -5,33 +5,8 @@ title: Migration guides
 # Migration guides {#migration-guides}
 
 import CodeBlock from '@theme/CodeBlock';
-import independentFieldSource from '!!raw-loader!../../examples/independent-field-binding.typecheck.ts';
 import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
-
-## Moving to 6.0.0 {#version-6}
-
-### Explicit control nodes {#explicit-control-nodes}
-
-**Breaking:** The `formNodeValue` input and its two-way form have been removed.
-Declare a node explicitly and bind it with `[formNode]`:
-
-| Previous usage | Replacement |
-| --- | --- |
-| `search = signal('')` with `[(formNodeValue)]="search"` | `search = field('')` with `[formNode]="search"` |
-| `[formNodeValue]="initialValue"` | Declare `field(initialValue)` and bind the field. |
-| `[formNode]="form.name" [formNodeValue]="loadedName"` | Keep `[formNode]="form.name"`; call `form.name.set(loadedName)` when data arrives. |
-
-<CodeBlock language="ts" title="search-page.component.ts">{independentFieldSource}</CodeBlock>
-
-An independent field owns its state and value across control destruction and recreation.
-Declare fields inside `form()` when they should participate in its validation, value, submission,
-and reset. Guard optional nodes with `@if` until they exist; there is no implicit-field fallback.
-
-If the application also stores the value elsewhere, decide when to copy it into the node with
-`set()` and when to persist edits. `(formNodeChange)` and `(formNodeValueChange)` remain aliases
-for committed control edits; neither emits for programmatic writes. Use the node's
-`onValueChange()` to observe both directions. See the [binding reference](../reference/form-node-binding.md).
 
 ## Moving to 5.0.0 {#version-5}
 

@@ -213,15 +213,17 @@ export { ValueChangeOutputsHost } from './value-change-outputs.fixture';
 @Component({
   imports: [FormNodeDirective, AotSignalValueControl],
   template: `
-    <input id="standalone" [formNode]="name" />
-    <aot-signal-value-control [formNode]="custom" />
-    <input id="explicit" [formNode]="profile.name" />
+    <input id="standalone" [(formNodeValue)]="name" />
+    <aot-signal-value-control [(formNodeValue)]="custom" />
+    <input id="explicit" [formNode]="profile.name" [formNodeValue]="source()" />
   `,
 })
-export class AotExplicitNodeHost {
-  name = field('Ada');
+export class AotStandaloneValueHost {
+  name = signal('Ada');
 
-  custom = field('Initial custom value');
+  custom = signal('Initial custom value');
 
-  profile = form({ name: field.strict('Grace') });
+  source = signal('Grace');
+
+  profile = form({ name: field.strict('') });
 }
