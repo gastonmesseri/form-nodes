@@ -18,9 +18,7 @@ export type FormNodeErrorsContext = {
    *       [node]="form.name"
    *       showWhen="always"
    *     >
-   *       <ng-template #message
-   *         let-message
-   *       >
+   *       <ng-template #message let-message>
    *         {{ message }}
    *       </ng-template>
    *     </form-node-errors>
@@ -47,7 +45,8 @@ export type FormNodeErrorsContext = {
    *       [node]="form.name"
    *       showWhen="always"
    *     >
-   *       <ng-template #message
+   *       <ng-template
+   *         #message
    *         let-message="message"
    *       >
    *         {{ message }}
@@ -76,7 +75,8 @@ export type FormNodeErrorsContext = {
    *       [node]="form.name"
    *       showWhen="always"
    *     >
-   *       <ng-template #message
+   *       <ng-template
+   *         #message
    *         let-messages="messages"
    *       >
    *         {{ messages.length }}
@@ -105,7 +105,8 @@ export type FormNodeErrorsContext = {
    *       [node]="form.name"
    *       showWhen="always"
    *     >
-   *       <ng-template #message
+   *       <ng-template
+   *         #message
    *         let-errors="errors"
    *       >
    *         {{ errors.length }}

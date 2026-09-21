@@ -5,8 +5,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   selector: 'app-selected-text',
   template: `
-    <input #text [value]="value()" [disabled]="disabled()" [class.edited]="dirty()"
-      (input)="value.set(text.value)">
+    <input #text [value]="value()" [disabled]="disabled()" [class.edited]="dirty()" (input)="value.set(text.value)">
   `,
 })
 export class TextControl {

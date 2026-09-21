@@ -48,6 +48,43 @@ When an example binds `[formNode]`, prefer showing the model and HTML together i
 
 Use modern Angular APIs, including signal inputs, outputs, models, and queries where applicable. Declare host bindings and listeners in component or directive `host` metadata. Show the proper injection context for hooks that require it. Keep model-only examples usable outside Angular injection context where the API supports that usage. Compile Angular templates as well as their surrounding TypeScript.
 
+### Template attribute layout
+
+Prefer one line for a simple tag when the complete line fits within the website's **120-character maximum**, including indentation. This is a maximum, not a requirement to compact every tag: use multiple lines when separating the attributes makes the example easier to read, especially when several configuration options are the subject being taught. Preserve intentional multiline layouts that help readers inspect those options. Source JSDoc examples use the same readability principle with their **45-character maximum**, excluding the JSDoc prefix.
+
+Whenever a tag uses multiple lines, whether for width or readability, put the tag name on its own line, then every template reference, static attribute, directive, property binding, and event binding on a separate line indented two spaces. Put the closing `>` or `/>` on its own line aligned with the opening `<`. Do not leave some attributes beside the tag name or combine only some of them on continuation lines. Preserve attribute order, binding expressions, and whether the element is self-closing.
+
+Apply this rule to native elements and custom components, both in inline Angular templates and standalone HTML code blocks. Keep multiline template content after the opening backtick, with the closing backtick on its own line. Count any surrounding code on the same line when deciding whether the example fits.
+
+This HTML fragment fits on one line:
+
+```html
+<input type="email" [formNode]="form.email" />
+```
+
+This configuration example is easier to scan with one option per line, even though it fits within 120 characters when compacted:
+
+```html
+<form-node-errors
+  [node]="form.email"
+  [maxMessages]="2"
+  showWhen="submit"
+  [animate]="false"
+/>
+```
+
+The following fragment sits four spaces into a component template. Its compact line would be 124 characters including that indentation, so every attribute goes on its own line:
+
+```html
+    <input
+      #text
+      [value]="value()"
+      [disabled]="disabled()"
+      (input)="onInput(text.value)"
+      (blur)="ngControl.markAsTouched()"
+    >
+```
+
 ### Template event handler names
 
 Name component methods used as template event handlers with `on` followed by a descriptive PascalCase name. For example, use `(formNodeChange)="onTimeseriesCodeChange($index)"` and name the corresponding method `onTimeseriesCodeChange(index: number)`. The same convention applies to native events, such as `(click)="onAddTimeseries()"`.
@@ -60,7 +97,7 @@ Include imports explicitly in complete website examples. Use named Angular impor
 
 Keep consecutive imports together without blank lines. Put package imports, including Angular and Form Nodes, before local relative or absolute-path imports. Sort imports by ascending length of the complete line within those categories. Keep each import on one line, and do not combine imports across comments identifying different hypothetical files. This is the documentation-example exception to the source-code import grouping rule.
 
-Use two-space indentation, single quotes, semicolons, and trailing commas. Website examples are not restricted to the hover's 45-character width. Keep lines readable without changing semantics, dropping required setup, or introducing unnecessary wrappers.
+Use two-space indentation, single quotes, semicolons, and trailing commas. Website example lines have a 120-character maximum, including indentation; source JSDoc examples have a 45-character maximum after removing the JSDoc prefix. Wrap without changing semantics, dropping required setup, or introducing unnecessary wrappers.
 
 Format multiline object-template calls as `array({ ... }, { ... })` and multiline form declarations as `form({ ... }, { ... })`. Open the definition object directly after the factory name, put a following options object after `}, {`, and indent properties one level. Do not add call-level indentation merely because both objects span lines. Break the opening call only when its name, type arguments, or preceding arguments require it.
 

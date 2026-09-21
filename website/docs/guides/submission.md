@@ -45,9 +45,7 @@ Import [`FormNodeDirective`](../reference/form-node-binding.md) once and use it 
     <form [formNode]="registration">
       <input [formNode]="registration.name" />
       <input type="email" [formNode]="registration.email" />
-      <button type="submit" [disabled]="registration.submitting()">
-        Create account
-      </button>
+      <button type="submit" [disabled]="registration.submitting()">Create account</button>
     </form>
   `,
 })

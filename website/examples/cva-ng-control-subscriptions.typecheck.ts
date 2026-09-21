@@ -7,7 +7,9 @@ import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor, type Validatio
 // An existing CVA can keep its Angular Forms integration unchanged.
 @Component({
   selector: 'app-legacy-text-control',
-  template: `<input #input [value]="value()" (input)="onInputValueChange(input.value)" (blur)="onTouched()" />`,
+  template: `
+    <input #input [value]="value()" (input)="onInputValueChange(input.value)" (blur)="onTouched()" />
+  `,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => LegacyTextControl), multi: true }],
 })
 export class LegacyTextControl implements ControlValueAccessor {

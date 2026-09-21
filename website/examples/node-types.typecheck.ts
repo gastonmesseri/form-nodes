@@ -30,12 +30,7 @@ export class NodeToolsComponent {
   imports: [NodeStatusComponent, NodeToolsComponent],
   template: `
     <app-node-status [node]="form" />
-    <app-node-tools
-      [field]="form.name"
-      [group]="form.preferences"
-      [form]="form"
-      [array]="form.contacts"
-    />
+    <app-node-tools [field]="form.name" [group]="form.preferences" [form]="form" [array]="form.contacts" />
   `,
 })
 export class ProfileComponent {

@@ -40,7 +40,9 @@ export class MyTextInput implements FormValueControl<string> {
 // profile-editor.component.ts
 @Component({
   imports: [FormNodeDirective, MyTextInput],
-  template: `<app-text-input label="Name" [formNode]="form.name" />`,
+  template: `
+    <app-text-input label="Name" [formNode]="form.name" />
+  `,
 })
 export class ProfileEditor {
   form = form({

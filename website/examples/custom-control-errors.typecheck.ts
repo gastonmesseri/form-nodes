@@ -51,7 +51,12 @@ export class EmailInput {
   template: `
     <form [formNode]="form">
       <my-email-input inputId="primary-email" label="Primary email" [formNode]="form.email" />
-      <my-email-input inputId="backup-email" label="Backup email (optional)" [formNode]="form.backupEmail" [animateErrors]="false" />
+      <my-email-input
+        inputId="backup-email"
+        label="Backup email (optional)"
+        [formNode]="form.backupEmail"
+        [animateErrors]="false"
+      />
       <button type="submit">Continue</button>
       <button type="button" (click)="form.resetToInitial()">Start over</button>
     </form>

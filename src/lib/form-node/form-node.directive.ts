@@ -96,8 +96,10 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
-   *     <input [formNode]="form.username"
-   *       (formNodeChange)="onChange($event)" />
+   *     <input
+   *       [formNode]="form.username"
+   *       (formNodeChange)="onChange($event)"
+   *     />
    *   `,
    * })
    * export class ProfilePage {

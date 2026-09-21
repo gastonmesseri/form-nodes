@@ -5,8 +5,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 @Component({
   selector: 'app-paired-text',
   template: `
-    <input #text [value]="value()" [disabled]="disabled()"
-      (input)="valueChange.emit(text.value)" (blur)="touch.emit()">
+    <input #text [value]="value()" [disabled]="disabled()" (input)="valueChange.emit(text.value)" (blur)="touch.emit()">
   `,
 })
 export class PairedText {

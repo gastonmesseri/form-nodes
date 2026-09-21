@@ -8,10 +8,8 @@ import { field, form, required, requiredTrue, FormNodeErrors, FormNodeDirective 
     <form [formNode]="form">
       <fieldset>
         <legend>Do you need an invoice?</legend>
-        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === true"
-          (click)="onAnswer(true)">Yes</button>
-        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === false"
-          (click)="onAnswer(false)">No</button>
+        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === true" (click)="onAnswer(true)">Yes</button>
+        <button type="button" [attr.aria-pressed]="form.wantsInvoice() === false" (click)="onAnswer(false)">No</button>
         <form-node-errors [node]="form.wantsInvoice" />
       </fieldset>
       <label>

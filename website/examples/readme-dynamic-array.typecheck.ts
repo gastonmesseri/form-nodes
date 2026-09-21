@@ -9,7 +9,10 @@ import { array, email, field, form, FormNodeDirective, required } from '@ngblock
       <fieldset>
         <legend>Contact {{ index + 1 }}</legend>
         <label>Name <input [formNode]="contact.name" /></label>
-        <label>Email <input type="email" [formNode]="contact.email" /></label>
+        <label>
+          Email
+          <input type="email" [formNode]="contact.email" />
+        </label>
         <button type="button" (click)="form.contacts.removeAt(index)">Remove</button>
       </fieldset>
     }

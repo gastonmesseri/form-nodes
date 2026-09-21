@@ -214,6 +214,8 @@ For reusable configuration objects, an explicit type annotation can make the con
 
 Every code or comment line inside a source JSDoc example must fit within **45 visible characters**, excluding only the JSDoc prefix. Include code indentation and output comments in the count. This is a hard maximum: a 46-character line must be rewritten or wrapped. The limit does not apply to source signatures or type-detail previews.
 
+For simple HTML tags, prefer one line when the complete line fits. Multiline layouts are also appropriate when they improve readability, such as when the example teaches several configuration options; the width limit does not require compacting those examples. Whenever a tag uses multiple lines, put the tag name, every attribute, and the closing `>` or `/>` on separate lines; indent attributes two spaces and align the closing delimiter with the opening `<`. Do not mix inline attributes with attributes on continuation lines. Website examples follow the [same width and readability rules](WEBSITE_DOCS_GUIDE.md#template-attribute-layout) with a 120-character maximum instead.
+
 Use two-space indentation, single quotes, semicolons, and trailing commas. Indent structurally, not by aligning beneath a preceding argument. Shorten incidental names or wording without changing the behavior demonstrated or deleting required setup.
 
 An object may stay on one line only when the complete line fits. Otherwise:

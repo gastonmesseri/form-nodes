@@ -6,7 +6,10 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
   imports: [FormNodeDirective],
   template: `
     <label>Username <input [formNode]="form.username" /></label>
-    <label>Email <input type="email" [formNode]="form.email" /></label>
+    <label>
+      Email
+      <input type="email" [formNode]="form.email" />
+    </label>
   `,
 })
 export class ProfileEditor {

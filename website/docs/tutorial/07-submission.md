@@ -51,9 +51,7 @@ export class ProfileEditor {
   <!-- Controls from previous steps... -->
 
   <button type="reset">Reset interaction state</button>
-  <button type="submit" [disabled]="form.submitting()">
-    {{ form.submitting() ? 'Saving…' : 'Save profile' }}
-  </button>
+  <button type="submit" [disabled]="form.submitting()">{{ form.submitting() ? 'Saving…' : 'Save profile' }}</button>
 </form>
 ```
 

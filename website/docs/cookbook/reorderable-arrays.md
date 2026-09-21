@@ -31,12 +31,8 @@ Track each item node in Angular:
     <input [formNode]="question.label" />
     <input [formNode]="question.answer" />
 
-    <button type="button" (click)="myForm.questions.moveUp(index)">
-      Move up
-    </button>
-    <button type="button" (click)="myForm.questions.moveDown(index)">
-      Move down
-    </button>
+    <button type="button" (click)="myForm.questions.moveUp(index)">Move up</button>
+    <button type="button" (click)="myForm.questions.moveDown(index)">Move down</button>
   </article>
 }
 ```

@@ -4,7 +4,14 @@ import { field, form, FORM_NODE, FormNodeDirective } from '@ngblocks/form-nodes'
 @Component({
   selector: 'app-description-input',
   template: `
-    <textarea #text [value]="value()" [attr.aria-invalid]="binding.errors().length ? true : null" (input)="value.set(text.value)" (blur)="touch.emit()"></textarea>
+    <textarea
+      #text
+      [value]="value()"
+      [attr.aria-invalid]="binding.errors().length ? true : null"
+      (input)="value.set(text.value)"
+      (blur)="touch.emit()"
+    >
+    </textarea>
   `,
 })
 export class DescriptionInput {
@@ -18,8 +25,11 @@ export class DescriptionInput {
 @Component({
   imports: [DescriptionInput, FormNodeDirective],
   template: `
-    <app-description-input [formNode]="form.description"
-      (valueChange)="onDescriptionChange()" (touch)="onDescriptionTouch()" />
+    <app-description-input
+      [formNode]="form.description"
+      (valueChange)="onDescriptionChange()"
+      (touch)="onDescriptionTouch()"
+    />
   `,
 })
 export class DescriptionEditor {

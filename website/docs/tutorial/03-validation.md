@@ -37,9 +37,7 @@ Use `getError()` for a specific rule. Known built-in kinds expose their typed pa
     <p class="error">{{ error.message }}</p>
   }
   @if (form.name.getError('minLength'); as error) {
-    <p class="error">
-      Enter at least {{ error.minLength }} characters.
-    </p>
+    <p class="error">Enter at least {{ error.minLength }} characters.</p>
   }
 }
 ```

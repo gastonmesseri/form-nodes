@@ -169,7 +169,9 @@ import { FormNodeDirective, field } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNodeDirective],
-  template: `<input #nameBinding="formNode" [formNode]="name" />`,
+  template: `
+    <input #nameBinding="formNode" [formNode]="name" />
+  `,
 })
 export class Editor {
   name = field('');

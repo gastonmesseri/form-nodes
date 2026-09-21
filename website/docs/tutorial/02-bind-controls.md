@@ -152,11 +152,7 @@ import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 @Component({
   imports: [FormNodeDirective, SelectModule],
   template: `
-    <p-select
-      [formNode]="form.city"
-      [options]="cities"
-      placeholder="Select a city"
-    />
+    <p-select [formNode]="form.city" [options]="cities" placeholder="Select a city" />
   `,
 })
 export class CityEditor {

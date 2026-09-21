@@ -8,7 +8,8 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
       [formNode]="form.description"
       (formNodeControlValueChange)="onControlValueChange($event)"
       (formNodeChange)="onValueChange($event)"
-    ></textarea>
+    >
+    </textarea>
     <p>Draft length: {{ draftLength }}</p>
     <p>Confirmed description: {{ confirmedDescription }}</p>
   `,

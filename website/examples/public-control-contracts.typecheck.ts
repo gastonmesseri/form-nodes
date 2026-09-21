@@ -3,8 +3,9 @@ import { field, form, FormNodeDirective, type FormNodeValueControl, type FormNod
 
 @Component({
   selector: 'app-contract-text',
-  template: `<input #text [value]="value()" [disabled]="disabled()"
-    (input)="value.set(text.value)" (blur)="touch.emit()">`,
+  template: `
+    <input #text [value]="value()" [disabled]="disabled()" (input)="value.set(text.value)" (blur)="touch.emit()">
+  `,
 })
 export class ContractTextControl implements FormNodeValueControl<string> {
   value = model('');
@@ -16,8 +17,15 @@ export class ContractTextControl implements FormNodeValueControl<string> {
 
 @Component({
   selector: 'app-contract-checkbox',
-  template: `<input #checkbox type="checkbox" [checked]="checked()"
-    (change)="checked.set(checkbox.checked)" (blur)="touch.emit()">`,
+  template: `
+    <input
+      #checkbox
+      type="checkbox"
+      [checked]="checked()"
+      (change)="checked.set(checkbox.checked)"
+      (blur)="touch.emit()"
+    >
+  `,
 })
 export class ContractCheckboxControl implements FormNodeCheckboxControl {
   checked = model(false);

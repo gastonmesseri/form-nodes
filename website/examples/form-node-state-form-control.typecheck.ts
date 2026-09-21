@@ -8,12 +8,7 @@ import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueA
   selector: 'app-date-picker',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DatePicker), multi: true }],
   template: `
-    <button
-      type="button"
-      [disabled]="formNodeState.disabled()"
-      (click)="onSelectDate('2026-09-03')"
-      (blur)="onBlur()"
-      >
+    <button type="button" [disabled]="formNodeState.disabled()" (click)="onSelectDate('2026-09-03')" (blur)="onBlur()">
       {{ value }}
     </button>
   `,

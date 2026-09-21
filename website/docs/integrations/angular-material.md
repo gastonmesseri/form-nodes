@@ -79,16 +79,12 @@ import { FormNodeDirective, email, field, form, maxDate, required, requiredTrue 
         }
       </mat-form-field>
 
-      <mat-checkbox [formNode]="form.acceptedTerms">
-        I accept the terms
-      </mat-checkbox>
+      <mat-checkbox [formNode]="form.acceptedTerms">I accept the terms</mat-checkbox>
       @if (form.acceptedTerms.touched() && form.acceptedTerms.invalid()) {
         <mat-error>{{ form.acceptedTerms.errors()[0]?.message }}</mat-error>
       }
 
-      <button mat-flat-button type="submit" [disabled]="form.submitting()">
-        Save profile
-      </button>
+      <button mat-flat-button type="submit" [disabled]="form.submitting()">Save profile</button>
     </form>
   `,
 })

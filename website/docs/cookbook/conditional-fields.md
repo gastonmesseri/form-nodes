@@ -15,11 +15,7 @@ import { FormNodeDirective, field, form, required } from '@ngblocks/form-nodes';
   imports: [FormNodeDirective],
   template: `
     <label>
-      <input
-        type="checkbox"
-        [checked]="isBusiness()"
-        (change)="isBusiness.set(!isBusiness())"
-      />
+      <input type="checkbox" [checked]="isBusiness()" (change)="isBusiness.set(!isBusiness())" />
       Business customer
     </label>
 

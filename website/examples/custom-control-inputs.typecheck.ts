@@ -8,8 +8,7 @@ export const appConfig: ApplicationConfig = {
 @Component({
   selector: 'app-text-control',
   template: `
-    <input #text [value]="value()" [disabled]="disabled()" [readOnly]="readonly()"
-      (input)="value.set(text.value)">
+    <input #text [value]="value()" [disabled]="disabled()" [readOnly]="readonly()" (input)="value.set(text.value)">
   `,
 })
 export class TextControl {

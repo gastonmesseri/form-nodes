@@ -122,8 +122,10 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
-   *     <input [formNode]="form.username"
-   *       (formNodeChange)="onChange($event)" />
+   *     <input
+   *       [formNode]="form.username"
+   *       (formNodeChange)="onChange($event)"
+   *     />
    *   `,
    * })
    * export class ProfilePage {

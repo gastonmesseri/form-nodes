@@ -7,7 +7,11 @@ import { FormsModule, NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angu
 @Component({
   selector: 'app-date-picker',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DatePicker), multi: true }],
-  template: `<button type="button" [disabled]="formNodeState.disabled()" (click)="onSelectDate('2026-09-03')" (blur)="onBlur()">{{ value }}</button>`,
+  template: `
+    <button type="button" [disabled]="formNodeState.disabled()" (click)="onSelectDate('2026-09-03')" (blur)="onBlur()">
+      {{ value }}
+    </button>
+  `,
 })
 export class DatePicker implements ControlValueAccessor {
   formNodeState = useFormNodeState();
@@ -40,7 +44,9 @@ export class DatePicker implements ControlValueAccessor {
 
 @Component({
   imports: [DatePicker, FormsModule],
-  template: `<app-date-picker name="birthDate" [(ngModel)]="birthDate" />`,
+  template: `
+    <app-date-picker name="birthDate" [(ngModel)]="birthDate" />
+  `,
 })
 export class ProfileEditor {
   birthDate: string | null = null;

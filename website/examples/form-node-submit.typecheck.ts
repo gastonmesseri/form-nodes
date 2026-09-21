@@ -4,9 +4,11 @@ import { field, form, required, FormNodeDirective, type FormNodeSubmitEvent } fr
 @Component({
   imports: [FormNodeDirective],
   template: `
-    <form [formNode]="form"
+    <form
+      [formNode]="form"
       (formNodeSubmit)="onFormSubmit($event)"
-      (formNodeSubmitBlocked)="onFormSubmitBlocked($event)">
+      (formNodeSubmitBlocked)="onFormSubmitBlocked($event)"
+    >
       <input [formNode]="form.name">
       <button type="submit">Save</button>
       <p>{{ message }}</p>

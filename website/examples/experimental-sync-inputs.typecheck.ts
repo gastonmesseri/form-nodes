@@ -5,8 +5,14 @@ import { field, form, required, minLength, FormNodeDirective } from '@ngblocks/f
 @Component({
   selector: 'app-text-control',
   template: `
-    <input #text [value]="value()" [disabled]="disabled()" [required]="required()"
-      [attr.minlength]="minLength()" (input)="value.set(text.value)">
+    <input
+      #text
+      [value]="value()"
+      [disabled]="disabled()"
+      [required]="required()"
+      [attr.minlength]="minLength()"
+      (input)="value.set(text.value)"
+    >
   `,
 })
 export class TextControl {

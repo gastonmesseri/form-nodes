@@ -107,17 +107,11 @@ Track each node instance in Angular so structural moves retain their DOM and bin
     <input [formNode]="contact.label" />
     <input type="email" [formNode]="contact.email" />
 
-    <button type="button" (click)="form.contacts.moveUp(index)">
-      Move up
-    </button>
-    <button type="button" (click)="form.contacts.removeAt(index)">
-      Remove
-    </button>
+    <button type="button" (click)="form.contacts.moveUp(index)">Move up</button>
+    <button type="button" (click)="form.contacts.removeAt(index)">Remove</button>
   }
 
-  <button type="button" (click)="form.contacts.push()">
-    Add contact
-  </button>
+  <button type="button" (click)="form.contacts.push()">Add contact</button>
 </section>
 ```
 

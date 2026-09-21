@@ -171,14 +171,10 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
       <input [formNode]="contact.label" />
       <input type="email" [formNode]="contact.email" />
       <input type="tel" [formNode]="contact.phone" />
-      <button type="button" (click)="form.contacts.removeAt(index)">
-        Remove contact
-      </button>
+      <button type="button" (click)="form.contacts.removeAt(index)">Remove contact</button>
     }
 
-    <button type="button" (click)="form.contacts.push()">
-      Add contact
-    </button>
+    <button type="button" (click)="form.contacts.push()">Add contact</button>
   </section>
 
   <section>
@@ -192,15 +188,11 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
         <input type="checkbox" [formNode]="task.completed" />
       }
 
-      <button type="button" (click)="project.tasks.push()">
-        Add task
-      </button>
+      <button type="button" (click)="project.tasks.push()">Add task</button>
     }
   </section>
 
-  <button type="submit" [disabled]="form.submitting()">
-    Save customer
-  </button>
+  <button type="submit" [disabled]="form.submitting()">Save customer</button>
 </form>
 ```
 
