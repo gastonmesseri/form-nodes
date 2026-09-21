@@ -10,10 +10,11 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.2.0] - 2026-09-21
+
 ### Added
 
 - Add per-subscription `onValueChange(callback, { debounce: 300 })` for fields, forms, groups, and arrays. Deliver the latest committed change after a pause without delaying node values, validation, or interaction state; cancel pending delivery on unsubscribe or injector destruction. Omitted or zero debounce retains synchronous notifications.
-
 
 ## [5.1.0] - 2026-09-21
 
@@ -447,7 +448,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.2.0...HEAD
+[5.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.1.0...v5.2.0
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
