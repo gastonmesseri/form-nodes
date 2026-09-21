@@ -13,6 +13,55 @@ registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
+it.each([0, 'blur', 25] as const)('starts listening after ngOnInit initialization with debounce %s', async (debounce) => {
+  const changed = vi.fn();
+  @Component({
+    selector: `test-initial-value-subscription-${debounce}`,
+    template: '<input [formNode]="form.username" /><input [formNode]="form.email" />',
+    imports: [FormNodeDirective],
+  })
+  class Host {
+    form = form({ username: field(''), email: field('') }, { debounce });
+
+    ngOnInit() {
+      this.form.patch({ username: 'manolo', email: 'manolo@lama.com' });
+      this.form.onValueChange(changed);
+      expect(changed).not.toHaveBeenCalled();
+    }
+  }
+  const fixture = TestBed.createComponent(Host);
+  try {
+    fixture.detectChanges();
+    const node = fixture.componentInstance.form;
+    expect(node()).toEqual({ username: 'manolo', email: 'manolo@lama.com' });
+    expect(changed).not.toHaveBeenCalled();
+    await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    fixture.detectChanges();
+    expect(changed).not.toHaveBeenCalled();
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+
+    node.patch({ username: 'ana', email: 'ana@lama.com' });
+    expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'ana', email: 'ana@lama.com' }, node);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(changed).toHaveBeenCalledOnce();
+
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(input.value).toBe('ana');
+    input.value = 'lucia';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    if (debounce !== 0) expect(changed).toHaveBeenCalledOnce();
+    if (debounce === 'blur') input.dispatchEvent(new Event('blur'));
+    await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    expect(changed).toHaveBeenLastCalledWith({ username: 'lucia', email: 'ana@lama.com' }, node);
+    expect(node.dirty()).toBe(true);
+  } finally {
+    fixture.destroy();
+  }
+});
+
 it('cleans up component-owned subscriptions without stopping a shared form or its construction callback', () => {
   const configured = vi.fn();
   const shared = form({ name: field('Ada', { onValueChange: configured }) });
