@@ -1764,5 +1764,7 @@ otherwise the registration context, owns the listener; node ownership provides a
 also ends the subscription when destroyed. Observation remains available without DI.
 
 See [instance subscriptions](../guides/configuring-nodes.md#value-subscriptions) for typed examples,
+[initializing from component inputs in `ngOnInit()`](../guides/configuring-nodes.md#initialize-before-listening)
+to patch initial values before listening,
 [automatic cleanup](../guides/configuring-nodes.md#subscription-ownership) for owner precedence and
 rebinding, and the callback section above for equality, debounce, and notification timing.

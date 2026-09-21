@@ -1,5 +1,5 @@
 import '@angular/compiler';
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
@@ -21,16 +21,24 @@ it.each([0, 'blur', 25] as const)('starts listening after ngOnInit initializatio
     imports: [FormNodeDirective],
   })
   class Host {
+    username = input.required<string>();
+
+    email = input.required<string>();
+
     form = form({ username: field(''), email: field('') }, { debounce });
 
     ngOnInit() {
-      this.form.patch({ username: 'manolo', email: 'manolo@lama.com' });
+      this.form.patch({ username: this.username(), email: this.email() });
       this.form.onValueChange(changed);
       expect(changed).not.toHaveBeenCalled();
     }
   }
+  registerSignalInputForJit(Host, 'username', 'username');
+  registerSignalInputForJit(Host, 'email', 'email');
   const fixture = TestBed.createComponent(Host);
   try {
+    fixture.componentRef.setInput('username', 'manolo');
+    fixture.componentRef.setInput('email', 'manolo@lama.com');
     fixture.detectChanges();
     const node = fixture.componentInstance.form;
     expect(node()).toEqual({ username: 'manolo', email: 'manolo@lama.com' });
@@ -41,6 +49,12 @@ it.each([0, 'blur', 25] as const)('starts listening after ngOnInit initializatio
     expect(changed).not.toHaveBeenCalled();
     expect(node.pristine()).toBe(true);
     expect(node.untouched()).toBe(true);
+
+    fixture.componentRef.setInput('username', 'later input');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(node.username()).toBe('manolo');
+    expect(changed).not.toHaveBeenCalled();
 
     node.patch({ username: 'ana', email: 'ana@lama.com' });
     expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'ana', email: 'ana@lama.com' }, node);

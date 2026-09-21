@@ -7,6 +7,7 @@ title: Configuring nodes and sibling rules
 import CodeBlock from '@theme/CodeBlock';
 import subscriptionsSource from '!!raw-loader!../../examples/node-value-subscriptions.example.ts';
 import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subscriptions.typecheck.ts';
+import initializeFromInputsSource from '!!raw-loader!../../examples/initialize-form-from-inputs.typecheck.ts';
 import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
@@ -178,6 +179,35 @@ first, then instance listeners in registration order. Canceling a listener befor
 it. New listeners do not receive an update already in progress, but can receive subsequent
 reentrant changes. Every listener in a delivery receives the same value snapshot, even if an
 earlier listener makes another write.
+
+### Initialize from component inputs before listening {#initialize-before-listening}
+
+When an editor receives its initial values through Angular `input()` signals, read them in
+`ngOnInit()`, after Angular has assigned the inputs. Apply those values with `patch()` first,
+then register `onValueChange()` if the parent should receive only subsequent changes.
+
+<CodeBlock language="ts" title="profile-editor.component.ts">{initializeFromInputsSource}</CodeBlock>
+
+For example, a parent can supply `username="manolo"` and `email="manolo@lama.com"`.
+The first `patch()` fills both controls without emitting `profileChange`. It completes
+synchronously before the subscription exists. Registering `onValueChange()` emits no current
+value and does not replay that earlier patch, including on later change-detection cycles.
+
+After registration, committed user edits and programmatic `set()` or `patch()` calls that change
+the value emit `profileChange`. Control edits respect debounce; programmatic writes commit
+immediately. The initial patch runs normal validation and preserves pristine/untouched state.
+Any listeners registered earlier, including an `onValueChange` construction option, still observe
+that patch; this ordering only skips it for the newly registered listener.
+
+This copies the inputs once. Later parent input changes do not automatically patch the form.
+If data arrives asynchronously, apply it and register the listener after that initial load;
+`ngOnInit()` does not wait for a request to finish. Register the subscription once to avoid
+duplicate notifications.
+
+Although `ngOnInit()` is outside Angular's injection context, this form was created in a component
+field initializer and captured its injector. The subscription therefore cleans up automatically
+when the component is destroyed. See [subscription ownership](#subscription-ownership) for forms
+created elsewhere and explicit injector options.
 
 ### Automatic subscription cleanup {#subscription-ownership}
 
