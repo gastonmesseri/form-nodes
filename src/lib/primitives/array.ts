@@ -18,7 +18,7 @@ type ArrayTemplateInput<TDefinition extends ArrayTemplate> =
 type ArrayFactory<TDefinition extends ArrayTemplate> = () => TDefinition & ArrayTemplateInput<TDefinition>;
 type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTemplateInput<TDefinition>) | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
-type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
+type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue' | 'initialLength'> & { initialValue?: never; initialLength?: never };
 
 /**
  * Creates an empty array with an unknown-valued field template, equivalent to `array(field())`.
@@ -148,9 +148,17 @@ export function array<TDefinition extends ArrayTemplate>(
     ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue, any> | undefined
     : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue, any> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue, any> | undefined;
   const configuredInitial = resolvedOptions?.initialValue;
+  const configuredLength = resolvedOptions?.initialLength;
+  if ((hasInitial && (configuredInitial !== undefined || configuredLength !== undefined))
+    || (configuredInitial !== undefined && configuredLength !== undefined)) {
+    throw new TypeError('array: provide only one initial source: a positional value/count, initialValue, or initialLength');
+  }
+  if (configuredLength !== undefined && (!Number.isSafeInteger(configuredLength) || configuredLength < 0)) {
+    throw new RangeError('array: initialLength must be a non-negative safe integer');
+  }
   const initial = hasInitial
     ? initialOrValidatorsOrOptions as number | TSet | null
-    : configuredInitial as number | TSet | null | undefined;
+    : (configuredLength ?? configuredInitial) as number | TSet | null | undefined;
   const validatorSource = hasInitial
     ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
     : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];

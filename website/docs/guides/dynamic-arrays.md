@@ -3,6 +3,7 @@ title: Dynamic arrays
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import initialLengthSource from '!!raw-loader!../../examples/array-initial-length.example.ts';
 import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
 
 # Dynamic arrays {#dynamic-arrays}
@@ -18,14 +19,14 @@ const myForm = form({
     name: field(''),
     age: field(18),
   }, {
-    initialValue: 3,
+    initialLength: 3,
   }),
 });
 
 const people = myForm.people;
 ```
 
-`initialValue: 3` creates three independent form items from the template defaults. The initial value is:
+`initialLength: 3` creates three independent form items from the template defaults. The initial value is:
 
 ```ts
 myForm.people();
@@ -37,7 +38,7 @@ myForm.people();
 // ]
 ```
 
-The options-object form keeps initial data and reconciliation configuration together. A non-negative number creates that many items from template defaults:
+Use `initialValue` for actual data and `initialLength` for a non-negative safe integer count of items created from template defaults:
 
 ```ts
 array(personTemplate);
@@ -46,11 +47,23 @@ array(personTemplate, {
   trackBy: 'id',
 });
 array(personTemplate, {
-  initialValue: 3,
+  initialLength: 3,
 });
 ```
 
-The positional `array(template, initialValue)` signature remains available for concise declarations. Positional and option-based initial values are alternatives; TypeScript prevents specifying both.
+The positional argument accepts either a count (`array(template, 3)`) or item values
+(`array(template, initialPeople)`). Numeric `initialValue`, such as `{ initialValue: 3 }`,
+remains supported for compatibility; prefer `initialLength` for new count-based declarations.
+
+Use one initial source: a positional value/count, `initialValue`, or `initialLength`. Conflicting
+sources are rejected by TypeScript and throw at runtime. `initialLength` accepts zero, but rejects
+negative, fractional, non-finite, and unsafe integer counts. Omit all sources to start empty.
+
+The length only applies during initialization. It does not impose a minimum or fixed length.
+Every new item receives its own `configureEach` callback. `resetToInitial()` restores the captured
+initial collection; ordinary `reset()` clears interaction state without restoring the initial count.
+
+<CodeBlock language="ts" title="array-initial-length.ts">{initialLengthSource}</CodeBlock>
 
 ## 💡 Templates and factories {#templates-and-factories}
 

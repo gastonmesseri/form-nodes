@@ -4726,3 +4726,28 @@ it('installs reactive async field validation through configureEach without injec
     expect(model.valid()).toBe(true);
   });
 });
+
+it('initializes field arrays by length with independent validation and reset state', () => {
+  const rows = array(field('', { validators: required }), { initialLength: 2 });
+  const first = rows.at(0)!;
+  expect(rows()).toEqual(['', '']);
+  expect(rows.invalid()).toBe(true);
+  expect(rows.pending()).toBe(false);
+  expect(rows.dirty()).toBe(false);
+  expect(rows.touched()).toBe(false);
+  first.value.control.set('filled');
+  first.markAsTouched();
+  expect(first.valid()).toBe(true);
+  expect(first.parent()).toBe(rows);
+  expect(rows.invalid()).toBe(true);
+  expect(rows.dirty()).toBe(true);
+  expect(rows.touched()).toBe(true);
+  expect(rows.at(1)!.dirty()).toBe(false);
+  rows.removeAt(1);
+  expect(rows.valid()).toBe(true);
+  rows.resetToInitial();
+  expect(rows()).toEqual(['', '']);
+  expect(rows.invalid()).toBe(true);
+  expect(rows.dirty()).toBe(false);
+  expect(rows.touched()).toBe(false);
+});

@@ -278,7 +278,8 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
   /**
    * Initializes collection items from complete values or the template defaults.
    * Null and undefined normalize to an empty array; the collection value is never nullable.
-   * A positional initial value excludes this option to prevent conflicting initial sources.
+   * Cannot be combined with initialLength or a positional initial value.
+   * Numeric values remain supported for compatibility; prefer initialLength for a count.
    *
    * **Default:** `[]`; no items.
    *
@@ -307,6 +308,29 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * ```
    */
   initialValue?: TValue | number | null;
+
+  /**
+   * Creates this many independent items from the template or factory defaults.
+   * Runs configureEach for every new item. Only controls initialization, not a minimum or
+   * fixed length; structural edits remain available and resetToInitial restores the baseline.
+   * Cannot be combined with initialValue or a positional initial value/count.
+   *
+   * **Default:** `undefined`; use the other initial source, or create an empty array.
+   *
+   * **Accepted values:** Non-negative safe integers, including zero. Invalid counts throw RangeError.
+   *
+   * ```ts
+   * const profile = form({
+   *   people: array({
+   *     name: field(''),
+   *   }, {
+   *     initialLength: 3,
+   *   }),
+   * });
+   * profile.people.length(); // 3
+   * ```
+   */
+  initialLength?: number;
   /**
    * Selects stable item identity during `set()`, `patch()`, `update()`, and value-reset reconciliation.
    * Matching keys retain and move existing nodes; new keys create nodes and removed keys detach them.
@@ -344,7 +368,7 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
     ? ((value: TItemValue, index: number) => unknown)
       | (TItemValue extends object ? Extract<keyof TItemValue, string> : never)
     : never;
-};
+} & ({ initialValue?: never } | { initialLength?: never });
 
 export type ArrayItemWithParent<TItem extends AnyNode, TParent extends AnyNode> =
   TItem extends FieldNode<infer TValue, AnyNode> ? FieldNode<TValue, TParent>

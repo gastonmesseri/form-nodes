@@ -57,7 +57,7 @@ export function createArrayNode<TItem extends AnyNode>(
 export class ArrayNode<TItem extends AnyNode> {
   node: ArrayNodeType<TItem>;
 
-  cloneOptions: Omit<ArrayOptions<ArrayValue<TItem>, any>, 'initialValue'> | undefined;
+  cloneOptions: Omit<ArrayOptions<ArrayValue<TItem>, any>, 'initialValue' | 'initialLength'> | undefined;
 
   cloneInitial: number | ArraySet<TItem>;
 
@@ -254,7 +254,7 @@ export class ArrayNode<TItem extends AnyNode> {
   ) {
     this.equal = resolveValueEquality(this.options?.equal);
     if (this.options !== undefined) {
-      const { initialValue: _initialValue, ...cloneOptions } = this.options;
+      const { initialValue: _initialValue, initialLength: _initialLength, ...cloneOptions } = this.options;
       this.cloneOptions = cloneOptions;
     }
     this.cloneInitial = typeof initial === 'number' ? initial : [...initial] as ArraySet<TItem>;

@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
+- Add `array(..., { initialLength })` to create independent items from template or factory defaults. Positional counts and values, and numeric `initialValue`, remain supported. Conflicting initial sources are rejected in types and at runtime.
 - Add `array(..., { configureEach })` to configure each new item through its inferred API after initial values are applied. Connect sibling fields or install validators with object templates or factories; reused and reordered items keep their existing configuration.
 
 ## [5.2.0] - 2026-09-21

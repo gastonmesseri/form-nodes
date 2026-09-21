@@ -150,3 +150,27 @@ array(array(field('')), {
     api.push('ready');
   },
 });
+
+const lengthRows = array({ name: field('') }, { initialLength: 3 });
+type _LengthRows = Expect<Equal<ReturnType<typeof lengthRows>, { name: string }[]>>;
+array(() => field(0), { initialLength: 2, configureEach: api => api.set(1) });
+array(field(''), () => null, { initialLength: 2 });
+array(field(''), 2, { debounce: 'blur' });
+array(field(''), ['Ada'], { debounce: 'blur' });
+// @ts-expect-error use one initial option
+array(field(''), { initialLength: 1, initialValue: ['Ada'] });
+// @ts-expect-error numeric initialValue is also an initial source
+array(field(''), { initialLength: 1, initialValue: 1 });
+// @ts-expect-error null is an explicit empty initial value
+array(field(''), { initialLength: 1, initialValue: null });
+// @ts-expect-error a positional count excludes initialLength
+array(field(''), 1, { initialLength: 1 });
+// @ts-expect-error positional values exclude initialLength
+array(field(''), ['Ada'], { initialLength: 1 });
+// @ts-expect-error factories follow the same exclusivity rule
+array(() => field(''), 1, () => null, { initialLength: 1 });
+// @ts-expect-error length must be a number
+array(field(''), { initialLength: '3' });
+const conflictingLengthOptions = { initialLength: 1, debounce: 'blur' as const };
+// @ts-expect-error positional exclusivity also applies to option variables
+array(field(''), 1, conflictingLengthOptions);

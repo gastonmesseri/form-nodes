@@ -189,7 +189,7 @@ type ArrayTemplateInput<TDefinition extends ArrayTemplate> = TDefinition extends
 type ConfiguredArrayItem<TDefinition, TNullable extends boolean | undefined> = NormalizedNodeWithDefault<TDefinition, TNullable>;
 type ConfiguredArrayValue<TDefinition, TNullable extends boolean | undefined> = ArrayValue<ConfiguredArrayItem<TDefinition, TNullable>>;
 type ArrayInitial<TDefinition, TNullable extends boolean | undefined> = number | ArraySet<ConfiguredArrayItem<TDefinition, TNullable>> | null | undefined;
-type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
+type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue' | 'initialLength'> & { initialValue?: never; initialLength?: never };
 
 export interface ArrayFactory<TNullable extends boolean | undefined> {
   /**

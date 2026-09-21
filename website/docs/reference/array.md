@@ -118,7 +118,9 @@ array(templateOrFactory, options);
 array(templateOrFactory, validators, options?);
 ```
 
-`initialValue` accepts an item-value array, a non-negative item count, `null`, or `undefined`.
+The positional `initialValue` argument accepts an item-value array, a non-negative safe integer
+count, `null`, or `undefined`. In options, prefer `initialLength` for counts and `initialValue`
+for data. Numeric `options.initialValue` remains supported for compatibility.
 Nullish values normalize to `[]`; an array node itself is never nullable.
 
 ```ts
@@ -127,7 +129,7 @@ const myForm = form({
     name: field(''),
     confirmed: field(false),
   }, {
-    initialValue: 3,
+    initialLength: 3,
   }),
 });
 ```
@@ -232,6 +234,7 @@ Like every node, an array also adopts a directly bound [`[formNode]`](./form-nod
 | --- | --- | --- |
 | [`configure`](#configure) | `(api) => void` | Configure this instance once with its typed, collision-safe API. |
 | [`equal`](#equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed array values; defaults to `Object.is`. |
+| [`initialLength`](#initiallength-option) | Non-negative safe integer | Creates independent items from template or factory defaults. Applies only during initialization. |
 | [`initialValue`](#initialvalue-option) | Item-value array, non-negative integer, `null`, or `undefined` | Creates items from supplied values or creates a requested number of items from the template defaults. Nullish values produce an empty array. |
 | [`validators`](#validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete array value. Put validators on the item template instead when every item needs independent validation. |
 | [`validatorMessages`](#validatormessages-option) | Message catalog or reactive catalog function | Overrides built-in validator messages for the array subtree. Validator-local messages still take precedence. |
@@ -255,9 +258,9 @@ preserved.
 
 :::caution Choose one initial-value signature
 
-Keep `initialValue` either as the positional argument or inside the options object. In multiline
-consumer examples, prefer `options.initialValue` so initialization and `trackBy` stay together.
-TypeScript intentionally rejects providing it in both places.
+Choose a positional value/count, `options.initialValue`, or `options.initialLength`. TypeScript
+rejects conflicting sources, and untyped calls throw `TypeError` before creating items. In multiline
+examples, prefer `initialLength` for counts and `initialValue` for data.
 
 :::
 
@@ -331,6 +334,33 @@ Controls, reset, and debounce use current committed values. Reordering equal-val
 invalidates obsolete pending control input. See
 [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality) for the shared contract.
 
+#### – initialLength {#initiallength-option}
+
+**Signature:** `initialLength?: number`
+
+**Default:** `undefined`; use another initial source or create an empty array.
+
+Creates the requested number of independent nodes from the template or factory defaults.
+Each new item runs `configureEach`. Accepts non-negative safe integers, including zero;
+invalid counts throw `RangeError`. Cannot be combined with `initialValue` or a positional
+initial value/count. This does not constrain future edits, pad incoming data, or truncate it.
+`resetToInitial()` restores the captured initial collection using normal reconciliation.
+
+```ts
+import { array, field, form } from '@ngblocks/form-nodes';
+
+const myForm = form({
+  people: array({
+    name: field(''),
+  }, {
+    initialLength: 3,
+  }),
+});
+myForm.people.length(); // 3
+```
+
+See the [executable initialization example](../guides/dynamic-arrays.md).
+
 #### – initialValue {#initialvalue-option}
 
 **Signature:** `initialValue?: readonly ItemValue[] | number | null`
@@ -353,7 +383,8 @@ const users = array({
 users.length(); // 2
 ```
 
-A numeric value creates that many independent items from the template defaults:
+Numeric `initialValue` remains supported for compatibility. Prefer `initialLength` when creating
+a count of independent items from template defaults. Do not combine the two options:
 
 ```ts
 const users = array({

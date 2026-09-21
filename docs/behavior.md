@@ -2174,20 +2174,23 @@ const people = array(
 );
 ```
 
-This `array(template, initialValue)` form should be presented first in user-facing documentation. It keeps the array's structure and initial data immediately visible, matching the positional style of `field(initialValue)`. Use `array(template)` when the intended initial value is simply `[]`.
+Use options.initialValue for initial data and options.initialLength for template/factory counts in
+consumer examples. The positional array(template, valueOrCount) form remains supported. Use
+array(template) when the intended initial value is simply [].
 
 Templates and factories also support these argument combinations:
 
 ```ts
 array(templateOrFactory);
-array(templateOrFactory, initialValue); // recommended when initial items exist
+array(templateOrFactory, initialValue); // values or a count
 array(templateOrFactory, initialValue, options?);
 array(templateOrFactory, initialValue, validators, options?);
 array(templateOrFactory, options);
 array(templateOrFactory, validators, options?);
 ```
 
-`initialValue` is either a non-negative item count or an array of item values. Declaring it inside options is a secondary alternative when keeping all configuration in one object is more convenient:
+The positional initial argument accepts a non-negative safe integer count or item values. Options
+use initialLength for counts and initialValue for values; numeric initialValue remains compatible:
 
 ```ts
 const people = array(
@@ -2199,7 +2202,11 @@ const people = array(
 );
 ```
 
-The positional and option forms are alternatives. Once a positional initial value is present, IntelliSense omits `options.initialValue` and TypeScript rejects attempts to specify both. Validators can retain the same shorthand style as fields and forms:
+The positional and option forms are alternatives. A defined positional source excludes both
+options.initialValue and options.initialLength. The two options are mutually exclusive too,
+including initialValue: null or a numeric initialValue. Conflicts throw TypeError before invoking
+item factories, and are rejected by TypeScript (including option variables). Undefined options
+are treated as omitted at runtime. Validators can retain the same shorthand style as fields and forms:
 
 ```ts
 const names = array(
@@ -2237,6 +2244,28 @@ Field, form/group, array, and shorthand-object recipes capture declarative input
 The template is already a live node before `array()` receives it. Compiling it neither mutates nor destroys it, so a separately retained template keeps its own reactive lifecycle. For templates whose construction itself must not start independent asynchronous work, use the explicit factory form.
 
 Leaf field values are not deep-cloned. A clone gets a fresh signal initialized with the originally declared value reference. As elsewhere in this signal-based API, application values should be updated immutably when their internal object identity matters.
+
+### Initial item count
+
+`initialLength` accepts a non-negative safe integer, including zero, and follows the same
+construction path as a numeric positional argument or numeric initialValue. Invalid types or
+negative, fractional, non-finite, and unsafe integer lengths throw RangeError before any item
+factory runs. Zero does not call the factory. Each created node is independent, uses declared
+template/factory defaults, runs configureEach, and receives normal parent/path/injector ownership.
+Initialization does not notify value-change listeners or mark nodes dirty/touched; validation uses
+the normal field and aggregate rules. No injection context is required.
+
+The count is not a length constraint. Structural edits, later set/patch operations, and reset(value)
+retain their existing behavior. reset() preserves current count and values while clearing state;
+resetToInitial() restores the initial collection baseline. Nested array clones preserve the declared
+count independently of current runtime edits. Both initial options are removed from clone options
+because the clone carries its normalized initial source separately.
+
+This initialization API intentionally differs from Angular Signal Forms, which derives nodes from
+an existing array-valued model. Reference inspected: Angular v22.1.7, commit
+f3358f24b884e34d44cfb8ec3db53965153d61e1; packages/forms/signals/src/field/structure.ts,
+src/field/node.ts, test/node/dynamic.spec.ts, and test/node/field_node.spec.ts govern structural
+identity and reset state. No Angular initialLength API is assumed.
 
 ### Reading items
 

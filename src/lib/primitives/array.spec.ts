@@ -2483,3 +2483,82 @@ describe('array configureEach', () => {
     expect(rows.length()).toBe(1);
   });
 });
+
+describe('array initialLength', () => {
+  it('creates independent template items and captures the same defaults as numeric initialValue', () => {
+    const template = group({ name: field('default') });
+    template.name.set('edited template');
+    const configured = vi.fn();
+    const rows = array(template, { initialLength: 2, configureEach: configured });
+    expect(rows()).toEqual([{ name: 'default' }, { name: 'default' }]);
+    expect(rows()).toEqual(array(template, { initialValue: 2 })());
+    expect(rows()).toEqual(array(template, 2)());
+    expect(configured).toHaveBeenCalledTimes(2);
+    expect(rows.at(0)).not.toBe(template);
+    expect(rows.at(0)).not.toBe(rows.at(1));
+    rows.at(0)!.name.set('changed');
+    expect(rows.at(1)!.name()).toBe('default');
+    rows.removeAt(1);
+    expect(rows.length()).toBe(1);
+    rows.reset();
+    expect(rows.length()).toBe(1);
+    rows.resetToInitial();
+    expect(rows()).toEqual([{ name: 'default' }, { name: 'default' }]);
+    expect(configured).toHaveBeenCalledTimes(3);
+    rows.push();
+    expect(rows.length()).toBe(3);
+    rows.clear();
+    expect(rows.length()).toBe(0);
+  });
+
+  it('calls factories only for requested items and accepts zero length', () => {
+    const factory = vi.fn(() => field('new'));
+    expect(array(factory, { initialLength: 0 })()).toEqual([]);
+    expect(factory).not.toHaveBeenCalled();
+    const rows = array(factory, { initialLength: 2 });
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(rows()).toEqual(['new', 'new']);
+    expect(rows.templateValue()).toBe('new');
+    expect(rows.length()).toBe(2);
+  });
+
+  it('supports positional validators and configured nullable primitives', () => {
+    const validate = vi.fn(() => null);
+    const rows = array(field(''), validate, { initialLength: 2 });
+    expect(rows.valid()).toBe(true);
+    expect(validate).toHaveBeenCalled();
+    const configured = createFormPrimitives({ nullable: true });
+    const users = configured.array({ name: 'Ada' }, validate, { initialLength: 2 });
+    expect(users()).toEqual([{ name: 'Ada' }, { name: 'Ada' }]);
+    users.at(0)!.name.set(null);
+    expect(users.at(1)!.name()).toBe('Ada');
+    const created = configured.array(() => ({ name: 'Grace' }), { initialLength: 1 });
+    expect(created()).toEqual([{ name: 'Grace' }]);
+    const nested = array(users, { initialLength: 2 });
+    expect(nested()).toEqual([[{ name: 'Ada' }, { name: 'Ada' }], [{ name: 'Ada' }, { name: 'Ada' }]]);
+  });
+
+  it.each([-1, 1.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1, null, '2', false])('rejects invalid initialLength %s before invoking a factory', (initialLength) => {
+    const factory = vi.fn(() => field(''));
+    expect(() => Reflect.apply(array, undefined, [factory, { initialLength }])).toThrow(RangeError);
+    expect(factory).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ initialLength: 1, initialValue: [] }],
+    [{ initialLength: 0, initialValue: 0 }],
+    [{ initialLength: 1, initialValue: null }],
+    [0, { initialLength: 1 }],
+    [[], { initialLength: 1 }],
+    [null, { initialLength: 1 }],
+    [1, { initialValue: [] }],
+    [[], () => null, { initialLength: 1 }],
+    [() => null, { initialLength: 1, initialValue: [] }],
+  ])('rejects conflicting initial sources %j before construction', (...args) => {
+    const factory = vi.fn(() => field(''));
+    expect(() => Reflect.apply(array, undefined, [factory, ...args])).toThrow(/only one initial source/);
+    expect(factory).not.toHaveBeenCalled();
+    expect(() => Reflect.apply(createFormPrimitives().array, undefined, [factory, ...args])).toThrow(/only one initial source/);
+    expect(factory).not.toHaveBeenCalled();
+  });
+});

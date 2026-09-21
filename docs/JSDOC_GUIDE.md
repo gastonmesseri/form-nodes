@@ -103,7 +103,7 @@ profile.address.city(); // 'Zurich'
 
 Use explicit leaf and root primitives such as `field('Mark')`, `form({ ... })`, and `array(...)` in website and IntelliSense examples by default. Keep field-value shorthands such as `'Mark'` confined to their dedicated documentation sections unless a later documentation decision deliberately introduces them elsewhere. Prefer the structural object shorthand for ordinary groups, such as `address: { city: field('Zurich') }`; use explicit `group({ ... })` only when that branch needs group validators, options, validator messages, or when the example specifically teaches the `group()` primitive.
 
-When introducing `array()` in consumer documentation, show a simple form-object template before primitive field templates. The dynamic-array guide should also introduce numeric `initialValue` with a form-object template so consumers immediately see how multiple items are created from readable defaults.
+When introducing `array()` in consumer documentation, show a simple form-object template before primitive field templates. The dynamic-array guide should also introduce `initialLength` with a form-object template so consumers immediately see how multiple items are created from readable defaults.
 
 Keep required setup and the option being taught; omit unrelated callbacks, settings, and operations. A debounce example does not need submission configuration. Each example must demonstrate its own member, not a similarly named operation on a different primitive.
 

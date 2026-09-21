@@ -85,3 +85,11 @@ createFormPrimitives({ nullable: true }).array({ name: 'Ada' }, {
     api.children.name.set(1);
   },
 });
+
+const lengthConfigured = createFormPrimitives({ nullable: true }).array({ name: 'Ada' }, { initialLength: 2 });
+type _LengthConfigured = Expect<Equal<ReturnType<typeof lengthConfigured>, { name: string | null }[]>>;
+createFormPrimitives().array(() => ({ count: 0 }), { initialLength: 1 });
+// @ts-expect-error configured arrays also accept only one initial source
+createFormPrimitives().array({ name: '' }, { initialLength: 2, initialValue: 2 });
+// @ts-expect-error configured factory positional counts exclude initialLength
+createFormPrimitives().array(() => field(''), 2, { initialLength: 2 });

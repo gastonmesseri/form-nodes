@@ -7124,3 +7124,37 @@ it('tracks async aggregate rules installed by configureEach through sibling edit
   model.nested.rows.clear();
   expect(model.valid()).toBe(true);
 });
+
+it('initializes nested object arrays by length and configures each cloned row independently', () => {
+  const configured = vi.fn();
+  const changed = vi.fn();
+  const model = form({
+    details: form({
+      rows: array({ code: field(''), detail: field('saved') }, {
+        initialLength: 2,
+        configureEach(api) {
+          configured();
+          api.children.code.onValueChange(() => {
+            changed();
+            api.patch({ detail: '' });
+          });
+        },
+      }),
+    }),
+  });
+  expect(model()).toEqual({ details: { rows: [{ code: '', detail: 'saved' }, { code: '', detail: 'saved' }] } });
+  expect(configured).toHaveBeenCalledTimes(2);
+  expect(changed).not.toHaveBeenCalled();
+  const first = model.details.rows.at(0)!;
+  first.code.set('selected');
+  expect(first.detail()).toBe('');
+  expect(model.details.rows.at(1)!.detail()).toBe('saved');
+  expect(first.path()).toEqual(['details', 'rows', '0']);
+  expect(model.valid()).toBe(true);
+  expect(model.dirty()).toBe(false);
+  model.details.rows.clear();
+  model.resetToInitial();
+  expect(configured).toHaveBeenCalledTimes(4);
+  expect(changed).toHaveBeenCalledOnce();
+  expect(model.details.rows()).toEqual([{ code: '', detail: 'saved' }, { code: '', detail: 'saved' }]);
+});

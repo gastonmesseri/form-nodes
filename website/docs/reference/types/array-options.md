@@ -31,8 +31,13 @@ type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = O
     disabled?: boolean | string | (() => boolean | string);
     readonly?: boolean | (() => boolean);
     initialValue?: TValue | number | null;
+    initialLength?: number;
     trackBy?: TValue extends readonly (infer TItemValue)[] ? ((value: TItemValue, index: number) => unknown) | (TItemValue extends object ? Extract<keyof TItemValue, string> : never) : never;
-};
+} & ({
+    initialValue?: never;
+} | {
+    initialLength?: never;
+});
 ```
 
 ## Type parameters
@@ -56,7 +61,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `hidden` | Controls this node's local hidden state. Descendants inherit active hidden state; programmatic writes remain available. Hidden nodes suppress their own validation and reported interaction state. Hiding does not delete values or stored dirty/touched state. |
 | `disabled` | Controls this node's local disabled state, inherited by descendants. A string disables the node and contributes a user-facing reason, including an empty string. Disabled nodes retain their values and accept programmatic writes; their own validation and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally. |
 | `readonly` | Controls this node's local readonly state. Descendants inherit active readonly state. It prevents control-originated edits, not programmatic writes. Readonly nodes suppress their own validation and reported dirty/touched state without discarding stored interaction. |
-| `initialValue` | Initializes collection items from complete values or the template defaults. Null and undefined normalize to an empty array; the collection value is never nullable. A positional initial value excludes this option to prevent conflicting initial sources. |
+| `initialValue` | Initializes collection items from complete values or the template defaults. Null and undefined normalize to an empty array; the collection value is never nullable. Cannot be combined with initialLength or a positional initial value. Numeric values remain supported for compatibility; prefer initialLength for a count. |
+| `initialLength` | Creates this many independent items from the template or factory defaults. Runs configureEach for every new item. Only controls initialization, not a minimum or fixed length; structural edits remain available and resetToInitial restores the baseline. Cannot be combined with initialValue or a positional initial value/count. |
 | `trackBy` | Selects stable item identity during `set()`, `patch()`, `update()`, and value-reset reconciliation. Matching keys retain and move existing nodes; new keys create nodes and removed keys detach them. Retained nodes keep their identity and interaction state while their values and paths update. Every current and incoming key must be unique; duplicate keys throw before mutation. |
 
 ## Related reference
