@@ -1,8 +1,8 @@
 # JSDoc authoring guide
 
-Read this guide before adding or changing public JSDoc, hover examples, or the tools that check and publish them. Keep [AGENTS.md](../AGENTS.md) pointing here and maintain agreed authoring preferences in this guide.
+Read this guide before adding or changing public JSDoc, hover examples, or the tools that check and publish them. Keep [AGENTS.md](../AGENTS.md) pointing here and maintain agreed JSDoc authoring preferences in this guide. Record website-specific preferences in the [website documentation authoring guide](WEBSITE_DOCS_GUIDE.md).
 
-Use English and the package name `@ngblocks/form-nodes`. Follow [AGENTS.md](../AGENTS.md) for project conventions, [behavior.md](behavior.md) for the documented behavior, and [website.md](website.md) for website authoring. Verify public types and implementation before claiming a capability. For behavioral decisions, follow the Angular source inspection requirements in AGENTS.md.
+Use English and the package name `@ngblocks/form-nodes`. Follow [AGENTS.md](../AGENTS.md) for project conventions, [behavior.md](behavior.md) for the documented behavior, and [WEBSITE_DOCS_GUIDE.md](WEBSITE_DOCS_GUIDE.md) for website authoring. Verify public types and implementation before claiming a capability. For behavioral decisions, follow the Angular source inspection requirements in AGENTS.md.
 
 This guide adapts the shared authoring rules to Form Nodes. Consumer examples, commands, package paths, output annotations, and generation details must match this repository. Clearly labeled examples retained from the source project are writing and formatting references, not Form Nodes API recipes.
 
@@ -151,7 +151,7 @@ Keep a separate node binding only when the binding itself teaches something, suc
 
 When a documentation example binds `[formNode]`, prefer showing the associated node model and HTML together in one Angular `@Component` with an inline `template`. This keeps the view and view-model visually adjacent and gives the template HTML highlighting inside the TypeScript example. Keep a separate HTML fragment only when the component model is already unambiguous from the immediately surrounding example or when combining a large template and model would make the example harder to read.
 
-For website examples, name component event handler methods with the `on` prefix, such as `onTimeseriesCodeChange`, following the [website event handler naming convention](website.md#template-event-handler-names).
+For website examples, name component event handler methods with the `on` prefix, such as `onTimeseriesCodeChange`, following the [website event handler naming convention](WEBSITE_DOCS_GUIDE.md#template-event-handler-names).
 
 Show the necessary injection context for hooks that require it and prefer modern signal-based Angular APIs.
 
@@ -202,7 +202,7 @@ export class ProfilePage {
 }
 ```
 
-In website documentation examples, including `website/examples/` and code blocks under `website/docs/`, keep consecutive imports together without blank lines. Put package imports (including Angular and `@ngblocks/form-nodes`) before local relative or absolute-path imports such as `./validator-message-catalog`. Retain ascending line-length order within those categories. Do not combine imports across comments marking different hypothetical files.
+Website examples follow the [website import and layout conventions](WEBSITE_DOCS_GUIDE.md#imports-and-code-layout), including explicit imports and consecutive import lines without blank lines.
 
 Omit a binding when its name or subsequent use adds nothing. Keep useful names when demonstrating state, a return value, or a sequence of operations.
 
@@ -577,15 +577,11 @@ Keep model-only examples usable outside Angular injection context where the API 
 
 ## Source and website synchronization
 
-Author JSDoc in source. Do not patch generated reference pages instead of their source or generator. Follow [website.md](website.md) and AGENTS.md for the consumer website.
+Author JSDoc in source. Do not patch generated reference pages instead of their source or generator. Follow the [website documentation authoring guide](WEBSITE_DOCS_GUIDE.md) and AGENTS.md for the consumer website.
 
 [The public-type reference generator](../website/scripts/sync-public-type-reference.mjs) generates declarations and member summaries under `website/docs/reference/types/`. It does not publish every complete hover example automatically. Keep detailed guides and reference pages current when consumers need additional explanation.
 
-Put complete consumer examples that claim observable runtime behavior in `website/examples/*.example.ts`; they must contain meaningful assertions and pass the executable documentation harness. Put complete Angular or public-inference examples that cannot run meaningfully in plain Node in `website/examples/*.typecheck.ts`. Render canonical examples directly from those files instead of duplicating their source in Markdown. Keep partial signatures, short alternatives, HTML fragments, and deliberately invalid examples inline when turning them into standalone programs would reduce clarity. Website examples follow their own import and layout conventions rather than the hover's 45-character limit.
-
-When one consumer documentation code block represents multiple application files, add a JavaScript comment such as `// main.ts` or `// app.component.ts` before each logical file section. Keep code belonging to the same file together, including global configuration and bootstrap calls in the `main.ts` section. Keep shared imports together and explain that the comments identify suggested files. For a block representing a single file, use its filename as the block title without a redundant filename comment. Keep pure signatures and isolated expressions free of invented filenames.
-
-End each progressive tutorial step with a concise `Related guides and reference` section linking to the most relevant concept pages, detailed guides, API references, and cookbook recipes. Keep these links curated and contextual rather than repeating the complete sidebar on every page.
+The website guide defines [canonical example locations and page structure](WEBSITE_DOCS_GUIDE.md#canonical-examples-and-page-structure), including executable assertions, Angular typechecked examples, file labels, and related-guide links. Follow its [synchronization rules](WEBSITE_DOCS_GUIDE.md#generated-references-and-synchronization) for generated references and README examples.
 
 Keep stable anchors, inherited contracts, cross-page links, and sidebar entries synchronized. Preserve source and published declaration hovers, overloads, generics, and readonly contracts. A narrow hover supplements the complete guide rather than replacing it.
 

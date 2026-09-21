@@ -4,6 +4,7 @@
 - Write all source code, identifiers, comments, documentation, tests, commit-facing text, warnings, errors, and generated user-facing copy in English.
 - Keep new and updated files in English even when the conversation with the user is in another language.
 - Read and follow the [JSDoc authoring guide](docs/JSDOC_GUIDE.md) before adding or updating JSDoc, IntelliSense examples, consumer documentation examples, or documentation formatting tools. The guide contains the project-specific authoring and example conventions.
+- Read and follow the [website documentation authoring guide](docs/WEBSITE_DOCS_GUIDE.md) before adding or updating website documentation, canonical website examples, or website documentation tools. Record agreed website authoring preferences in that guide.
 - `form()` and `field()` must remain safe to declare and use outside an Angular injection context. Their synchronous behavior and explicitly triggered asynchronous validation must always work without dependency injection.
 - Reactive dependency tracking for asynchronous validators must work both inside and outside an Angular injection context.
 - A node's explicit or currently captured injector takes precedence for injector-dependent ownership. Without one, nodes temporarily adopt a directly bound `[formNode]` host injector and then inherit the nearest ancestor injector by default, including nodes created later by array templates or factories. `adoptBindingInjector: false` disables direct binding adoption, while `inheritInjector: false` creates an ancestor boundary. Binding leases and inherited ownership must be released on rebinding or detachment, and outside dependency injection use weak ownership so an unreachable node and its watcher can be garbage-collected without keeping the form tree alive.
@@ -35,7 +36,7 @@
 
 ## Import style
 
-- In source code, separate third-party imports from project imports with exactly one blank line. The documentation-example import convention in the JSDoc authoring guide is an exception.
+- In source code, separate third-party imports from project imports with exactly one blank line. The documentation-example import convention in the website documentation authoring guide is an exception.
 - Keep third-party imports in the first group and project imports in the second group.
 - Sort imports within each group by ascending length of the complete import line, from shortest to longest.
 - Keep every import on a single line. Do not use multiline imports, including imports with several named symbols.

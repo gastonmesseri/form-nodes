@@ -2,6 +2,9 @@
 
 For npm publication, version tags, and GitHub Releases, see [Publishing a release](releasing.md).
 
+Follow the [website documentation authoring guide](WEBSITE_DOCS_GUIDE.md) for content,
+examples, naming, formatting, and documentation verification conventions.
+
 Edit the documentation in `website/docs/` and its canonical examples in `website/examples/`.
 Before pushing, check the examples and preview the production build:
 
@@ -20,18 +23,6 @@ For the first deployment, select **GitHub Actions** under **Settings â†’ Pages â
 ensure the `github-pages` environment permits deployment from `master`. After deployment,
 check a directly opened nested page and search. The hosting URL and base path
 are configured in `website/docusaurus.config.ts`.
-
-## Template event handler names
-
-In website documentation and canonical examples, name component methods used as template
-event handlers with `on` followed by a descriptive PascalCase name. For example, use
-`(formNodeChange)="onTimeseriesCodeChange($index)"` and name the corresponding component
-method `onTimeseriesCodeChange(index: number)`. Use the same convention for native events,
-such as `(click)="onAddTimeseries()"`.
-
-Keep handler names consistent between the template and component. This convention applies
-to component handler methods; direct calls to public node operations, such as
-`(click)="form.name.focus()"`, retain their API names.
 
 ## Deferred playground
 
