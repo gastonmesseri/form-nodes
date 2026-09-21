@@ -4014,12 +4014,33 @@ does not create an injection context, and does not await promises or register re
 Exceptions propagate. Ancestor attachment is not guaranteed at this point.
 
 Field, group, form, and array use the same node-level semantics. Configure a group/form array
-template for per-row rules; an array callback configures the collection. Independent templates
-and every fresh clone run their own callback. Existing nodes do not rerun on edits, reset, moves,
+template or use array configureEach for per-row rules; an array configure callback configures
+the collection. Independent templates and every fresh clone run their own callback. Existing
+nodes do not rerun on edits, reset, moves,
 or keyed reuse; newly constructed replacement nodes run normally. Clone recipes retain declared
 options and reinstall rules against fresh siblings. Array row values are applied after template
 construction. Configuration writes do not redefine field declaration defaults. setValidators
 replaces rather than appends to existing rules.
+
+Array `configureEach` receives each actual new item's inferred callable `$api` once. It runs
+untracked and with value-change notifications suppressed, after the item's own configure and
+supplied initial data, before array attachment and capture of its reset-to-initial baseline.
+Its value writes become part of that baseline. Initial items run before array configure.
+It applies to templates, factories, numeric initial counts, and items created by insertion or
+reconciliation. Existing items do not rerun on edits, movement, keyed reuse, or reset; replacement
+items do. The original template and templateValue drafts do not invoke configureEach. Nested
+array clones retain the option. Children are ready; ancestors are not guaranteed. No injector is
+required or created. Returns are ignored, errors propagate, and installed subscriptions retain
+normal injector ownership and detached-node semantics. Installed validators retain reactive
+tracking and normal synchronous/asynchronous validation. Configuring items does not itself mark
+them dirty or touched. Later dependent writes use the ordinary state and validation rules.
+
+This hook is a Form Nodes API extension, not an Angular Signal Forms API. The identity/reuse
+reference is Angular v22.1.7 (f3358f24b884e34d44cfb8ec3db53965153d61e1),
+packages/forms/signals/src/field/structure.ts and test/node/dynamic.spec.ts (tracking across moves).
+State/reset reference: src/field/state.ts, src/field/node.ts, and test/node/field_node.spec.ts
+under packages/forms/signals. Form Nodes continues to use its own index/trackBy reconciliation;
+configureEach follows actual node creation rather than array position changes.
 
 ValidatorContext.parent remains a reactive signal, with an additional generic assertion overload
 returning TParent | null. It does not validate kind/shape or skip structural parents. Non-generic

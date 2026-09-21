@@ -4683,3 +4683,46 @@ describe('field instance onValueChange subscription debounce', () => {
     expect(notify).not.toHaveBeenCalled();
   });
 });
+
+it('installs reactive async field validation through configureEach without injection', async () => {
+  const limit = signal(2);
+  const calls: number[] = [];
+  const configured = vi.fn();
+  const model = form({
+    counts: array(field(1), {
+      initialValue: 2,
+      configureEach(api) {
+        configured();
+        api.setValidators(asyncValidator(async ({ value }) => {
+          calls.push(value());
+          return value() >= limit() ? null : { kind: 'tooSmall' };
+        }));
+      },
+    }),
+  });
+  const first = model.counts.at(0)!;
+  expect(first.pending()).toBe(true);
+  expect(model.pending()).toBe(true);
+  await vi.waitFor(() => expect(model.pending()).toBe(false));
+  expect(calls).toEqual([1, 1]);
+  expect(first.hasError('tooSmall')).toBe(true);
+  expect(model.invalid()).toBe(true);
+  first.set(3);
+  await vi.waitFor(() => expect(first.valid()).toBe(true));
+  expect(calls).toEqual([1, 1, 3]);
+  expect(first.valid()).toBe(true);
+  expect(model.invalid()).toBe(true);
+  limit.set(0);
+  await vi.waitFor(() => expect(model.valid()).toBe(true));
+  expect(calls).toHaveLength(5);
+  expect(configured).toHaveBeenCalledTimes(2);
+  expect(first.dirty()).toBe(false);
+  expect(first.touched()).toBe(false);
+  first.resetToInitial();
+  await vi.waitFor(() => {
+    expect(calls).toHaveLength(6);
+    expect(first()).toBe(1);
+    expect(model.pending()).toBe(false);
+    expect(model.valid()).toBe(true);
+  });
+});

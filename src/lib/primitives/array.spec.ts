@@ -2376,3 +2376,110 @@ it('supports writable signal utilities without replacing array nodes or bypassin
   profile.resetToInitial();
   expect(view()).toEqual([{ name: '' }]);
 });
+
+describe('array configureEach', () => {
+  it.each(['template', 'factory'] as const)('configures actual %s items after their values and before capturing reset defaults', (source) => {
+    const events: string[] = [];
+    const changed = vi.fn();
+    const create = () => field('default', { configure: () => events.push('own'), onValueChange: changed });
+    const options = {
+      configureEach(api: NonNullable<ReturnType<typeof array<ReturnType<typeof create>>>[number]>['$api']) {
+        events.push(`each:${api()}`);
+        expect(api.parent()).toBeNull();
+        api.onValueChange(changed);
+        api.set(api().toUpperCase());
+      },
+      configure: () => events.push('array'),
+    };
+    const rows = source === 'factory' ? array(create, options) : array(create(), options);
+    expect(events).toEqual(source === 'factory' ? ['array'] : ['own', 'array']);
+    events.length = 0;
+    expect(rows.templateValue()).toBe('default');
+    expect(events).toEqual(source === 'factory' ? ['own'] : []);
+    events.length = 0;
+    const row = rows.push('loaded');
+    expect(events).toEqual(['own', 'each:loaded']);
+    expect(changed).not.toHaveBeenCalled();
+    expect(row()).toBe('LOADED');
+    expect(row.parent()).toBe(rows);
+    expect(row.dirty()).toBe(false);
+    expect(row.touched()).toBe(false);
+    row.set('edited');
+    expect(changed).toHaveBeenCalledTimes(2);
+    row.resetToInitial();
+    expect(row()).toBe('LOADED');
+    expect(events).toEqual(['own', 'each:loaded']);
+  });
+
+  it.each([false, true])('configures new items once across reconciliation and resets (keyed: %s)', (keyed) => {
+    const configured = vi.fn();
+    const rows = array({ id: field(''), count: field(0) }, {
+      initialValue: [{ id: 'a', count: 1 }, { id: 'b', count: 2 }],
+      ...(keyed ? { trackBy: 'id' as const } : {}),
+      configureEach(api) {
+        configured(api().id);
+        expect(api.children.count.parent()?.$api).toBe(api);
+      },
+    });
+    expect(configured.mock.calls).toEqual([['a'], ['b']]);
+    const first = rows.at(0)!;
+    rows.move(0, 1);
+    rows.swap(0, 1);
+    rows.patch([{ id: 'a', count: 3 }, { id: 'b', count: 4 }]);
+    rows.reset();
+    rows.resetToInitial();
+    expect(rows.at(0)).toBe(first);
+    expect(configured).toHaveBeenCalledTimes(2);
+    rows.insert(1, { id: 'c', count: 5 });
+    expect(configured).toHaveBeenCalledTimes(3);
+    rows.set([{ id: 'a', count: 6 }, { id: 'c', count: 7 }, { id: 'b', count: 8 }, { id: 'd', count: 9 }]);
+    expect(configured).toHaveBeenCalledTimes(4);
+    rows.removeAt(0);
+    rows.clear();
+    rows.resetToInitial();
+    expect(configured).toHaveBeenCalledTimes(6);
+    expect(rows()).toEqual([{ id: 'a', count: 1 }, { id: 'b', count: 2 }]);
+  });
+
+  it('retains per-item configuration when nested array templates are cloned', () => {
+    const innerConfigured = vi.fn();
+    const outerConfigured = vi.fn();
+    const template = array(field(''), { configureEach: innerConfigured });
+    const rows = array(template, {
+      initialValue: [['one'], ['two']],
+      configureEach(api) {
+        outerConfigured(api());
+        api.setValidators(({ value }) => value().length ? null : { kind: 'empty' });
+      },
+    });
+    expect(innerConfigured).toHaveBeenCalledTimes(2);
+    expect(outerConfigured.mock.calls).toEqual([[['one']], [['two']]]);
+    expect(rows.valid()).toBe(true);
+    rows.at(0)!.clear();
+    expect(rows.invalid()).toBe(true);
+    rows.at(1)!.push('three');
+    expect(innerConfigured).toHaveBeenCalledTimes(3);
+    expect(outerConfigured).toHaveBeenCalledTimes(2);
+    expect(template()).toEqual([]);
+  });
+
+  it('runs untracked and propagates failures before inserting an item', () => {
+    const dependency = signal(false);
+    const configured = vi.fn();
+    const declaration = computed(() => {
+      return array(field(''), {
+        initialValue: 1,
+        configureEach() {
+          configured();
+          if (dependency()) throw new Error('Cannot configure item');
+        },
+      });
+    });
+    const rows = declaration();
+    dependency.set(true);
+    expect(declaration()).toBe(rows);
+    expect(configured).toHaveBeenCalledOnce();
+    expect(() => rows.push()).toThrow('Cannot configure item');
+    expect(rows.length()).toBe(1);
+  });
+});

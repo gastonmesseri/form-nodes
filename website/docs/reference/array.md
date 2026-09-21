@@ -274,12 +274,28 @@ structure is ready. The callback is untracked; validators installed inside it re
 Fresh template clones run their own callback. Existing instances do not rerun it on reset or edits.
 Ancestors may not be attached yet. Return values are ignored.
 
-This callback configures the array itself through `items()`. For per-row sibling rules, put
-`configure` on a `group()` or `form()` template.
+This callback configures the array itself through `items()`. For per-row sibling rules, use
+[`configureEach`](#configure-each) or put `configure` on a `group()` or `form()` template.
 
 See [configuring nodes and sibling rules](../guides/configuring-nodes.md) for an executable example,
 parent contracts, initialization order, and lifecycle details.
 
+
+### configureEach {#configure-each}
+
+**Default:** `undefined`; no per-item configuration.
+
+Receives each new item's inferred, collision-safe callable `$api`, just as `configure` receives
+this array's API. Works with object templates, node templates, and factories. For object items,
+use `api.children` to access typed siblings; fields expose `set()` and arrays expose `items()`.
+
+Runs synchronously and untracked after the item's own configuration and supplied initial data,
+before attachment and capture of its reset-to-initial baseline. Initialization and configuration
+writes do not notify value-change listeners. No injector is required or implicitly created.
+The original template and `templateValue()` drafts do not run this callback. Existing items do
+not rerun it on edits, moves, or resets; newly created items do. Returned values are ignored.
+
+See [the complete example and lifecycle contract](../guides/configuring-nodes.md#configure-each).
 
 Each option below includes its signature, default behavior, scope, and a complete example.
 

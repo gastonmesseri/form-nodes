@@ -113,3 +113,40 @@ const generated = array(() => ({ id: field.strict(1) }));
 type _FactoryTemplateValue = Expect<Equal<ReturnType<typeof generated.templateValue>, { id: number }>>;
 // @ts-expect-error Template values preserve child value types.
 draft.age = 'invalid';
+
+const configuredRows = array({ code: field<string>(null), value: field('') }, {
+  configureEach(api) {
+    type _Code = Expect<Equal<ReturnType<typeof api.children.code>, string | null>>;
+    type _Value = Expect<Equal<ReturnType<typeof api>, { code: string | null; value: string }>>;
+    api.children.code.onValueChange(() => api.patch({ value: '' }));
+    // @ts-expect-error row values retain their declared types
+    api.patch({ value: 123 });
+  },
+});
+type _ConfiguredRows = Expect<Equal<ReturnType<typeof configuredRows>, { code: string | null; value: string }[]>>;
+array(field(0), 2, {
+  configureEach(api) {
+    type _Value = Expect<Equal<ReturnType<typeof api>, number>>;
+    api.set(1);
+    // @ts-expect-error field configuration preserves the numeric value contract
+    api.set('wrong');
+  },
+});
+array(() => form({ code: field('') }), {
+  configureEach(api) {
+    type _Code = Expect<Equal<ReturnType<typeof api.children.code>, string>>;
+    api.patch({ code: 'ready' });
+  },
+});
+array(() => field(false), [true], {
+  configureEach(api) {
+    type _Value = Expect<Equal<ReturnType<typeof api>, boolean>>;
+    api.set(false);
+  },
+});
+array(array(field('')), {
+  configureEach(api) {
+    type _Value = Expect<Equal<ReturnType<typeof api>, string[]>>;
+    api.push('ready');
+  },
+});

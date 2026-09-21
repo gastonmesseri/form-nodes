@@ -78,6 +78,10 @@ The template node itself is not inserted. If application code retains it, it rem
 
 Compiling a template does not keep its original nodes or their parent tree alive through the clone recipe. Values, validator callbacks, and explicit injectors retain their existing identity; references held by your own configuration still apply.
 
+Use [`configureEach`](./configuring-nodes.md#configure-each) to connect siblings or install
+validators for every new item without wrapping an object template in `group()`. The callback
+receives the item API after initial data is applied and runs only once per created item.
+
 A factory must return a fresh tree. Returning the same live node more than once throws rather than allowing items to share state.
 
 ## Validate siblings within a row

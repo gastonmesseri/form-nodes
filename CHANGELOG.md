@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Add `array(..., { configureEach })` to configure each new item through its inferred API after initial values are applied. Connect sibling fields or install validators with object templates or factories; reused and reordered items keep their existing configuration.
+
 ## [5.2.0] - 2026-09-21
 
 ### Added

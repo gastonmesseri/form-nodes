@@ -76,3 +76,12 @@ void configuredForms;
 name.set(null);
 // @ts-expect-error a non-nullable configured field requires a non-null initial value
 nonNullableForms.field<string>();
+
+createFormPrimitives({ nullable: true }).array({ name: 'Ada' }, {
+  configureEach(api) {
+    type _Name = Expect<Equal<ReturnType<typeof api.children.name>, string | null>>;
+    api.children.name.set(null);
+    // @ts-expect-error configured primitive inference still rejects numbers
+    api.children.name.set(1);
+  },
+});

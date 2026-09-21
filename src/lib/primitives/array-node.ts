@@ -531,6 +531,7 @@ export class ArrayNode<TItem extends AnyNode> {
       const normalize = createItemValueNormalizer(item);
       this.itemValueNormalizers.set(item, normalize);
       if (args.length === 1) withoutValueChanges(() => item.$api.reset(normalize(args[0])));
+      withoutValueChanges(() => this.options?.configureEach?.(item.$api));
       (item as unknown as InternalNode).$api._captureInitialValue();
     });
     return item;

@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Add `array(..., { configureEach })` to configure each new item through its inferred API after initial values are applied. Connect sibling fields or install validators with object templates or factories; reused and reordered items keep their existing configuration.
+
 ## 📦 5.2.0 — 2026-09-21 {#520--2026-09-21}
 
 ### Added

@@ -59,6 +59,35 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
   configure?: (api: TArray['$api']) => void;
 
   /**
+   * Configures each newly created item once with its typed, collision-safe callable `$api`.
+   * Runs after the item's own configure callback and supplied initial value, before attachment
+   * to this array and capture of its reset-to-initial baseline. Children are ready; ancestors
+   * may not be attached. Works with templates and factories, without requiring an injector.
+   * Runs synchronously and untracked, with value-change notifications suppressed. Returned
+   * values are ignored; promises are not awaited and returned functions are not cleanup hooks.
+   * Edits, moves, and resets of reused items do not rerun it; newly created items do.
+   * The original template and templateValue() drafts do not run this callback.
+   *
+   * **Default:** `undefined`; no per-item configuration.
+   *
+   * ```ts
+   * const profile = form({
+   *   rows: array({
+   *     code: field(''),
+   *     detail: field(''),
+   *   }, {
+   *     configureEach(api) {
+   *       api.children.code.onValueChange(() => {
+   *         api.patch({ detail: '' });
+   *       });
+   *     },
+   *   }),
+   * });
+   * ```
+   */
+  configureEach?: (api: TArray extends { readonly [index: number]: AnyNode | undefined } ? NonNullable<TArray[number]>['$api'] : never) => void;
+
+  /**
    * Registers rules on this node's exposed value. Aggregate rules receive the complete
    * object or array; put per-field rules on children. A synchronous composition may return
    * validators; asynchronous rules must be wrapped with `asyncValidator()`.

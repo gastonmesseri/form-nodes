@@ -7017,3 +7017,110 @@ describe('form instance onValueChange subscription debounce', () => {
     }
   });
 });
+
+it('configures sibling reactions for each row of a nested form without sharing subscriptions', () => {
+  const configured = vi.fn();
+  const changed = vi.fn();
+  const model = form({
+    chart: form({
+      timeseries: array({
+        timeseriesCode: field<string>(null, { debounce: 'blur' }),
+        value: field('', { validators: required }),
+        axis: field('left'),
+      }, {
+        initialValue: [
+          { timeseriesCode: 'a', value: 'first', axis: 'right' },
+          { timeseriesCode: 'b', value: 'second', axis: 'right' },
+        ],
+        configureEach(api) {
+          configured();
+          api.children.timeseriesCode.onValueChange(() => {
+            changed();
+            api.patch({ value: '', axis: 'left' });
+          });
+        },
+      }),
+    }),
+  });
+  const rows = model.chart.timeseries;
+  const first = rows.at(0)!;
+  expect(configured).toHaveBeenCalledTimes(2);
+  expect(changed).not.toHaveBeenCalled();
+  expect(model.valid()).toBe(true);
+  first.timeseriesCode.value.control.set('c');
+  expect(first.value()).toBe('first');
+  expect(first.timeseriesCode.debouncing()).toBe(true);
+  expect(changed).not.toHaveBeenCalled();
+  expect(model.dirty()).toBe(true);
+  first.timeseriesCode.markAsTouched();
+  expect(first()).toEqual({ timeseriesCode: 'c', value: '', axis: 'left' });
+  expect(changed).toHaveBeenCalledOnce();
+  expect(first.value.dirty()).toBe(false);
+  expect(first.value.touched()).toBe(false);
+  expect(model.touched()).toBe(true);
+  expect(model.invalid()).toBe(true);
+  expect(model.chart.invalid()).toBe(true);
+  expect(rows.at(1)!()).toEqual({ timeseriesCode: 'b', value: 'second', axis: 'right' });
+  first.value.set('replacement');
+  expect(model.valid()).toBe(true);
+  first.patch({ timeseriesCode: 'd', value: 'loaded', axis: 'right' });
+  expect(first.value()).toBe('');
+  expect(changed).toHaveBeenCalledTimes(2);
+  rows.move(0, 1);
+  const detached = rows.removeAt(1)!;
+  expect(model.valid()).toBe(true);
+  expect(model.dirty()).toBe(false);
+  detached.timeseriesCode.set('e');
+  expect(changed).toHaveBeenCalledTimes(3);
+  expect(detached.parent()).toBeNull();
+  expect(model.valid()).toBe(true);
+  const added = rows.push({ timeseriesCode: 'f', value: 'new', axis: 'right' });
+  expect(configured).toHaveBeenCalledTimes(3);
+  expect(changed).toHaveBeenCalledTimes(3);
+  added.timeseriesCode.set('g');
+  expect(added.value()).toBe('');
+  expect(changed).toHaveBeenCalledTimes(4);
+  expect(model.invalid()).toBe(true);
+});
+
+it('tracks async aggregate rules installed by configureEach through sibling edits and dependencies', async () => {
+  const minimum = signal(2);
+  const calls: number[] = [];
+  const model = form({
+    nested: form({
+      rows: array({ count: field(1) }, {
+        initialValue: 1,
+        configureEach(api) {
+          api.setValidators(asyncValidator(async ({ value }) => {
+            calls.push(value().count);
+            return value().count >= minimum() ? null : { kind: 'tooSmall' };
+          }));
+        },
+      }),
+    }),
+  });
+  const row = model.nested.rows.at(0)!;
+  expect(row.pending()).toBe(true);
+  expect(model.pending()).toBe(true);
+  await vi.waitFor(() => {
+    expect(calls).toEqual([1]);
+    expect(model.pending()).toBe(false);
+    expect(row.hasError('tooSmall')).toBe(true);
+  });
+  expect(model.invalid()).toBe(true);
+  row.count.set(3);
+  await vi.waitFor(() => {
+    expect(calls).toEqual([1, 3]);
+    expect(model.valid()).toBe(true);
+  });
+  minimum.set(4);
+  await vi.waitFor(() => {
+    expect(calls).toEqual([1, 3, 3]);
+    expect(model.pending()).toBe(false);
+    expect(model.nested.invalid()).toBe(true);
+  });
+  expect(row.count.valid()).toBe(true);
+  expect(row.dirty()).toBe(false);
+  model.nested.rows.clear();
+  expect(model.valid()).toBe(true);
+});

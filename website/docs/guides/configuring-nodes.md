@@ -11,6 +11,7 @@ import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subs
 import initializeFromInputsSource from '!!raw-loader!../../examples/initialize-form-from-inputs.typecheck.ts';
 import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
+import configureEachSource from '!!raw-loader!../../examples/configure-each.example.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
 
 Use the `configure` option when a rule needs several already-created children. Its callback receives
@@ -26,10 +27,10 @@ your declaration. No parent assertion or reference to the variable being initial
 | [`form()`](../reference/form.md#configure) | The form API, including typed `children` and submission operations | Configure rules involving several branches. |
 | [`array()`](../reference/array.md#configure) | The array API, including typed `items()` | Configure the collection itself. |
 
-`array(..., { configure })` configures the **array**, not each row. To configure rows, put the
-callback on the template: `array(group({ ... }, { configure }))`. An explicit `form()` template
-also supports this if each row should own a submission workflow. A [factory](./dynamic-arrays.md)
-remains useful when you prefer capturing locally declared sibling nodes.
+`array(..., { configure })` configures the **array**. Use `configureEach` to configure each
+new item directly, including ordinary object templates. A `group()` or `form()` template may
+also carry its own `configure` callback. A [factory](./dynamic-arrays.md) remains useful when
+you prefer capturing locally declared sibling nodes.
 
 <CodeBlock language="ts" title="configure-nodes.ts">{configureSource}</CodeBlock>
 
@@ -57,6 +58,36 @@ Prefer configuration for installing rules rather than changing initial values. A
 changes current state; it does not redefine a field's declared reset default. Supplied array row
 values are applied after the template instance is constructed, so they can overwrite construction-time
 value changes. Install a validator that reads live values instead of capturing a value snapshot.
+
+## Configure each array item {#configure-each}
+
+`configureEach` receives each new item's typed, callable `$api`. For object rows,
+`api.children` exposes the inferred sibling nodes and `api.patch()` updates that row.
+
+<CodeBlock language="ts" title="configure-each.ts">{configureEachSource}</CodeBlock>
+
+The callback runs once per actual item, for both templates and factories. It runs after the
+item's own `configure` and supplied initial data, before attachment to the array and capture
+of the item's `resetToInitial()` baseline. Its value changes therefore become part of that
+baseline. Children are ready; ancestors and bindings may not be available yet. For initial
+items, `configureEach` runs before the containing array's `configure`.
+
+It also runs for new items created by `push()`, `insert()`, or value reconciliation. Edits,
+reordering, and resets of reused items do not repeat configuration. A reset that creates new
+items configures those new items. Neither the original template nor `templateValue()` drafts
+run this callback. Cloning an array retains the option for its own newly created items.
+
+Configuration is synchronous, untracked, and safe outside an injection context. Initial data
+and configuration writes do not emit value-change notifications. Returned values are ignored;
+promises are not awaited and returned functions are not cleanup handlers. Errors propagate.
+Subscriptions registered here use the normal [subscription ownership](#subscription-ownership)
+rules, including continued observation of retained detached nodes.
+
+`onValueChange` observes later programmatic writes as well as committed control edits. A
+`patch()` or value reset that changes `timeseriesCode` will also clear the dependent fields,
+even if that operation supplied values for them. Control debounce delays this reaction until
+the code commits. The dependent `patch()` preserves their dirty and touched state; use each
+field's `reset(value)` if you also want to clear those interaction flags.
 
 ## Declaring a parent contract
 
