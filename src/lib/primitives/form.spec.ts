@@ -30,6 +30,127 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('form onValueChange emitCurrent', () => {
+  it('emits a current nested snapshot through the collision-safe API without notifying other listeners', () => {
+    const configured = vi.fn();
+    const profile = form({ nested: form({ name: field('Ada', [required]) }), onValueChange: field('child') }, { onValueChange: configured });
+    profile.nested.name.set('Grace');
+    configured.mockClear();
+    const parentChanged = vi.fn();
+    const childChanged = vi.fn();
+    profile.$api.onValueChange(parentChanged);
+    profile.nested.onValueChange(childChanged);
+    const notify = vi.fn();
+    const stop = profile.$api.onValueChange(notify, { emitCurrent: true });
+
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' }, onValueChange: 'child' }, profile);
+    expect(configured).not.toHaveBeenCalled();
+    expect(parentChanged).not.toHaveBeenCalled();
+    expect(childChanged).not.toHaveBeenCalled();
+    expect(profile.valid()).toBe(true);
+    expect(profile.dirty()).toBe(false);
+    expect(profile.touched()).toBe(false);
+    profile.nested.name.set('');
+    expect(profile.invalid()).toBe(true);
+    expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' }, onValueChange: 'child' }, profile);
+    stop();
+    profile.nested.name.set('Lin');
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it('emits the nested exposed value immediately and debounces only later aggregate changes', () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({ nested: form({ name: field('Ada', [required], { debounce: 'blur' }) }) });
+      profile.nested.name.value.control.set('');
+      const state = [profile.valid(), profile.dirty(), profile.touched(), profile.pending(), profile.debouncing()];
+      const notify = vi.fn();
+      const stop = profile.onValueChange(notify, { emitCurrent: true, debounce: 100 });
+
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+      expect([profile.valid(), profile.dirty(), profile.touched(), profile.pending(), profile.debouncing()]).toEqual(state);
+      expect(profile.nested.name.value.control()).toBe('');
+      profile.flush();
+      expect(profile.invalid()).toBe(true);
+      expect(notify).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' } }, profile);
+      profile.nested.name.set('Grace');
+      stop();
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledTimes(2);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('does not track aggregate values or callback reads when registering', () => {
+    const profile = form({ nested: form({ name: field('Ada') }) });
+    const dependency = signal(0);
+    let runs = 0;
+    let stop = () => {};
+    const registration = computed(() => {
+      runs++;
+      stop = profile.onValueChange(() => { dependency(); }, { emitCurrent: true });
+      return runs;
+    });
+
+    expect(registration()).toBe(1);
+    profile.nested.name.set('Grace');
+    dependency.set(1);
+    expect(registration()).toBe(1);
+    stop();
+  });
+
+  it('removes an initial listener that throws after a nested write without retaining pending delivery', () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({ nested: form({ name: field('Ada') }) });
+      const existing = vi.fn();
+      profile.onValueChange(existing);
+      const failure = new Error('Initial form callback failed');
+      const notify = vi.fn(() => {
+        profile.nested.name.set('Grace');
+        throw failure;
+      });
+
+      expect(() => profile.onValueChange(notify, { emitCurrent: true, debounce: 100 })).toThrow(failure);
+      expect(profile()).toEqual({ nested: { name: 'Grace' } });
+      expect(existing).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile);
+      expect(vi.getTimerCount()).toBe(0);
+      profile.nested.name.set('Lin');
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledOnce();
+      expect(existing).toHaveBeenCalledTimes(2);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('emits the current snapshot during an in-progress change without replaying that pending notification', () => {
+    const profile = form({ nested: form({ name: field('Ada') }) });
+    const notify = vi.fn();
+    let stop = () => {};
+    const stopChild = profile.nested.name.onValueChange(() => {
+      stop = profile.onValueChange(notify, { emitCurrent: true });
+    });
+
+    profile.nested.name.set('Grace');
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile);
+    stopChild();
+    profile.nested.name.set('Lin');
+    expect(notify).toHaveBeenCalledTimes(2);
+    stop();
+  });
+
+  it('cancels on owner destruction during initial aggregate delivery', () => {
+    const owner = Injector.create({ providers: [] });
+    const profile = form({ nested: form({ name: field('Ada') }) }, { injector: owner });
+    const notify = vi.fn(() => owner.destroy());
+    const stop = profile.onValueChange(notify, { emitCurrent: true });
+
+    profile.nested.name.set('Grace');
+    expect(notify).toHaveBeenCalledOnce();
+    stop();
+  });
+});
+
 describe('Angular controls stored in forms', () => {
   const structuralControl = () => ({
     value: undefined,

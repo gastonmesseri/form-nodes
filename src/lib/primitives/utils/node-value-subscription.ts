@@ -98,7 +98,7 @@ export class ValueSubscription {
   }
 }
 
-export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector; debounce?: number }, registry = valueSubscriptions, onUnsubscribe?: () => void): (() => void) => {
+export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }, registry = valueSubscriptions, onUnsubscribe?: () => void): (() => void) => {
   const debounce = options?.debounce ?? 0;
   if (!Number.isFinite(debounce) || debounce < 0) throw new RangeError('onValueChange debounce must be a finite, non-negative number of milliseconds.');
   const subscription = new ValueSubscription(new WeakRef(node), callback, registry, onUnsubscribe, debounce);
@@ -110,6 +110,7 @@ export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallbac
     subscription.consumerCleanup = subscription.attach(consumer);
     subscription.setNodeInjector(resolveNodeInjector(node));
     subscription.watchCleanup = watchNodeInjector(node, updateSubscriptionOwner(subscription.reference));
+    if (options?.emitCurrent) untracked(() => callback(node(), node));
   } catch (error) {
     subscription.unsubscribe();
     throw error;

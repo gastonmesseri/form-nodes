@@ -37,6 +37,133 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('field onValueChange emitCurrent', () => {
+  it('emits the current exposed value synchronously only to the new listener', () => {
+    const configured = vi.fn();
+    const existing = vi.fn();
+    const node = field('Ada', { onValueChange: configured, equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    node.onValueChange(existing);
+    node.set('Grace');
+    node.set('GRACE');
+    configured.mockClear();
+    existing.mockClear();
+    const notify = vi.fn();
+    const stop = node.onValueChange(notify, { emitCurrent: true });
+
+    expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+    expect(configured).not.toHaveBeenCalled();
+    expect(existing).not.toHaveBeenCalled();
+    const silent = vi.fn();
+    node.onValueChange(silent, { emitCurrent: false });
+    expect(silent).not.toHaveBeenCalled();
+    node.set('Lin');
+    expect(notify).toHaveBeenLastCalledWith('Lin', node);
+    stop();
+    stop();
+    node.set('Pat');
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it('bypasses subscription debounce for the current value without flushing control input or changing state', () => {
+    vi.useFakeTimers();
+    try {
+      const node = field('Ada', [required], { debounce: 'blur' });
+      node.value.control.set('');
+      const state = [node.valid(), node.dirty(), node.touched(), node.pending(), node.debouncing()];
+      const notify = vi.fn();
+      const stop = node.onValueChange(notify, { emitCurrent: true, debounce: 100 });
+
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(node.value.control()).toBe('');
+      expect([node.valid(), node.dirty(), node.touched(), node.pending(), node.debouncing()]).toEqual(state);
+      expect(vi.getTimerCount()).toBe(0);
+      node.flush();
+      expect(node.invalid()).toBe(true);
+      expect(node.debouncing()).toBe(false);
+      expect(notify).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(100);
+      expect(notify).toHaveBeenLastCalledWith('', node);
+      node.set('Grace');
+      stop();
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledTimes(2);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('reads the current value and invokes the callback without tracking dependencies', () => {
+    const node = field('Ada');
+    const dependency = signal(0);
+    let runs = 0;
+    let stop = () => {};
+    const registration = computed(() => {
+      runs++;
+      stop = node.onValueChange(() => { dependency(); }, { emitCurrent: true });
+      return runs;
+    });
+
+    expect(registration()).toBe(1);
+    node.set('Grace');
+    dependency.set(1);
+    expect(registration()).toBe(1);
+    stop();
+  });
+
+  it('keeps reentrant writes subscribed and removes a failed initial listener with its pending timer', () => {
+    vi.useFakeTimers();
+    const owner = Injector.create({ providers: [] });
+    try {
+      const node = field('Ada');
+      const existing = vi.fn();
+      node.onValueChange(existing);
+      const failure = new Error('Initial callback failed');
+      const notify = vi.fn(() => {
+        node.set('Grace');
+        throw failure;
+      });
+
+      expect(() => node.onValueChange(notify, { emitCurrent: true, debounce: 100, injector: owner })).toThrow(failure);
+      expect(node()).toBe('Grace');
+      expect(existing).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(vi.getTimerCount()).toBe(0);
+      node.set('Lin');
+      vi.runAllTimers();
+      expect(notify).toHaveBeenCalledOnce();
+      expect(existing).toHaveBeenLastCalledWith('Lin', node);
+    } finally { owner.destroy(); vi.useRealTimers(); }
+  });
+
+  it('honors owner destruction during the initial callback and validates options before delivery', () => {
+    const owner = Injector.create({ providers: [] });
+    const node = field('Ada');
+    const notify = vi.fn(() => owner.destroy());
+    const stop = node.onValueChange(notify, { emitCurrent: true, injector: owner });
+    node.set('Grace');
+    stop();
+    expect(notify).toHaveBeenCalledOnce();
+
+    const rejected = vi.fn();
+    expect(() => node.onValueChange(rejected, { emitCurrent: true, injector: owner })).toThrow();
+    expect(() => node.onValueChange(rejected, { emitCurrent: true, debounce: -1 })).toThrow(RangeError);
+    node.set('Lin');
+    expect(rejected).not.toHaveBeenCalled();
+  });
+
+  it('supports synchronous reentrant changes from the initial callback', () => {
+    const node = field(0);
+    const values: number[] = [];
+    const stop = node.onValueChange((value, current) => {
+      values.push(value);
+      if (value === 0) current.set(1);
+    }, { emitCurrent: true });
+
+    expect(values).toEqual([0, 1]);
+    expect(node()).toBe(1);
+    node.set(2);
+    expect(values).toEqual([0, 1, 2]);
+    stop();
+  });
+});
+
 describe('Angular controls stored as field values', () => {
   it('stores and resets control objects without adopting their validation or interaction state', () => {
     const control = new FormControl('', Validators.required);

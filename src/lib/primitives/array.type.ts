@@ -478,7 +478,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   nodeType(): 'array';
   /**
    * Subscribes to future exposed value changes and returns an idempotent cancellation function.
-   * Runs untracked, respects equality and control debounce, and skips initial
+   * Runs untracked, respects equality and control debounce, and by default skips initial
    * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
    * The explicit injector, otherwise the registration context, owns the listener. The node's
    * current injector also ends the subscription on destruction and acts as the fallback owner.
@@ -487,6 +487,11 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * A positive `debounce` delays only this callback until that many milliseconds without another
    * change. Omitted or zero stays synchronous. Cancellation drops pending delivery.
    * Node values, validation, and interaction state are unaffected by the subscription delay.
+   * Set `emitCurrent: true` to call only this listener synchronously with the current exposed
+   * value before registration returns, even with subscription debounce. Pending control input is
+   * not flushed. The read and callback run untracked; this is not a value-change event.
+   * If the first call throws, registration is canceled and the error is rethrown.
+   * `emitCurrent` defaults to false; later changes retain the normal notification rules.
    *
    * ```ts
    * const node = array({ name: field('Ada') });
@@ -508,10 +513,20 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored. Synchronous errors propagate after other listeners are notified; debounced errors are thrown from the timer callback.
-   * @param options Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+   * ```ts
+   * const node = array(field('Ada'), 1);
+   * const values: unknown[] = [];
+   * const stop = node.onValueChange(value => {
+   *   values.push(value);
+   * }, { emitCurrent: true });
+   * values.length; // 1
+   * stop();
+   * ```
+   *
+   * @param callback Receives the exposed value and original node after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+   * @param options Optional emitCurrent (default false) delivers the current value synchronously before returning. Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
    */
-  onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>) => void, options?: { injector?: Injector; debounce?: number }): () => void;
+  onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Returns an independent value for one new item without adding it to this array.
    * Template declarations use their captured defaults, independently of current rows and this

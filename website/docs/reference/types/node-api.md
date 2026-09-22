@@ -24,6 +24,7 @@ type NodeApi = {
     onValueChange(callback: (value: any, node: AnyNode) => void, options?: {
         injector?: Injector;
         debounce?: number;
+        emitCurrent?: boolean;
     }): () => void;
     form: Signal<AnyNode | null>;
     root: Signal<AnyNode>;
@@ -91,7 +92,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `nodeType` | Returns the concrete primitive represented by this node. |
-| `onValueChange` | Observes future exposed value changes synchronously, respecting equality and debounce. Returns an idempotent cancellation function. An explicit injector or the registration context owns the listener; node injector destruction also ends it. DI-free use is supported. |
+| `onValueChange` | Observes future exposed value changes synchronously, respecting equality and debounce. Returns an idempotent cancellation function. An explicit injector or the registration context owns the listener; node injector destruction also ends it. DI-free use is supported. `emitCurrent: true` delivers the current exposed value synchronously before returning, untracked and without waiting for subscription debounce or flushing pending control input. Defaults to false. If that first call throws, registration is canceled and the error is rethrown. |
 | `form` | Nearest explicit `form()` containing this node, or `null` when no form workflow owns it. |
 | `root` | Complete root node containing this node. A root node returns itself. |
 | `parent` | Immediate structural parent of this node, or `null` when it is a root or has been detached. |

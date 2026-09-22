@@ -27,8 +27,6 @@ export function form(): FormNode<{}>;
  * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
  * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
  * created, with the complete declaration path included in the error.
- * Angular control-like children are rejected structurally by TypeScript only, with no runtime
- * check. Use a Form Nodes primitive, or `field(control)` to store the control as an ordinary value.
  *
  * ```ts
  * const profile = form({

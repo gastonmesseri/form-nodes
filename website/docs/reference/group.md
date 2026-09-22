@@ -1739,14 +1739,23 @@ reset and array behavior, callback ordering, and error handling.
 ### Subscribe after creation {#onvaluechange-method}
 
 ```ts
-onValueChange(callback: (value: GroupValue<TNodes>, node: TNode) => void, options?: { injector?: Injector; debounce?: number }): () => void;
+onValueChange(
+  callback: (value: GroupValue<TNodes>, node: TNode) => void,
+  options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean },
+): () => void;
 ```
 
 Here `TNode` is the inferred type of this group instance. Call the instance method to register
 independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
-It returns an idempotent cancellation function and emits no initial value. The explicit injector,
+It returns an idempotent cancellation function and emits no initial value by default. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.
+
+Pass `{ emitCurrent: true }` to invoke this listener synchronously with the current exposed value
+before the method returns. This first call bypasses subscription debounce, runs untracked, and
+does not flush pending control input. It does not notify other listeners or change node state.
+If it throws, the subscription is canceled and the error propagates. See
+[emitting the current value](../guides/configuring-nodes.md#emit-current-value) for examples and initialization rules.
 
 Pass `{ debounce: 300 }` to deliver only the latest change after 300 ms of silence for this listener.
 Omission or `0` keeps synchronous delivery. Values, validation, and interaction state update normally;

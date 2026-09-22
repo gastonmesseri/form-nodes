@@ -93,6 +93,9 @@ export type NodeApi = {
    * Observes future exposed value changes synchronously, respecting equality and debounce.
    * Returns an idempotent cancellation function. An explicit injector or the registration
    * context owns the listener; node injector destruction also ends it. DI-free use is supported.
+   * `emitCurrent: true` delivers the current exposed value synchronously before returning, untracked
+   * and without waiting for subscription debounce or flushing pending control input. Defaults to false.
+   * If that first call throws, registration is canceled and the error is rethrown.
    *
    * ```ts
    * const node: AnyNode = field('Ada');
@@ -103,10 +106,10 @@ export type NodeApi = {
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and node; no initial value is emitted.
-   * @param options Optional injector that owns this subscription without changing node ownership.
+   * @param callback Receives the exposed value and node; emitCurrent also delivers the current value at registration.
+   * @param options Optional subscription injector, debounce in milliseconds, and emitCurrent (default false).
    */
-  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector; debounce?: number }): () => void;
+  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Nearest explicit `form()` containing this node, or `null` when no form workflow owns it.
    *

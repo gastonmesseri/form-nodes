@@ -9,6 +9,20 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('supports emitCurrent in configure and through the collision-safe group API', () => {
+    const configured = vi.fn();
+    const node = group({ name: field('Ada'), onValueChange: field('child') }, {
+      configure(api) { api.onValueChange(configured, { emitCurrent: true }); },
+    });
+    expect(configured).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node);
+    const notify = vi.fn();
+    const stop = node.$api.onValueChange(notify, { emitCurrent: true });
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node);
+    node.name.set('Grace');
+    expect(notify).toHaveBeenLastCalledWith({ name: 'Grace', onValueChange: 'child' }, node);
+    stop();
+  });
+
   it('subscribes to complete group values through the collision-safe API', () => {
     const node = group({ name: field('Ada'), onValueChange: field('child') });
     const notify = vi.fn();

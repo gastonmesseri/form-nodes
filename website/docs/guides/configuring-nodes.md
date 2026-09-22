@@ -7,6 +7,7 @@ title: Configuring nodes and sibling rules
 import CodeBlock from '@theme/CodeBlock';
 import debouncedSubscriptionSource from '!!raw-loader!../../examples/debounced-value-subscription.typecheck.ts';
 import subscriptionsSource from '!!raw-loader!../../examples/node-value-subscriptions.example.ts';
+import emitCurrentSource from '!!raw-loader!../../examples/emit-current-value-subscription.example.ts';
 import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subscriptions.typecheck.ts';
 import initializeFromInputsSource from '!!raw-loader!../../examples/initialize-form-from-inputs.typecheck.ts';
 import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
@@ -196,7 +197,7 @@ the [binding outputs](../reference/form-node-binding.md) instead.
 
 ### Subscribe to an existing node {#value-subscriptions}
 
-Call `node.onValueChange(callback, { injector?, debounce? })` after creating a field, form, group, or array.
+Call `node.onValueChange(callback, { injector?, debounce?, emitCurrent? })` after creating a field, form, group, or array.
 The callback receives the inferred value and original node. Each call creates an independent
 subscription and returns an idempotent cancellation function. The method also exists on `$api`
 when an object child is named `onValueChange`.
@@ -212,6 +213,34 @@ it. New listeners do not receive an update already in progress, but can receive 
 reentrant changes. Every listener in a delivery receives the same value snapshot, even if an
 earlier listener makes another write.
 
+### Emit the current value when subscribing {#emit-current-value}
+
+Pass `{ emitCurrent: true }` to call the new listener synchronously with the node's current exposed
+value and the original node before `onValueChange()` returns. The default is `false`. This reads
+the value at registration time, including earlier programmatic changes, rather than the original
+default or any uncommitted control input.
+
+<CodeBlock language="ts" title="emit-current-value-subscription.ts">{emitCurrentSource}</CodeBlock>
+
+Combine `{ emitCurrent: true, debounce: 300 }` to receive the current value immediately and debounce
+only later changes. The initial read and callback run untracked, notify only the newly registered
+listener, and do not flush control debounce or change values, validity, or interaction state.
+Writes performed by the callback still use the normal node mutation rules.
+
+The listener and its cleanup are installed before that first call, so changes made by the callback
+can notify it again. With no subscription debounce, reentrant writes can invoke it before the first
+call returns. If the first call throws, its subscription and pending timer are canceled before the
+error is rethrown; already-applied writes are retained. The returned cancellation function is not
+available inside this initial call because the registration has not returned yet.
+
+This also works inside `configure` and `configureEach`. In `configureEach`, it observes each row's
+applied initial values. This first call repeats for newly created rows, not when an existing row is
+moved; later value changes are observed normally. Callbacks that reset other fields also reset their initially supplied
+values. Ordinary construction-time notifications remain suppressed. Registering with `emitCurrent`
+during another notification delivers the current snapshot without replaying the pending change.
+The construction option `onValueChange` retains its existing behavior; `emitCurrent` belongs only
+to the instance subscription options.
+
 ### Debounce a subscription {#subscription-debounce}
 
 Pass `{ debounce: 300 }` to notify that listener only after 300 milliseconds without another
@@ -223,8 +252,9 @@ typing pauses.
 
 The form value, validation, dirty/touched state, and other listeners update normally. This delay
 does not make `debouncing()` or validation `pending()` true. Both programmatic writes and committed
-control edits restart the timer. Equality-suppressed writes do not restart it. Registration emits
-nothing, including when the form was patched earlier in `ngOnInit()`.
+control edits restart the timer. Equality-suppressed writes do not restart it. By default, registration
+emits nothing, including when the form was patched earlier in `ngOnInit()`. Add `emitCurrent: true`
+to receive that current value synchronously before debouncing later changes.
 
 - Omit `debounce` or pass `0` for the existing synchronous behavior.
 - Use finite, non-negative milliseconds. Negative values, `NaN`, and infinities throw `RangeError`

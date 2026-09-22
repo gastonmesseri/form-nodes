@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Add `node.onValueChange(callback, { emitCurrent: true })` to receive the current exposed value synchronously when subscribing, including inside `configure` and `configureEach`. The initial call bypasses subscription debounce without flushing pending control input; later changes keep their existing timing and cleanup. Defaults to false; if the initial callback throws synchronously, its subscription is canceled before the error is rethrown.
+
 ### Fixed
 
 - Prevent accidental use of Angular control-like objects as child definitions in forms, groups, array object templates or factories, and dynamic additions through a TypeScript constraint. Detection requires a shared set of member names without restricting their types, importing `AbstractControl`, or adding JavaScript to the bundle. Use Form Nodes primitives for children, or `field(control)` to store a control object explicitly as ordinary data. Runtime normalization is unchanged; JavaScript and erased types can bypass the restriction.

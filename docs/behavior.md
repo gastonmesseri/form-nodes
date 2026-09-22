@@ -4267,7 +4267,7 @@ do not emit a callback, and recovery compares against the last successfully obse
 
 ### Instance value subscriptions
 
-Every node and its collision-safe `$api` expose `onValueChange(callback, { injector?, debounce? })`, returning
+Every node and its collision-safe `$api` expose `onValueChange(callback, { injector?, debounce?, emitCurrent? })`, returning
 an idempotent cancellation function. Callback value and node arguments preserve the concrete
 primitive and parent types. Multiple registrations are independent, including registrations of
 the same function, and coexist with the unchanged factory callback. Instance subscriptions are
@@ -4281,12 +4281,38 @@ snapshot. All listeners for one notification receive the same exposed value snap
 by an earlier listener. Failures in any listener do not prevent the remaining listeners or ancestors
 from receiving the update, and are rethrown after delivery. Initialization remains suppressed.
 
+`emitCurrent` defaults to false. When true, registration invokes only the new callback synchronously
+with the current exposed `node()` value and original node, before returning its cancellation function.
+This first delivery bypasses subscription debounce and does not flush pending control input. Both
+the value read and callback run untracked; no synthetic value-change event is sent to construction
+callbacks, other subscriptions, or ancestors. Reading the current value does not itself mutate
+values, validation, or interaction state. The current exposed value respects node equality and can
+differ from both the declared initial value and pending control input.
+
+Ownership hooks and registration are installed before this first callback. Reentrant writes follow
+normal notification rules, including synchronous reentry without subscription debounce. If the
+callback or current-value read throws, the new subscription, hooks, and any reentrantly scheduled
+timer are removed and the error propagates; completed writes are not rolled back. Invalid debounce
+or destroyed ownership prevents initial delivery. Destroying an owner inside that callback ends the
+subscription before later writes. The cancellation function is not assigned to the caller until the
+first callback finishes.
+
+Registration inside `configure` or `configureEach` supports this explicit delivery even while ordinary
+initialization notifications are suppressed. `configureEach` observes applied row values; moves do
+not register again. A listener registered during an existing notification gets its requested current
+snapshot but does not join that already-captured notification. The construction `onValueChange`
+callback does not gain this option. This registration behavior is a Form Nodes API extension;
+Angular v22.1.7 (`f3358f24b884e34d44cfb8ec3db53965153d61e1`) `src/field/node.ts` and
+`test/node/api/debounce.spec.ts` under `packages/forms/signals` were rechecked for the distinction
+between exposed model values and pending control input. Control-commit behavior is unchanged.
+
 An optional finite, non-negative `debounce` in milliseconds delays only this subscription's
 callback. Omitted or zero keeps synchronous delivery. Negative, NaN, and infinite delays throw
 RangeError before registration. Each positive-delay subscription replaces its pending exposed value
 snapshot and restarts its timer on each otherwise eligible notification, including programmatic
 writes. Equality-suppressed writes and state-only changes do not restart the timer. Initialization
-and changes preceding registration are never replayed. Returning to the last delivered value after
+and changes preceding registration are not replayed; `emitCurrent` explicitly delivers the current
+value once without starting a timer. Returning to the last delivered value after
 intervening changes still emits. Delivery clears pending state before invoking the callback untracked,
 so reentrant writes schedule a fresh notification. Delayed exceptions escape the timer callback;
 they cannot propagate through the already-completed mutation or its error aggregation.

@@ -15,6 +15,41 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('emits its current array value synchronously when emitCurrent is requested', () => {
+    const rows = array({ name: field('Ada') }, { initialLength: 1 });
+    const notify = vi.fn();
+    const stop = rows.onValueChange(notify, { emitCurrent: true });
+
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Ada' }], rows);
+    rows.push({ name: 'Grace' });
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Ada' }, { name: 'Grace' }], rows);
+    stop();
+    rows.clear();
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it('emits current row values after initialization in configureEach without repeating on moves', () => {
+    const configured = vi.fn();
+    const rows = array({ code: field('default') }, {
+      initialValue: [{ code: 'first' }, { code: 'second' }],
+      configureEach(api) {
+        api.children.code.onValueChange(configured, { emitCurrent: true });
+      },
+    });
+    const first = rows[0]!;
+    const second = rows[1]!;
+
+    expect(configured.mock.calls.map(([value]) => value)).toEqual(['first', 'second']);
+    rows.moveDown(0);
+    expect(configured).toHaveBeenCalledTimes(2);
+    expect(rows[1]).toBe(first);
+    first.code.set('updated');
+    expect(configured).toHaveBeenLastCalledWith('updated', first.code);
+    rows.push({ code: 'third' });
+    expect(configured).toHaveBeenLastCalledWith('third', rows[2]!.code);
+    expect(second.code()).toBe('second');
+  });
+
   it('clones explicit control-valued fields without integrating Angular control state', () => {
     const control = new FormControl('Ada');
     const rows = array({ search: field(control) }, { initialLength: 2 });
