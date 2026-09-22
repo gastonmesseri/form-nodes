@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-09-22
+
 ### Added
 
 - Add `node.onValueChange(callback, { emitCurrent: true })` to receive the current exposed value synchronously when subscribing, including inside `configure` and `configureEach`. The initial call bypasses subscription debounce without flushing pending control input; later changes keep their existing timing and cleanup. Defaults to false; if the initial callback throws synchronously, its subscription is canceled before the error is rethrown.
@@ -470,7 +472,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.4.0...HEAD
+[5.4.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.1...v5.4.0
 [5.3.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.1.0...v5.2.0

@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.4.0 — 2026-09-22 {#540--2026-09-22}
+
 ### Added
 
 - Add `node.onValueChange(callback, { emitCurrent: true })` to receive the current exposed value synchronously when subscribing, including inside `configure` and `configureEach`. The initial call bypasses subscription debounce without flushing pending control input; later changes keep their existing timing and cleanup. Defaults to false; if the initial callback throws synchronously, its subscription is canceled before the error is rethrown.
