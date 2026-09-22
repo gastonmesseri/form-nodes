@@ -12,6 +12,8 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * without explicit return annotations. The form and computed retain their inferred types.
  * Parameterless `when` callbacks on other validators support the same inference convention.
  *
+ * **Return Type:** `boolean` for the `condition` callback.
+ *
  * Require a company name only for business accounts.
  *
  * ```ts

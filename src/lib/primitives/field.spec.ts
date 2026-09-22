@@ -36,6 +36,126 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe.each([false, true])('self-referencing field state with injection=%s', (inContext) => {
+  it.each(['disabled', 'hidden', 'readonly'] as const)('defers async startup through %s and cancels work when the state activates', async (state) => {
+    const injector = Injector.create({ providers: [] });
+    const runs: { abortSignal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+    const create = () => {
+      const profile = form({
+        mode: field('locked'),
+        name: field('', {
+          validators: [asyncValidator(({ abortSignal, value }) => {
+            value();
+            return new Promise<{ kind: string } | null>((resolve) => { runs.push({ abortSignal, resolve }); });
+          })],
+          disabled: state === 'disabled' ? () => profile.mode() === 'locked' : false,
+          hidden: state === 'hidden' ? () => profile.mode() === 'locked' : false,
+          readonly: state === 'readonly' ? () => profile.mode() === 'locked' : false,
+        }),
+      });
+      return profile;
+    };
+    try {
+      const profile = inContext ? runInInjectionContext(injector, create) : create();
+      expect(runs).toHaveLength(0);
+      expect(profile.name[state]()).toBe(true);
+      expect(profile.name.pending()).toBe(false);
+      await Promise.resolve();
+      expect(runs).toHaveLength(0);
+
+      profile.mode.set('');
+      await vi.waitFor(() => expect(runs).toHaveLength(1));
+      expect(profile.pending()).toBe(true);
+      profile.mode.set('locked');
+      await vi.waitFor(() => expect(runs[0]!.abortSignal.aborted).toBe(true));
+      expect(profile.pending()).toBe(false);
+      runs[0]!.resolve({ kind: 'stale' });
+      await Promise.resolve();
+      expect(profile.allErrors()).toEqual([]);
+
+      profile.name.set('Ada');
+      profile.mode.set('');
+      await vi.waitFor(() => expect(runs).toHaveLength(2));
+      runs[1]!.resolve(null);
+      await vi.waitFor(() => expect(profile.pending()).toBe(false));
+      expect(profile.valid()).toBe(true);
+    } finally {
+      injector.destroy();
+    }
+  });
+
+  it.each(['disabled', 'hidden', 'readonly'] as const)('tracks %s without reading the form during construction', (state) => {
+    const injector = Injector.create({ providers: [] });
+    const run = () => {
+      const calls = { disabled: 0, hidden: 0, readonly: 0 };
+      let validations = 0;
+      const profile = form({
+        purpose: field(''),
+        itemIds: field<number[]>(null, {
+          validators: [({ value }) => {
+            validations++;
+            return value() === null ? { kind: 'required' } : null;
+          }],
+          disabled: () => {
+            calls.disabled++;
+            return profile.purpose() === 'disabled';
+          },
+          hidden: () => {
+            calls.hidden++;
+            return profile.purpose() === 'hidden';
+          },
+          readonly: () => {
+            calls.readonly++;
+            return profile.purpose() === 'readonly';
+          },
+        }),
+      });
+
+      expect(calls).toEqual({ disabled: 0, hidden: 0, readonly: 0 });
+      expect(validations).toBe(0);
+      expect(profile.itemIds[state]()).toBe(false);
+      expect(profile.itemIds[state]()).toBe(false);
+      expect(calls[state]).toBe(1);
+      expect(profile.invalid()).toBe(true);
+      expect(profile.itemIds.hasError('required')).toBe(true);
+      expect(validations).toBe(1);
+      profile.itemIds.markAsDirty();
+      profile.itemIds.markAsTouched();
+
+      profile.purpose.set(state);
+      expect(profile.itemIds[state]()).toBe(true);
+      expect(profile.itemIds[state]()).toBe(true);
+      expect(calls[state]).toBe(2);
+      expect(profile.valid()).toBe(true);
+      expect(profile.allErrors()).toEqual([]);
+      expect(profile.itemIds.pending()).toBe(false);
+      expect(profile.itemIds.touched()).toBe(false);
+      expect(profile.itemIds.dirty()).toBe(false);
+      expect(validations).toBe(1);
+      expect(profile.itemIds()).toBeNull();
+      expect(profile[state]()).toBe(false);
+
+      profile.purpose.set('');
+      expect(profile.itemIds[state]()).toBe(false);
+      expect(calls[state]).toBe(3);
+      expect(profile.invalid()).toBe(true);
+      expect(profile.itemIds.touched()).toBe(true);
+      expect(profile.itemIds.dirty()).toBe(true);
+      expect(validations).toBe(2);
+      profile.itemIds.set([7]);
+      expect(profile.valid()).toBe(true);
+      expect(profile()).toEqual({ purpose: '', itemIds: [7] });
+      expect(validations).toBe(3);
+    };
+    try {
+      if (inContext) runInInjectionContext(injector, run);
+      else run();
+    } finally {
+      injector.destroy();
+    }
+  });
+});
+
 describe('minimum length for empty strings', () => {
   it('preserves nullish initial values and reset behavior with inferred field types outside injection', () => {
     const name = field('Ada', required);

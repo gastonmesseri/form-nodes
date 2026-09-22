@@ -25,6 +25,10 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
  * field declares or infers those values. For example, `field(0)` uses number, while
  * `field<number>(null)` uses number | null. Form and array nodes use their aggregate models.
  *
+ * **Return Type:** `ComposableValidationResult<TValue>` for the `validate` callback.
+ * This includes `null`, `undefined`, or `void` for success, messages or errors for failure,
+ * and validators for synchronous composition. See {@link ComposableValidationResult}.
+ *
  * ```ts
  * export const isAdult = validator<
  *   number | null

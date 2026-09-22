@@ -356,8 +356,11 @@ export class FieldNode<TValue> {
       cleanup: this.asyncValidation.cancel,
       destroy: this.asyncValidation.destroy,
     };
-    // Conditions and synchronous guards can reference a later declared class form or computed.
-    const deferInitialRun = needsDeferredValidationStart(this.validators());
+    // Availability, conditions, and synchronous guards can reference a later declared form or computed.
+    const deferInitialRun = needsDeferredValidationStart(this.validators())
+      || typeof this.options?.disabled === 'function'
+      || typeof this.options?.hidden === 'function'
+      || typeof this.options?.readonly === 'function';
     this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null, deferInitialRun);
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }

@@ -137,6 +137,8 @@ export const pattern = (
      * Parameterless callbacks support class self-references with unchecked returns; return
      * a boolean. Context-taking callbacks retain boolean checking.
      *
+     * **Return Type:** `boolean` for the condition callback.
+     *
      * **Default:** `undefined`; the validator remains active.
      *
      * ```ts

@@ -33,9 +33,9 @@ type FieldOptions<TValue = any> = {
     inheritInjector?: boolean;
     adoptBindingInjector?: boolean;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => boolean);
-    disabled?: boolean | string | (() => boolean | string);
-    readonly?: boolean | (() => boolean);
+    hidden?: boolean | (() => any);
+    disabled?: boolean | string | (() => any);
+    readonly?: boolean | (() => any);
 };
 ```
 

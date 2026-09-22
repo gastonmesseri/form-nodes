@@ -29,6 +29,148 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('self-referencing form state', () => {
+  it.each(['disabled', 'hidden', 'readonly'] as const)('defers aggregate async validation until its %s callback can read the form', async (state) => {
+    const run = vi.fn(async () => null);
+    const profile = form({
+      mode: field('locked'),
+      details: group({ name: field('') }, {
+        validators: [asyncValidator(run)],
+        disabled: state === 'disabled' ? () => profile.mode() === 'locked' : false,
+        hidden: state === 'hidden' ? () => profile.mode() === 'locked' : false,
+        readonly: state === 'readonly' ? () => profile.mode() === 'locked' : false,
+      }),
+      rows: array({ name: field('') }, {
+        initialLength: 1,
+        validators: [asyncValidator(run)],
+        disabled: state === 'disabled' ? () => profile.mode() === 'locked' : false,
+        hidden: state === 'hidden' ? () => profile.mode() === 'locked' : false,
+        readonly: state === 'readonly' ? () => profile.mode() === 'locked' : false,
+      }),
+    }, {
+      validators: [asyncValidator(run)],
+      disabled: state === 'disabled' ? () => profile.mode() === 'locked' : false,
+      hidden: state === 'hidden' ? () => profile.mode() === 'locked' : false,
+      readonly: state === 'readonly' ? () => profile.mode() === 'locked' : false,
+    });
+    expect(run).not.toHaveBeenCalled();
+    expect(profile.pending()).toBe(false);
+    expect(profile.rows[0]!.name[state]()).toBe(true);
+    await Promise.resolve();
+    expect(run).not.toHaveBeenCalled();
+    profile.mode.set('');
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(3));
+    expect(profile.pending()).toBe(false);
+    expect(profile.valid()).toBe(true);
+  });
+
+  it.each(['disabled', 'hidden', 'readonly'] as const)('propagates %s from its own value and restores nested validation', (state) => {
+    const calls = { disabled: 0, hidden: 0, readonly: 0 };
+    const profile = form({
+      mode: field(''),
+      details: form({ name: field('', [required]) }),
+      rows: array({ name: field('', [required]) }, { initialLength: 1 }),
+    }, {
+      disabled: () => {
+        calls.disabled++;
+        return profile.mode() === 'disabled' ? 'Locked by mode' : false;
+      },
+      hidden: () => {
+        calls.hidden++;
+        return profile.mode() === 'hidden';
+      },
+      readonly: () => {
+        calls.readonly++;
+        return profile.mode() === 'readonly';
+      },
+    });
+    expect(calls).toEqual({ disabled: 0, hidden: 0, readonly: 0 });
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toHaveLength(2);
+    profile.details.name.markAsDirty();
+    profile.details.name.markAsTouched();
+
+    profile.mode.set(state);
+    expect(profile[state]()).toBe(true);
+    expect(profile.details[state]()).toBe(true);
+    expect(profile.details.name[state]()).toBe(true);
+    expect(profile.rows[state]()).toBe(true);
+    expect(profile.rows[0]!.name[state]()).toBe(true);
+    expect(profile.valid()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+    expect(profile.pending()).toBe(false);
+    expect(profile.touched()).toBe(false);
+    expect(profile.dirty()).toBe(false);
+    if (state === 'disabled') {
+      expect(profile.details.name.disabledReasons()).toEqual([{ sourceNode: profile, message: 'Locked by mode' }]);
+      profile.enable();
+      expect(profile.disabled()).toBe(true);
+    }
+
+    profile.details.name.set('Ada');
+    expect(profile.details.name()).toBe('Ada');
+    profile.mode.set('');
+    expect(profile[state]()).toBe(false);
+    expect(profile.rows[0]!.name[state]()).toBe(false);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toHaveLength(1);
+    expect(profile.touched()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    profile.rows[0]!.name.set('Lia');
+    expect(profile.valid()).toBe(true);
+    profile.resetToInitial();
+    expect(profile.mode()).toBe('');
+    expect(profile.details.name()).toBe('');
+    expect(profile.rows[0]!.name()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.touched()).toBe(false);
+    expect(profile.dirty()).toBe(false);
+  });
+
+  it('supports group and array conditions through a later declared component computed', () => {
+    class Editor {
+      form = form({
+        mode: field(''),
+        details: group({ name: field('', [required]) }, {
+          disabled: () => this.locked() ? 'Locked' : false,
+          hidden: () => this.locked(),
+          readonly: () => this.locked(),
+        }),
+        rows: array({ name: field('', [required]) }, {
+          initialLength: 1,
+          disabled: () => this.locked(),
+          hidden: () => this.locked(),
+          readonly: () => this.locked(),
+        }),
+      });
+
+      locked = computed(() => this.form.mode() === 'locked');
+    }
+    const injector = Injector.create({ providers: [] });
+    try {
+      const editor = runInInjectionContext(injector, () => new Editor());
+      expect(editor.form.invalid()).toBe(true);
+      editor.form.mode.set('locked');
+      editor.form.rows.push();
+      for (const state of ['disabled', 'hidden', 'readonly'] as const) {
+        expect(editor.form.details.name[state]()).toBe(true);
+        expect(editor.form.rows[1]!.name[state]()).toBe(true);
+      }
+      expect(editor.form.valid()).toBe(true);
+      expect(editor.form.details.name.disabledReasons()).toEqual([{ sourceNode: editor.form.details, message: 'Locked' }]);
+      editor.form.mode.set('');
+      for (const state of ['disabled', 'hidden', 'readonly'] as const) {
+        expect(editor.form.details.name[state]()).toBe(false);
+        expect(editor.form.rows[1]!.name[state]()).toBe(false);
+      }
+      expect(editor.form.invalid()).toBe(true);
+      expect(editor.form.allErrors()).toHaveLength(3);
+    } finally {
+      injector.destroy();
+    }
+  });
+});
+
 describe('minimum length propagation', () => {
   it('propagates empty-string errors through nested forms and submission', async () => {
     const save = vi.fn();

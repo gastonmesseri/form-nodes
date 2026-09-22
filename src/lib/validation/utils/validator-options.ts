@@ -20,7 +20,13 @@ export type ValidatorOptions<TValue = unknown> = ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<TValue>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether the validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  /**
+   * Reactive predicate deciding whether the validator and its constraint metadata are active.
+   * Parameterless conditions have unchecked returns for class self-references.
+   * Context-taking conditions retain boolean checking.
+   *
+   * **Return Type:** `boolean` for the condition callback.
+   */
   when?: DeferredCondition | ((context: ValidatorContext<TValue>) => boolean);
 };
 

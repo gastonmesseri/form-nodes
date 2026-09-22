@@ -344,7 +344,9 @@ const search = form({
 
 #### – hidden {#form-hidden-option}
 
-**Signature:** `hidden?: boolean | (() => boolean)`
+**Signature:** `hidden?: boolean | (() => any)`
+
+Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives hidden state for the complete form subtree. It defaults to `false`.
 
@@ -358,7 +360,9 @@ const businessDetails = form({
 
 #### – disabled {#form-disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => boolean | string)`
+**Signature:** `disabled?: boolean | string | (() => any)`
+
+Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives disabled state for the complete subtree. A string also becomes a message
 in `disabledReasons()`. It defaults to `false`.
@@ -375,7 +379,9 @@ profile.disabledReasons()[0]?.message; // 'Profile is locked'
 
 #### – readonly {#form-readonly-option}
 
-**Signature:** `readonly?: boolean | (() => boolean)`
+**Signature:** `readonly?: boolean | (() => any)`
+
+Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives readonly state for the complete form subtree. It defaults to `false`.
 

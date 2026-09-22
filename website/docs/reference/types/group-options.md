@@ -24,9 +24,9 @@ type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<
     configure?: (api: TGroup['$api']) => void;
     validators?: ValidatorSource<TValue, TGroup>;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => boolean);
-    disabled?: boolean | string | (() => boolean | string);
-    readonly?: boolean | (() => boolean);
+    hidden?: boolean | (() => any);
+    disabled?: boolean | string | (() => any);
+    readonly?: boolean | (() => any);
 };
 ```
 

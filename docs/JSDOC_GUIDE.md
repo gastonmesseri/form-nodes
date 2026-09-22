@@ -28,15 +28,22 @@ Do not paste the entire API contract into every comment. Give each public option
 Use this order, omitting sections that do not apply:
 
 1. A concrete description.
-2. **Default:** for an optional configuration field.
-3. **Accepted values:** for literal alternatives or mixed input forms.
-4. **Type details:** with useful links and a concise type preview.
-5. One or more complete fenced `ts` examples.
-6. Relevant callable tags, including `@param`, after the examples.
+2. **Return Type:** for a callback whose declared return type does not show its supported results.
+3. **Default:** for an optional configuration field.
+4. **Accepted values:** for literal alternatives or mixed input forms.
+5. **Type details:** with useful links and a concise type preview.
+6. One or more complete fenced `ts` examples.
+7. Relevant callable tags, including `@param`, after the examples.
 
 Separate sections and examples with one blank JSDoc line (` *`). Keep related list items together. Do not invent defaults for required arguments or inspected properties. Explain whether omission inherits a value, preserves existing configuration, derives a value, or disables a feature.
 
 Mark public parameterized functions that participate in signal dependency tracking with a JSDoc `@reactive` tag. Briefly describe the tracking or memoization semantics after the tag. Do not add the tag to ordinary `Signal` properties, whose type already communicates reactivity. Explain return values in prose or checked output comments rather than adding redundant tags to properties.
+
+### Callback return contracts
+
+When a callback intentionally declares an unchecked return such as `any` to support self-referencing inference, include a separate `**Return Type:**` paragraph in its JSDoc. Put the supported runtime type in inline code: `boolean` for `hidden`, `readonly`, and validator conditions, or `boolean | string` for `disabled`. Preserve the explanation of why the declaration uses `any` and how an explicit return annotation restores checking.
+
+Document the callback result, not merely the permissive TypeScript signature. Include `null`, `undefined`, or `void` only when the callback contract admits them. For validators, link the result contract and explain success, errors, and composition; for asynchronous validators, show the Promise-like or Observable-like wrapper as well as its resolved result. When the JSDoc belongs to a factory such as `requiredIf()`, identify the callback parameter explicitly so its return type cannot be confused with the factory's return type. Apply this to inline options, relevant overloads, and shared public callback types.
 
 ### Markdown examples, not `@example`
 

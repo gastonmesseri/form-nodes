@@ -39,6 +39,8 @@ export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TVal
    * Parameterless callbacks support self-references with unchecked returns; return a boolean.
    * Context-taking callbacks retain boolean checking.
    *
+   * **Return Type:** `boolean` for the condition callback.
+   *
    * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
    *
    * ```ts

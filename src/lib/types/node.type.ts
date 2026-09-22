@@ -28,8 +28,14 @@ export type MarkAsTouchedOptions = {
   skipDescendants?: boolean;
 };
 
-/** A static or reactive condition that disables a node, optionally with a user-facing reason. */
-export type DisabledStateSource = boolean | string | (() => boolean | string);
+/**
+ * A static or reactive condition that disables a node, optionally with a user-facing reason.
+ * Reactive callbacks must return a boolean or string. Their return type is intentionally unchecked
+ * to support self-referencing declarations; an explicit return annotation restores result checking.
+ *
+ * **Return Type:** `boolean | string` for the callback.
+ */
+export type DisabledStateSource = boolean | string | (() => any);
 
 /** Internal strategy used to delay control-originated values before committing them to the model. */
 export type ControlDebounce = number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);

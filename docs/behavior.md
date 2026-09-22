@@ -1949,16 +1949,16 @@ Field actions are available directly and under `field.$api`. Form actions are av
 
 ### State option sources
 
-Readonly and hidden options have this type:
+Readonly and hidden accept boolean static values and reactive callbacks:
 
 ```ts
-boolean | (() => boolean)
+boolean | (() => any)
 ```
 
 Disabled options additionally accept a user-facing reason:
 
 ```ts
-boolean | string | (() => boolean | string)
+boolean | string | (() => any)
 ```
 
 The function can be an Angular `Signal<boolean>`, an Angular computed signal, or a normal function. Normal functions are read from the node's computed state, so Angular signals they read are tracked automatically:
@@ -1979,12 +1979,18 @@ A state function can refer to its containing form after construction:
 const formGroup = form({
   age: field(17),
   guardian: field('', undefined, {
-    hidden: (): boolean => formGroup.age() >= 18,
+    hidden: () => formGroup.age() >= 18,
   }),
 });
 ```
 
-Under TypeScript strict mode, the explicit `: boolean` return type is needed in this self-referential initializer to break circular inference. Functions that only read previously declared signals do not need the annotation.
+State callbacks on fields, forms, groups, and arrays support self-referencing declarations without return annotations, including class forms referenced through a later computed signal. The callback return alone is intentionally `any`, as in direct validator declarations, to stop TypeScript from resolving the containing initializer while comparing the callback result. Field values, child access, writes, and public boolean state signals keep their inferred types; static state options remain checked. `DisabledStateSource` uses the same callback boundary.
+
+Runtime results must still be boolean for `hidden`/`readonly`, and boolean or string for `disabled`. Explicit `(): boolean` or `(): boolean | string` annotations restore callback-result checking. State functions remain computed and lazy; eagerly reading a self-reference from `configure` before assignment or creating cyclic state dependencies remains invalid.
+
+When a node has an availability callback, its initial asynchronous validation guard is deferred until the initial microtask or an explicit validation-state read after construction. This also applies to nodes with only unconditional asynchronous validators, so their availability check cannot read the containing form before assignment. Reactive activation, cancellation, and stale-result suppression keep their existing behavior. Nodes with only static availability options retain the existing startup scheduling.
+
+Angular reference: `v22.1.7`, commit `f3358f24b884e34d44cfb8ec3db53965153d61e1`, inspected on September 22, 2026. Relevant paths are `packages/forms/signals/src/api/rules/{disabled,hidden,readonly}.ts`, `src/field/state.ts`, and `test/node/field_node.spec.ts`, `test/node/api/hidden.spec.ts`, and `test/node/api/readonly.spec.ts`. Reactive updates, descendant inheritance, disabled reasons, and non-interactive validation remain aligned with those state rules. Angular's schema-path callbacks keep checked result types; Form Nodes deliberately uses an unchecked declaration callback return to support references to the form being initialized.
 
 ### Mutable and configured state
 

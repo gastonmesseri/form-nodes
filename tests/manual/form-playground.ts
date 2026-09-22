@@ -92,6 +92,15 @@ const myForm = form({
   // equal: 'deep',
 });
 
+
+const myForm7 = form({
+  purpose: field('', [required]),
+  itemIds: field<number[]>(null, {
+    validators: [required],
+    disabled: () => !!myForm7.purpose(),
+  }),
+});
+
 const to1 = myForm.mixedType.value();
 const to2 = myForm.pureString.value();
 

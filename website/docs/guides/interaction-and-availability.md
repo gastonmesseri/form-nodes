@@ -4,6 +4,9 @@ title: Interaction and availability
 
 # Interaction and availability {#interaction-and-availability}
 
+import CodeBlock from '@theme/CodeBlock';
+import selfReferencingStateSource from '!!raw-loader!../../examples/self-referencing-state.example.ts';
+
 Touched and dirty describe user interaction. Disabled, readonly, and hidden determine whether a node currently participates as an interactive part of the form.
 
 ## 👆 Touched state {#touched-state}
@@ -58,6 +61,29 @@ Effective state is the union of three independent causes:
 3. Inherited parent state.
 
 `enable()`, `markAsWritable()`, and `show()` clear mutable local state but cannot override an active configured or inherited condition.
+
+### Referencing the containing form {#self-referencing-state}
+
+State callbacks can reference the form being declared without an explicit callback return type,
+including `this.form` in a component. This works for `field()`, `form()`, `group()`, and `array()`.
+The field values and public state signals retain their inferred types.
+
+<CodeBlock language="ts" title="self-referencing-state.ts">{selfReferencingStateSource}</CodeBlock>
+
+Here, a nonempty purpose disables `itemIds`. Use `!profile.purpose()` instead if the field should
+be disabled until a purpose is selected. Programmatic writes still work while disabled.
+
+As with direct validator callbacks, the callback return type is intentionally `any` to avoid
+TypeScript's circular initializer inference. The runtime contract still requires a boolean for
+`hidden` and `readonly`, or a boolean or reason string for `disabled`. Static options remain
+type checked. Add an explicit result annotation when you want TypeScript to check a callback's
+return, for example `disabled: (): boolean => !!profile.purpose()` or
+`disabled: (): boolean | string => profile.purpose() ? 'Locked' : false`.
+
+This supports references resolved when the state is read, including through a component computed
+declared after the form. Initial asynchronous validation also waits to check these callbacks until
+the initial microtask or a validation-state read after construction. It does not make an eager read
+inside `configure` safe before the form variable is assigned, or allow circular dependencies between state computations.
 
 ## ⚡ State propagation {#state-propagation}
 

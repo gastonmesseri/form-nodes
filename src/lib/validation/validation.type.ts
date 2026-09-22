@@ -1576,13 +1576,28 @@ export type ComposableValidationResult<TValue, TField extends AnyNode = Validato
  */
 export type Validators<TValue, TField extends AnyNode = ValidatorNode> = readonly ComposableValidator<TValue, TField>[];
 
-// A shared first branch keeps contextual return typing stable across repeated instantiations.
+/**
+ * Shared unchecked branch keeping contextual return typing stable across repeated instantiations.
+ *
+ * **Return Type:** `ComposableValidationResult` for synchronous validation, or
+ * `AsyncValidationResult` when passed to `asyncValidator()`. The consuming API determines
+ * the contract; see {@link ComposableValidationResult} and {@link AsyncValidationResult}.
+ */
 export type DeferredValidator = () => any;
 
-/** Shared unchecked branch for parameterless conditions in contextual and overloaded signatures. */
+/**
+ * Shared unchecked branch for parameterless conditions in contextual and overloaded signatures.
+ *
+ * **Return Type:** `boolean` for the condition callback.
+ */
 export type DeferredCondition = () => any;
 
-/** Typed declaration context with an unchecked return to avoid circular initializer inference. */
+/**
+ * Typed declaration context with an unchecked return to avoid circular initializer inference.
+ *
+ * **Return Type:** `ComposableValidationResult<TValue, TField>` for the synchronous callback.
+ * Wrap asynchronous callbacks with `asyncValidator()`.
+ */
 type DeclarationValidator<TValue, TField extends AnyNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => any;
 
 /**
@@ -1602,6 +1617,11 @@ type DeclarationValidator<TValue, TField extends AnyNode> = (context: ValidatorC
  * The context-taking validator() helper also checks returns and preserves contextual typing
  * for returned inline validators. Checked callbacks can still need an explicit result annotation
  * when they reference their own initializer. Parameterless helper callbacks remain unchecked.
+ *
+ * **Return Type:** `ComposableValidationResult<TValue, TField>` for synchronous callbacks.
+ * This includes `null`, `undefined`, or `void` for success, messages or errors for failure,
+ * and validators for synchronous composition. See {@link ComposableValidationResult}.
+ * Wrap asynchronous callbacks with `asyncValidator()`.
  *
  * ```ts
  * const rule = validator<string | null>(

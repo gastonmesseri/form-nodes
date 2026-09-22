@@ -339,7 +339,9 @@ const username = field('', {
 
 #### – disabled {#field-disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => boolean | string)`
+**Signature:** `disabled?: boolean | string | (() => any)`
+
+Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives disabled state. A string also becomes a disabled reason.
 
@@ -353,7 +355,9 @@ username.disabled(); // true
 
 #### – readonly {#field-readonly-option}
 
-**Signature:** `readonly?: boolean | (() => boolean)`
+**Signature:** `readonly?: boolean | (() => any)`
+
+Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives readonly state. It defaults to `false`.
 
@@ -365,7 +369,9 @@ const username = field('', {
 
 #### – hidden {#field-hidden-option}
 
-**Signature:** `hidden?: boolean | (() => boolean)`
+**Signature:** `hidden?: boolean | (() => any)`
+
+Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives hidden state. It defaults to `false`.
 

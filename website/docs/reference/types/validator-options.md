@@ -44,7 +44,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | --- | --- |
 | `message` | Human-readable message returned with the validation error. |
 | `error` | Custom error or errors returned instead of the built-in error. |
-| `when` | Reactive predicate deciding whether the validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. |
+| `when` | Reactive predicate deciding whether the validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references. Context-taking conditions retain boolean checking. |
 
 ## Related reference
 

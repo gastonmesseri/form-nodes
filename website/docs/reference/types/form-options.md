@@ -34,9 +34,9 @@ type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
     adoptBindingInjector?: boolean;
     validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => boolean);
-    disabled?: boolean | string | (() => boolean | string);
-    readonly?: boolean | (() => boolean);
+    hidden?: boolean | (() => any);
+    disabled?: boolean | string | (() => any);
+    readonly?: boolean | (() => any);
     onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
     onSubmitBlocked?(form: TForm): void;
     submitWhen?: 'valid' | 'not-invalid' | 'always';

@@ -267,6 +267,11 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * allow self-reference inference. Use `validator()` or an explicit result annotation
    * when returned errors also need strict checking.
    *
+   * **Return Type:** `ComposableValidationResult<TValue>` for each synchronous callback.
+   * Return `null`, `undefined`, or `void` for success; a message, error, or array of them for failure;
+   * or validators for synchronous composition. See {@link ComposableValidationResult}.
+   * Wrap asynchronous callbacks with `asyncValidator()`.
+   *
    * **Default:** `[]`; no own validators.
    *
    * **Accepted values:**
@@ -431,6 +436,13 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * programmatic writes remain available. Hidden nodes suppress their own validation
    * and reported interaction state. Hiding does not delete values or stored dirty/touched state.
    *
+   * The callback return type is intentionally unchecked
+   * so it can reference its containing node without a circular inference error. Add an
+   * explicit return annotation when authoring a strictly checked callback. Node values
+   * and state signals retain their inferred types.
+   *
+   * **Return Type:** `boolean` for the callback.
+   *
    * **Default:** `false` locally; active ancestor state still applies.
    *
    * **Accepted values:**
@@ -457,12 +469,19 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  hidden?: boolean | (() => boolean);
+  hidden?: boolean | (() => any);
   /**
    * Controls this node's local disabled state, inherited by descendants. A string disables
    * the node and contributes a user-facing reason, including an empty string.
    * Disabled nodes retain their values and accept programmatic writes; their own validation
    * and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally.
+   *
+   * The callback return type is intentionally unchecked
+   * so it can reference its containing node without a circular inference error. Add an
+   * explicit return annotation when authoring a strictly checked callback. Node values
+   * and state signals retain their inferred types.
+   *
+   * **Return Type:** `boolean | string` for the callback.
    *
    * **Default:** `false` locally; active ancestor state still applies.
    *
@@ -499,11 +518,18 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  disabled?: boolean | string | (() => boolean | string);
+  disabled?: boolean | string | (() => any);
   /**
    * Controls this node's local readonly state. Descendants inherit active readonly state.
    * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
    * their own validation and reported dirty/touched state without discarding stored interaction.
+   *
+   * The callback return type is intentionally unchecked
+   * so it can reference its containing node without a circular inference error. Add an
+   * explicit return annotation when authoring a strictly checked callback. Node values
+   * and state signals retain their inferred types.
+   *
+   * **Return Type:** `boolean` for the callback.
    *
    * **Default:** `false` locally; active ancestor state still applies.
    *
@@ -531,7 +557,7 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  readonly?: boolean | (() => boolean);
+  readonly?: boolean | (() => any);
   /**
    * Handles permitted submissions with the exposed value snapshot and this form.
    * Return void/null for success, or an error/error array to reject the attempt.

@@ -115,6 +115,8 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    * Parameterless callbacks support self-references with unchecked returns; return a boolean.
    * Context-taking callbacks retain boolean checking.
    *
+   * **Return Type:** `boolean` for the condition callback.
+   *
    * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
    *
    * ```ts
@@ -162,6 +164,10 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
  * Parameterless callbacks support self-referencing declarations with unchecked returns;
  * context-taking callbacks check their asynchronous result type. No injector is required.
  *
+ * **Return Type:** `PromiseLike<ValidationResult> | ObservableLike<ValidationResult>`
+ * for the `validator` callback. The resolved {@link ValidationResult} is `null`, `undefined`,
+ * or `void` for success, a message or error for failure, or an array of messages and errors.
+ *
  * ```ts
  * field('', {
  *   validators: asyncValidator(
@@ -205,6 +211,8 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      * cancels active work and clears this validator's contribution. Signal reads are tracked.
      * Parameterless callbacks support self-references with unchecked returns; return a boolean.
      * Context-taking callbacks retain boolean checking.
+     *
+     * **Return Type:** `boolean` for the condition callback.
      *
      * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
      *
@@ -291,6 +299,8 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      * cancels active work and clears this validator's contribution. Signal reads are tracked.
      * Parameterless callbacks support self-references with unchecked returns; return a boolean.
      * Context-taking callbacks retain boolean checking.
+     *
+     * **Return Type:** `boolean` for the condition callback.
      *
      * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
      *

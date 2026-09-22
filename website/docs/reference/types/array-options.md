@@ -27,9 +27,9 @@ type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = O
     } ? NonNullable<TArray[number]>['$api'] : never) => void;
     validators?: ValidatorSource<TValue, TArray>;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => boolean);
-    disabled?: boolean | string | (() => boolean | string);
-    readonly?: boolean | (() => boolean);
+    hidden?: boolean | (() => any);
+    disabled?: boolean | string | (() => any);
+    readonly?: boolean | (() => any);
     initialValue?: TValue | number | null;
     initialLength?: number;
     trackBy?: TValue extends readonly (infer TItemValue)[] ? ((value: TItemValue, index: number) => unknown) | (TItemValue extends object ? Extract<keyof TItemValue, string> : never) : never;
