@@ -175,6 +175,13 @@ as `constructor` and `prototype` remain valid children.
 
 :::
 
+Angular control-like children, including `FormControl`, `FormGroup`, and `FormArray`, are rejected
+by TypeScript. The same rule applies to nested definitions and dynamic `add()` calls. This type-only
+restriction adds no runtime check or JavaScript to the bundle; JavaScript and erased types can bypass it.
+Use `field(initialValue)` to declare a Form Nodes field. Use `field(control)` only to store the
+control object as ordinary data, without integrating its Angular state or validation. See the
+[structural detection rules](../concepts/creating-nodes.md#angular-controls-in-definitions).
+
 Every other value becomes an implicit field. This includes arrays, ordinary functions, and non-plain
 objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like values, and
 custom class instances. Only plain objects—with `Object.prototype` or a `null` prototype—are

@@ -29,6 +29,8 @@ export function group(): GroupNode<{}>;
  * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
  * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
  * created, with the complete declaration path included in the error.
+ * Angular control-like children are rejected structurally by TypeScript only, as in `form()`.
+ * Use `field(control)` only when intentionally storing the control object as an ordinary value.
  *
  * ```ts
  * const address = group({

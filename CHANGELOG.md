@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Fixed
+
+- Prevent accidental use of Angular control-like objects as child definitions in forms, groups, array object templates or factories, and dynamic additions through a TypeScript constraint. Detection requires a shared set of member names without restricting their types, importing `AbstractControl`, or adding JavaScript to the bundle. Use Form Nodes primitives for children, or `field(control)` to store a control object explicitly as ordinary data. Runtime normalization is unchanged; JavaScript and erased types can bypass the restriction.
+
 ## [5.3.1] - 2026-09-22
 
 ### Fixed

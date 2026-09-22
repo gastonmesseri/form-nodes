@@ -571,11 +571,39 @@ also an implicit field, including empty arrays, populated arrays, readonly tuple
 and arrays of plain objects. A mutable empty-array shorthand widens from `never[]` to `unknown[]`,
 while an empty readonly tuple widens to `readonly unknown[]`; consumers can use an explicit
 `field<T[]>([])` when the eventual item type is known. Array length and contents never select a
-node shape; only an explicit `array(...)` creates a dynamic collection of item nodes. Every other value becomes an implicit
+node shape; only an explicit `array(...)` creates a dynamic collection of item nodes. At runtime,
+every other value becomes an implicit
 field, including ordinary functions and non-plain objects such as `RegExp`, `URL`, maps, sets,
 typed arrays, Temporal or Moment-like values, and custom class instances. Only objects whose prototype is
 `Object.prototype` or `null` become structural groups. Explicit nodes always retain their existing
 behavior.
+
+Angular control-like children are rejected by TypeScript in `form()`, `group()`, nested
+object definitions, array object templates and factory results, and dynamic `add()` calls,
+including configured primitives. Detection requires all twelve members: `value`, `status`,
+`errors`, `pristine`, `touched`, `valueChanges`, `statusChanges`, `setValue`, `patchValue`,
+`setErrors`, `markAsTouched`, and `updateValueAndValidity`. The TypeScript shape maps each
+required member to `unknown`; additional members and any member value types are allowed.
+Objects and functions with the complete shape are rejected even when they are unrelated to
+Angular; missing any required member prevents a match. This is a type-only constraint, declared
+with explicit `unknown` members and imported with `import type`. It adds no JavaScript or runtime
+check and does not import Angular Forms. JavaScript, `any`, assertions, and widened or erased
+types can bypass the restriction; runtime shorthand normalization remains unchanged.
+
+Explicit nodes take precedence over structural detection, including nodes whose children use
+those twelve names. `field(control)` intentionally stores the control as an atomic value, without
+integrating its Angular validation, interaction state, or subscriptions. Controls inside atomic
+array values are also data, not child definitions. Other class instances and supported shorthand
+values retain their existing behavior. Object-value identity follows ordinary field and clone
+semantics; the type constraint does not mutate the Angular control.
+
+Reference inspected: latest stable Angular 22 tag **v22.1.7**, commit
+`f3358f24b884e34d44cfb8ec3db53965153d61e1`, specifically
+`packages/forms/signals/src/api/structure.ts` and `packages/forms/signals/test/node/form.spec.ts`
+for model-based Signal Forms construction, and `packages/forms/src/model/abstract_model.ts` plus
+the `setErrors` and `valueChanges & statusChanges` cases in `packages/forms/test/form_control_spec.ts`
+for the classic control surface. This structural type restriction is a Form Nodes declaration policy,
+not an Angular Signal Forms state rule; accepted node state and propagation remain unchanged.
 
 Object-node declarations use only own enumerable string-keyed data properties. Inherited and
 non-enumerable properties are ignored. Enumerable accessors are rejected without invoking their

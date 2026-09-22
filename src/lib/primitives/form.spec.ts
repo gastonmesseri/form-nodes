@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { FormControl } from '@angular/forms';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal, type WritableSignal } from '@angular/core';
 
@@ -28,6 +29,38 @@ import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
+
+describe('Angular controls stored in forms', () => {
+  const structuralControl = () => ({
+    value: undefined,
+    status: undefined,
+    errors: undefined,
+    pristine: undefined,
+    touched: undefined,
+    valueChanges: undefined,
+    statusChanges: undefined,
+    setValue: undefined,
+    patchValue: undefined,
+    setErrors: undefined,
+    markAsTouched: undefined,
+    updateValueAndValidity: undefined,
+  });
+
+  it('preserves explicit fields, atomic array data, and nodes with matching child names', () => {
+    const control = new FormControl('Ada');
+    const matchingNode = group(structuralControl());
+    const profile = form({ control: field(control), controls: [control], matchingNode });
+
+    expect(profile.control()).toBe(control);
+    expect(profile.controls()).toEqual([control]);
+    expect(profile.matchingNode).toBe(matchingNode);
+    expect(profile.matchingNode()).toEqual(structuralControl());
+    profile.patch({ control: new FormControl('Lia') });
+    expect(profile.control().value).toBe('Lia');
+    profile.control.reset(control);
+    expect(profile.control()).toBe(control);
+  });
+});
 
 describe('self-referencing form state', () => {
   it.each(['disabled', 'hidden', 'readonly'] as const)('restarts nested async validation after inherited %s clears without value changes', async (state) => {

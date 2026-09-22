@@ -171,6 +171,11 @@ nodes, validation, interaction state, or structural operations. An empty `[]` sh
 See the [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
 for the explicit equivalent and inferred value of every shorthand category.
 
+Angular control-like children are rejected by TypeScript only, including nested and
+dynamically added definitions. Use Form Nodes primitives for children, or `field(control)` to
+store a control object as ordinary data. There is no runtime control check or added JavaScript. See the
+[structural detection rules](../concepts/creating-nodes.md#angular-controls-in-definitions).
+
 :::info Declaration property rules
 
 Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable

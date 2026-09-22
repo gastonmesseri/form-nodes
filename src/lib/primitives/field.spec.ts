@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { FormControl, Validators } from '@angular/forms';
 import { createWatch } from '@angular/core/primitives/signals';
 import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal, type WritableSignal } from '@angular/core';
 
@@ -35,6 +36,29 @@ import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
+
+describe('Angular controls stored as field values', () => {
+  it('stores and resets control objects without adopting their validation or interaction state', () => {
+    const control = new FormControl('', Validators.required);
+    const value = field(control);
+    const profile = form({ search: value });
+
+    control.markAsTouched();
+    expect(control.invalid).toBe(true);
+    expect(value()).toBe(control);
+    expect(value.valid()).toBe(true);
+    expect(value.touched()).toBe(false);
+    expect(profile.valid()).toBe(true);
+    expect(profile.touched()).toBe(false);
+
+    value.set(new FormControl('Ada'));
+    expect(profile().search.value).toBe('Ada');
+    value.reset(control);
+    expect(profile().search).toBe(control);
+    expect(control.touched).toBe(true);
+    expect(control.invalid).toBe(true);
+  });
+});
 
 describe.each([false, true])('self-referencing field state with injection=%s', (inContext) => {
   it.each(['disabled', 'hidden', 'readonly', 'sync'] as const)('refreshes async params after %s suppression with an unchanged field value', async (state) => {

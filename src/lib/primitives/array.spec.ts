@@ -1,3 +1,4 @@
+import { FormControl } from '@angular/forms';
 import { describe, expect, it, vi } from 'vitest';
 import { Injector, computed, isSignal, signal, type WritableSignal } from '@angular/core';
 
@@ -14,6 +15,20 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('clones explicit control-valued fields without integrating Angular control state', () => {
+    const control = new FormControl('Ada');
+    const rows = array({ search: field(control) }, { initialLength: 2 });
+
+    expect(rows[0]!.search).not.toBe(rows[1]!.search);
+    expect(rows[0]!.search()).toBe(control);
+    expect(rows[1]!.search()).toBe(control);
+    rows[0]!.search.set(new FormControl('Lia'));
+    expect(rows[1]!.search().value).toBe('Ada');
+    rows.reset([{ search: control }, { search: control }]);
+    expect(rows[0]!.search()).toBe(control);
+    expect(rows[1]!.search()).toBe(control);
+  });
+
   it('subscribes to structural and row changes without copying instance listeners into template clones', () => {
     const template = field('Ada');
     const templateChanged = vi.fn();

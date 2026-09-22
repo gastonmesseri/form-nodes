@@ -10,6 +10,7 @@ import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
+import type { AngularControlLike } from './utils/angular-control-like.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode, ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
@@ -28,9 +29,10 @@ export interface ObjectNodeDefinitions {
 /** Validates one inferred object-node child definition while preserving its original type. */
 export type ObjectNodeDefinitionInput<TDefinition> =
   TDefinition extends AnyNode ? TDefinition
-    : TDefinition extends FieldShorthand ? TDefinition
-      : TDefinition extends ObjectNodeDefinitions ? ObjectNodeDefinitionInputs<TDefinition>
-        : TDefinition;
+    : TDefinition extends AngularControlLike ? never
+      : TDefinition extends FieldShorthand ? TDefinition
+        : TDefinition extends ObjectNodeDefinitions ? ObjectNodeDefinitionInputs<TDefinition>
+          : TDefinition;
 
 /** Validates an inferred map of object-node child definitions. */
 export type ObjectNodeDefinitionInputs<TDefinitions extends ObjectNodeDefinitions> = {

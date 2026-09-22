@@ -158,6 +158,11 @@ The template above is equivalent to `array({ name: field(''), age: field(0) }, .
 receives fresh field and group nodes; only the declared initial values are shared. This also works
 for object templates returned by a factory.
 
+Angular control-like children are rejected by TypeScript in object templates and factory results.
+This type-only restriction adds no runtime check or JavaScript to the bundle.
+Use `field(initialValue)` for a Form Nodes field, or `field(control)` to store the control object
+as ordinary data. See the [structural detection rules](../concepts/creating-nodes.md#angular-controls-in-definitions).
+
 The [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
 compares these template declarations with their explicit equivalents and explains when a nested
 `array()` is required.

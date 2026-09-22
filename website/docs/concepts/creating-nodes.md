@@ -88,6 +88,28 @@ the tree. A normalization error reports the complete declaration path and,
 when the object may be application data rather than structure, recommends wrapping it with
 `field(value)`.
 
+### Angular controls in definitions {#angular-controls-in-definitions}
+
+Use Form Nodes primitives for children: `form({ search: field('') })`. Passing an Angular
+`FormControl`, `FormGroup`, or `FormArray` directly as a child is rejected by TypeScript.
+This also applies to nested definitions, `group()`, object templates and factory results
+in `array()`, dynamic `add()` calls, and primitives created by `createFormPrimitives()`.
+
+Detection is structural and does not import `AbstractControl`. A candidate must have **all** of
+these members: `value`, `status`, `errors`, `pristine`, `touched`, `valueChanges`, `statusChanges`,
+`setValue`, `patchValue`, `setErrors`, `markAsTouched`, and `updateValueAndValidity`. Member types
+are unconstrained (`unknown`), and additional members are allowed. An unrelated object with this
+complete shape also matches; a type missing any required member does not.
+
+This restriction exists only in TypeScript and adds no JavaScript to the bundle. There is no
+runtime control check: JavaScript, `any`, assertions, or widened types can bypass it. Runtime
+shorthand normalization remains unchanged.
+
+To store a control object intentionally as application data, use `field(control)`. It remains one
+atomic value: its Angular validators, touched state, and value-change subscriptions are not
+integrated into Form Nodes. Controls inside an atomic array value are also treated as data.
+Other class instances and explicit Form Nodes nodes remain supported.
+
 ## 🧩 Declaration shorthand matrix {#declaration-shorthand-matrix}
 
 Shorthand is intentionally predictable: atomic values become fields, plain objects become groups,
