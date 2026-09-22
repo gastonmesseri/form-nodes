@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.3.1] - 2026-09-22
+
 ### Fixed
 
 - Restart asynchronous validators after disabled, hidden, readonly, or blocking synchronous errors clear, even when the value has not changed. Inherited states follow the same behavior, parameterized validators read current signals again, and cancelled results remain ignored.
@@ -460,7 +462,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.2.0...v5.3.0
 [5.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.1.0...v5.2.0
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0

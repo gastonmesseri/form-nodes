@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.3.1 — 2026-09-22 {#531--2026-09-22}
+
 ### Fixed
 
 - Restart asynchronous validators after disabled, hidden, readonly, or blocking synchronous errors clear, even when the value has not changed. Inherited states follow the same behavior, parameterized validators read current signals again, and cancelled results remain ignored.
