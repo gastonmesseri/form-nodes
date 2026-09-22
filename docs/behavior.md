@@ -1992,6 +1992,10 @@ When a node has an availability callback, its initial asynchronous validation gu
 
 Angular reference: `v22.1.7`, commit `f3358f24b884e34d44cfb8ec3db53965153d61e1`, inspected on September 22, 2026. Relevant paths are `packages/forms/signals/src/api/rules/{disabled,hidden,readonly}.ts`, `src/field/state.ts`, and `test/node/field_node.spec.ts`, `test/node/api/hidden.spec.ts`, and `test/node/api/readonly.spec.ts`. Reactive updates, descendant inheritance, disabled reasons, and non-interactive validation remain aligned with those state rules. Angular's schema-path callbacks keep checked result types; Form Nodes deliberately uses an unchecked declaration callback return to support references to the form being initialized.
 
+Suspending asynchronous validation because a node is disabled, hidden, readonly, or synchronously invalid cancels active work, clears its asynchronous errors and pending state, and releases tracked callback dependencies and cached parameter snapshots. When the guard clears, asynchronous validation starts a fresh execution even if the node value and parameters compare equal to the prior execution. Direct callbacks rediscover their reactive reads; explicit `params` callbacks read current signals, including changes made while validation was suspended. This applies to inherited availability, nested forms, groups, and arrays. Late results from cancelled work remain ignored. Equality-based filtering during uninterrupted active validation is unchanged.
+
+The asynchronous guard behavior was checked against the same Angular `v22.1.7` commit: `packages/forms/signals/src/api/rules/validation/validate_async.ts` supplies undefined resource parameters while `shouldSkipValidation()` or synchronous validity blocks execution; `src/field/validation.ts` defines those availability guards. `test/node/resource.spec.ts` covers synchronous gating, pending/error propagation, and stable-parameter filtering. Form Nodes uses abortable callbacks and tracked parameter readers rather than Angular resources, and resets those readers when a blocking guard is observed.
+
 ### Mutable and configured state
 
 State has three independent sources:

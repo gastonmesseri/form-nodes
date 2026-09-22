@@ -30,6 +30,92 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('self-referencing form state', () => {
+  it.each(['disabled', 'hidden', 'readonly'] as const)('restarts nested async validation after inherited %s clears without value changes', async (state) => {
+    const blocked = signal(false);
+    const dependency = signal('first');
+    const runs: { label: string; abortSignal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+    const createRule = (label: string) => {
+      return asyncValidator(({ value, abortSignal }) => {
+        value();
+        dependency();
+        return new Promise<{ kind: string } | null>((resolve) => { runs.push({ label, abortSignal, resolve }); });
+      });
+    };
+    const profile = form({
+      details: form({ name: field('Ada', [createRule('field')]) }, { validators: createRule('form') }),
+      rows: array({ name: field('Lia') }, { initialLength: 1, validators: createRule('array') }),
+      address: group({ city: field('Zurich') }, { validators: createRule('group') }),
+    }, {
+      validators: createRule('root'),
+      disabled: state === 'disabled' ? blocked : false,
+      hidden: state === 'hidden' ? blocked : false,
+      readonly: state === 'readonly' ? blocked : false,
+    });
+    const initial = profile();
+    await vi.waitFor(() => expect(runs).toHaveLength(5));
+    expect(profile.pending()).toBe(true);
+    blocked.set(true);
+    await vi.waitFor(() => expect(runs.every(run => run.abortSignal.aborted)).toBe(true));
+    expect(profile.pending()).toBe(false);
+    expect(profile.valid()).toBe(true);
+    expect(profile.details.name[state]()).toBe(true);
+    runs.forEach(run => run.resolve({ kind: 'stale' }));
+    await Promise.resolve();
+    expect(profile.allErrors()).toEqual([]);
+
+    blocked.set(false);
+    await vi.waitFor(() => expect(runs).toHaveLength(10));
+    expect(profile.pending()).toBe(true);
+    expect(profile()).toEqual(initial);
+    expect(runs.slice(5).map(run => run.label).sort()).toEqual(['array', 'field', 'form', 'group', 'root']);
+    runs.slice(5).forEach(run => run.resolve({ kind: 'unavailable' }));
+    await vi.waitFor(() => expect(profile.allErrors()).toHaveLength(5));
+    expect(profile.pending()).toBe(false);
+    expect(profile.invalid()).toBe(true);
+
+    blocked.set(true);
+    await Promise.resolve();
+    expect(profile.allErrors()).toEqual([]);
+    blocked.set(false);
+    await vi.waitFor(() => expect(runs).toHaveLength(15));
+    runs.slice(10).forEach(run => run.resolve(null));
+    await vi.waitFor(() => expect(profile.pending()).toBe(false));
+    expect(profile.valid()).toBe(true);
+
+    dependency.set('second');
+    await vi.waitFor(() => expect(runs).toHaveLength(20));
+    expect(profile.pending()).toBe(true);
+    runs.slice(15).forEach(run => run.resolve({ kind: 'latest' }));
+    await vi.waitFor(() => expect(profile.allErrors()).toHaveLength(5));
+    expect(profile.allErrors().every(error => error.kind === 'latest')).toBe(true);
+    expect(profile()).toEqual(initial);
+  });
+
+  it.each([false, true])('restarts aggregate async validation when a synchronous guard clears without changing its value (parameterized: %s)', async (parameterized) => {
+    const blocked = signal(false);
+    const run = vi.fn(async () => ({ kind: 'unavailable' }));
+    const params = vi.fn(({ value }: Context<{ name: string }>) => value());
+    const profile = form({ name: field('Ada') }, {
+      validators: [
+        () => blocked() ? { kind: 'blocked' } : null,
+        parameterized ? asyncValidator({ params, validate: run }) : asyncValidator(run),
+      ],
+    });
+    await vi.waitFor(() => expect(profile.hasError('unavailable')).toBe(true));
+    expect(run).toHaveBeenCalledTimes(1);
+    blocked.set(true);
+    await Promise.resolve();
+    expect(profile.hasError('unavailable')).toBe(false);
+    expect(profile.hasError('blocked')).toBe(true);
+    expect(profile.pending()).toBe(false);
+    blocked.set(false);
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    expect(profile.hasError('unavailable')).toBe(true);
+    expect(profile.hasError('blocked')).toBe(false);
+    expect(params).toHaveBeenCalledTimes(parameterized ? 2 : 0);
+    expect(profile()).toEqual({ name: 'Ada' });
+  });
+
   it.each(['disabled', 'hidden', 'readonly'] as const)('defers aggregate async validation until its %s callback can read the form', async (state) => {
     const run = vi.fn(async () => null);
     const profile = form({

@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Restart asynchronous validators after disabled, hidden, readonly, or blocking synchronous errors clear, even when the value has not changed. Inherited states follow the same behavior, parameterized validators read current signals again, and cancelled results remain ignored.
 - Allow `disabled`, `hidden`, and `readonly` callbacks to reference their containing field, form, group, or array without explicit return annotations, while preserving inferred node value and state types. Initial asynchronous validation defers availability checks so these references are safe during construction. Callback returns are intentionally unchecked, as with direct validators; they must still return the documented boolean or disabled-reason string.
 
 ## 📦 5.3.0 — 2026-09-21 {#530--2026-09-21}

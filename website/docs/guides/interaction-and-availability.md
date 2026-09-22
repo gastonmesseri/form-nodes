@@ -122,6 +122,10 @@ A node is non-interactive while hidden, disabled, or readonly. During that time:
 
 When the node becomes interactive again, validation runs against its current value and previously stored touched or dirty state becomes observable again.
 
+Async validators restart even if that value has not changed, including when the state was inherited
+from a parent. Explicit `params` are read again from current signals, and results from cancelled
+executions remain ignored.
+
 Hidden state does not manipulate the DOM. Use `@if` to remove hidden UI controls.
 
 See [Advanced behavior and edge cases](../advanced/behavior-details.md#stored-state-while-non-interactive)

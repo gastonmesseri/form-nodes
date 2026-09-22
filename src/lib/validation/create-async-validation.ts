@@ -105,6 +105,9 @@ export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: As
       }
     });
     if (validators.length === 0 || !isActive() || getSyncErrors().length > 0) {
+      // Resuming validation must rediscover dependencies even when prior values are unchanged.
+      trackedValidators.forEach(({ runner }) => runner.destroy());
+      trackedValidators.clear();
       lastParameterizedRun = null;
       cancel();
       return;

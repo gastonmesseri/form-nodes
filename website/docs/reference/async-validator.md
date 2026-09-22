@@ -497,7 +497,11 @@ asynchronous execution. Later reactive changes retain their scheduled revalidati
 - A dependency change cancels stale work and restarts the complete debounce.
 - Simultaneous value, params, and `when` changes coalesce into one latest execution.
 - A false `when` cancels work and clears this validator's result.
-- Disabled, readonly, or hidden state cancels work; returning to interactive state restarts it.
+- Disabled, readonly, or hidden state cancels work; returning to interactive state restarts it,
+  even when the value has not changed. Inherited states follow the same rule.
+- Clearing blocking synchronous errors also restarts async validation with an unchanged value.
+- While validation is suspended, previous callback dependencies are released. On resumption,
+  direct callbacks track their reads again and `params` is evaluated from current signals.
 - Destroying the lifecycle owner cancels delay and work.
 - Stale Promise resolutions, Observable emissions, and mapped errors are ignored.
 

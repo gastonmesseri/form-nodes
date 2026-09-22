@@ -37,6 +37,58 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe.each([false, true])('self-referencing field state with injection=%s', (inContext) => {
+  it.each(['disabled', 'hidden', 'readonly', 'sync'] as const)('refreshes async params after %s suppression with an unchanged field value', async (state) => {
+    const injector = Injector.create({ providers: [] });
+    const blocked = signal(false);
+    const country = signal('CH');
+    const params = vi.fn(({ value }: Context<string>) => ({ name: value(), country: country() }));
+    const validate = vi.fn(async ({ params }: { params: { name: string; country: string } }) => {
+      return { kind: 'unavailable', country: params.country };
+    });
+    const create = () => {
+      return field('Ada', {
+        validators: [
+          () => state === 'sync' && blocked() ? { kind: 'blocked' } : null,
+          asyncValidator({ params, validate }),
+        ],
+        disabled: state === 'disabled' ? blocked : false,
+        hidden: state === 'hidden' ? blocked : false,
+        readonly: state === 'readonly' ? blocked : false,
+      });
+    };
+    try {
+      const name = inContext ? runInInjectionContext(injector, create) : create();
+      await vi.waitFor(() => expect(name.hasError('unavailable')).toBe(true));
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(params).toHaveBeenCalledTimes(1);
+
+      blocked.set(true);
+      await Promise.resolve();
+      expect(name.hasError('unavailable')).toBe(false);
+      expect(name.pending()).toBe(false);
+      country.set('DE');
+      await Promise.resolve();
+      expect(params).toHaveBeenCalledTimes(1);
+      expect(validate).toHaveBeenCalledTimes(1);
+
+      blocked.set(false);
+      await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+      expect(params).toHaveBeenCalledTimes(2);
+      expect(validate.mock.calls[1]![0].params).toEqual({ name: 'Ada', country: 'DE' });
+      expect(name.hasError('unavailable')).toBe(true);
+
+      blocked.set(true);
+      await Promise.resolve();
+      blocked.set(false);
+      await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(3));
+      expect(params).toHaveBeenCalledTimes(3);
+      expect(name()).toBe('Ada');
+      expect(name.invalid()).toBe(true);
+    } finally {
+      injector.destroy();
+    }
+  });
+
   it.each(['disabled', 'hidden', 'readonly'] as const)('defers async startup through %s and cancels work when the state activates', async (state) => {
     const injector = Injector.create({ providers: [] });
     const runs: { abortSignal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
@@ -73,10 +125,22 @@ describe.each([false, true])('self-referencing field state with injection=%s', (
       await Promise.resolve();
       expect(profile.allErrors()).toEqual([]);
 
-      profile.name.set('Ada');
       profile.mode.set('');
       await vi.waitFor(() => expect(runs).toHaveLength(2));
-      runs[1]!.resolve(null);
+      expect(profile.name()).toBe('');
+      expect(profile.pending()).toBe(true);
+      runs[1]!.resolve({ kind: 'unavailable' });
+      await vi.waitFor(() => expect(profile.name.hasError('unavailable')).toBe(true));
+      expect(profile.invalid()).toBe(true);
+
+      profile.mode.set('locked');
+      await vi.waitFor(() => expect(profile.allErrors()).toEqual([]));
+      await Promise.resolve();
+      expect(runs).toHaveLength(2);
+      profile.mode.set('');
+      await vi.waitFor(() => expect(runs).toHaveLength(3));
+      expect(profile.pending()).toBe(true);
+      runs[2]!.resolve(null);
       await vi.waitFor(() => expect(profile.pending()).toBe(false));
       expect(profile.valid()).toBe(true);
     } finally {
