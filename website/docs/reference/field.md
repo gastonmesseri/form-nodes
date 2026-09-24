@@ -345,7 +345,7 @@ Its `index` tracks the node's nearest containing array item and is `null` outsid
 
 **Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness. A nonempty string also supplies a disabled reason; static strings, including an empty one, retain their reason. The callback return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives disabled state. A string also becomes a disabled reason.
 
@@ -361,7 +361,7 @@ username.disabled(); // true
 
 **Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness and the state signal stays boolean. The return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives readonly state. It defaults to `false`.
 
@@ -375,7 +375,7 @@ const username = field('', {
 
 **Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness and the state signal stays boolean. The return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives hidden state. It defaults to `false`.
 

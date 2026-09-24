@@ -57,7 +57,7 @@ it.each([0, 'blur', 25] as const)('starts listening after ngOnInit initializatio
     expect(changed).not.toHaveBeenCalled();
 
     node.patch({ username: 'ana', email: 'ana@lama.com' });
-    expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'ana', email: 'ana@lama.com' }, node);
+    expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'ana', email: 'ana@lama.com' }, node, { index: null });
     await fixture.whenStable();
     fixture.detectChanges();
     expect(changed).toHaveBeenCalledOnce();
@@ -69,7 +69,7 @@ it.each([0, 'blur', 25] as const)('starts listening after ngOnInit initializatio
     if (debounce !== 0) expect(changed).toHaveBeenCalledOnce();
     if (debounce === 'blur') input.dispatchEvent(new Event('blur'));
     await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
-    expect(changed).toHaveBeenLastCalledWith({ username: 'lucia', email: 'ana@lama.com' }, node);
+    expect(changed).toHaveBeenLastCalledWith({ username: 'lucia', email: 'ana@lama.com' }, node, { index: null });
     expect(node.dirty()).toBe(true);
   } finally {
     fixture.destroy();
@@ -91,8 +91,8 @@ it('cleans up component-owned subscriptions without stopping a shared form or it
   const fixture = TestBed.createComponent(Consumer);
   fixture.detectChanges();
   shared.name.set('Grace');
-  expect(fieldChanged).toHaveBeenCalledExactlyOnceWith('Grace', shared.name);
-  expect(formChanged).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, shared);
+  expect(fieldChanged).toHaveBeenCalledExactlyOnceWith('Grace', shared.name, { index: null });
+  expect(formChanged).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, shared, { index: null });
   fixture.destroy();
   shared.name.set('Lin');
   expect(fieldChanged).toHaveBeenCalledOnce();
@@ -112,7 +112,7 @@ it('uses the captured component owner when a listener is registered later outsid
   profile.name.set('Grace');
   fixture.destroy();
   profile.name.set('Lin');
-  expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile);
+  expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile, { index: null });
 });
 
 it('reports committed input after blur and complete programmatic resets without extra view notifications', () => {
@@ -134,8 +134,8 @@ it('reports committed input after blur and complete programmatic resets without 
   expect(changed).not.toHaveBeenCalled();
   input.dispatchEvent(new Event('blur'));
   fixture.detectChanges();
-  expect(changed).toHaveBeenCalledExactlyOnceWith('Grace', profile.name);
-  expect(parentChanged).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile);
+  expect(changed).toHaveBeenCalledExactlyOnceWith('Grace', profile.name, { index: null });
+  expect(parentChanged).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile, { index: null });
   profile.resetToInitial();
   fixture.detectChanges();
   expect(changed).toHaveBeenCalledTimes(2);
@@ -175,7 +175,7 @@ it('debounces committed input notifications and cancels pending delivery on comp
     expect(node.username()).toBe('Ada');
     expect(node.dirty()).toBe(true);
     expect(changed).not.toHaveBeenCalled();
-    await vi.waitFor(() => expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'Ada' }, node));
+    await vi.waitFor(() => expect(changed).toHaveBeenCalledExactlyOnceWith({ username: 'Ada' }, node, { index: null }));
     input.value = 'Grace';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(node.username()).toBe('Grace');

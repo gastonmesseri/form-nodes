@@ -4,7 +4,7 @@ const profile = form({
   purpose: field('', [required]),
   itemIds: field<number[]>(null, {
     validators: [required],
-    disabled: () => !!profile.purpose(),
+    disabled: () => profile.purpose(),
   }),
   internalNotes: field('', {
     hidden: () => profile.purpose() === 'public',

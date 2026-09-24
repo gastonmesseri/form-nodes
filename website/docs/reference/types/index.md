@@ -127,7 +127,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | --- | --- |
 | [ArrayOptions](./array-options.md) | Template, initial-data, validation, and ownership configuration for array(). |
 | [DisabledReason](./disabled-reason.md) | Identifies one active cause of a node's disabled state. |
-| [DisabledStateSource](./disabled-state-source.md) | A static or reactive condition that disables a node, optionally with a user-facing reason. Reactive callbacks must return a boolean or string. Their return type is intentionally unchecked to support self-referencing declarations; an explicit return annotation restores result checking. The callback receives `NodeCallbackContext.index` for the nearest containing array item. |
+| [DisabledStateSource](./disabled-state-source.md) | A static or reactive condition that disables a node, optionally with a user-facing reason. Reactive callback results follow JavaScript truthiness. Nonempty strings also supply a reason; static strings, including an empty one, disable with a reason. The callback return type is intentionally unchecked to support self-referencing declarations; an explicit return annotation can restrict the result type. The callback receives `NodeCallbackContext.index` for the nearest containing array item. |
 | [FieldOptions](./field-options.md) | Value, validation, interaction, and ownership configuration for field(). |
 | [FormNodesConfig](./form-nodes-config.md) | Injector-scoped validator messages and configuration for `[formNode]` bindings. |
 | [FormOptions](./form-options.md) | Value, validation, interaction, ownership, and submission configuration for form(). |

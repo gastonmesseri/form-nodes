@@ -339,7 +339,7 @@ export type FieldOptions<TValue = any> = {
    * explicit return annotation when authoring a strictly checked callback. Node values
    * and state signals retain their inferred types.
    *
-   * **Return Type:** `boolean` for the callback.
+   * **Return Type:** `unknown` for the callback; JavaScript truthiness determines the state.
    *
    * **Default:** `false` locally; active ancestor state still applies.
    *
@@ -366,8 +366,8 @@ export type FieldOptions<TValue = any> = {
    */
   hidden?: boolean | ((context: NodeCallbackContext) => any);
   /**
-   * Controls this node's local disabled state, inherited by descendants. A string disables
-   * the node and contributes a user-facing reason, including an empty string.
+   * Controls this node's local disabled state, inherited by descendants. A static string
+   * disables and supplies a reason even when empty; callback strings follow truthiness.
    * Disabled nodes retain their values and accept programmatic writes; their own validation
    * and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally.
    *
@@ -376,7 +376,8 @@ export type FieldOptions<TValue = any> = {
    * explicit return annotation when authoring a strictly checked callback. Node values
    * and state signals retain their inferred types.
    *
-   * **Return Type:** `boolean | string` for the callback.
+   * **Return Type:** `unknown` for the callback; truthy results disable the node.
+   * A nonempty string also becomes a reason message.
    *
    * **Default:** `false` locally; active ancestor state still applies.
    *
@@ -385,7 +386,8 @@ export type FieldOptions<TValue = any> = {
    * - **Booleans**: Enable or clear the local configured state.
    * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
    *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
-   * - **Strings**: Disable locally and record the text in `disabledReasons()`.
+   * - **Strings**: Static strings disable locally, even when empty, and record the text
+   *   in `disabledReasons()`. Callback strings do so when nonempty.
    *
    * ```ts
    * field('', {
@@ -419,7 +421,7 @@ export type FieldOptions<TValue = any> = {
    * explicit return annotation when authoring a strictly checked callback. Node values
    * and state signals retain their inferred types.
    *
-   * **Return Type:** `boolean` for the callback.
+   * **Return Type:** `unknown` for the callback; JavaScript truthiness determines the state.
    *
    * **Default:** `false` locally; active ancestor state still applies.
    *

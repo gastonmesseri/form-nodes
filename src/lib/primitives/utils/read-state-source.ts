@@ -7,5 +7,5 @@ export const getInitialMutableState = (source?: boolean | ((context: NodeCallbac
 };
 
 export const readStateSource = (source: boolean | ((context: NodeCallbackContext) => any) | undefined, node: AnyNode): boolean => {
-  return typeof source === 'function' ? source(createNodeIndexContext(node)) : false;
+  return typeof source === 'function' ? Boolean(source(createNodeIndexContext(node))) : false;
 };

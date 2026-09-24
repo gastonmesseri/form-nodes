@@ -10,7 +10,9 @@ export const getInitialDisabledState = (source?: DisabledStateSource): DisabledS
 
 /** Reads only a continuing reactive disabled condition; static options belong to mutable state. */
 export const readConfiguredDisabledState = (source: DisabledStateSource | undefined, node: AnyNode): DisabledState => {
-  return typeof source === 'function' ? source(createNodeIndexContext(node)) : false;
+  if (typeof source !== 'function') return false;
+  const result = source(createNodeIndexContext(node));
+  return result ? (typeof result === 'string' ? result : true) : false;
 };
 
 /** Converts an active disabled state into its public reason while preserving an optional message. */

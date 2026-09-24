@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Fixed
+
+- Interpret reactive `disabled`, `readonly`, and `hidden` callback results by JavaScript truthiness while keeping their public state signals boolean. Falsy results such as `0`, `null`, and an empty callback string no longer activate the state; nonempty disabled strings still supply a reason.
+
 ### Added
 
 - Add a reactive `node.index()` signal and `index: number | null` to validator, availability, value-change, and form submission callback contexts. They report the current zero-based item position in the nearest containing array, including through nested groups and forms; reactive reads follow row moves, attachment, and detachment without a value edit.

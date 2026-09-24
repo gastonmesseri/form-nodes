@@ -52,7 +52,11 @@ const profile = form({
 });
 ```
 
-A normal function may read signals directly; no extra `computed()` is needed.
+A normal function may read signals directly; no extra `computed()` is needed. Callback results
+use JavaScript truthiness: `0`, `''`, `null`, and `undefined` clear the configured state, while
+nonzero numbers, nonempty strings, and objects activate it. `hidden()` and `readonly()` still
+return booleans. A nonempty string from `disabled` also becomes a reason message; other truthy
+results produce an unnamed reason. Static disabled strings, including `''`, still supply a reason.
 
 These functions also receive `{ index }`, where `index` is the zero-based position of the item
 containing this node in its nearest array ancestor. It is `null` outside arrays, including after
@@ -81,10 +85,9 @@ Here, a nonempty purpose disables `itemIds`. Use `!profile.purpose()` instead if
 be disabled until a purpose is selected. Programmatic writes still work while disabled.
 
 As with direct validator callbacks, the callback return type is intentionally `any` to avoid
-TypeScript's circular initializer inference. The runtime contract still requires a boolean for
-`hidden` and `readonly`, or a boolean or reason string for `disabled`. Static options remain
-type checked. Add an explicit result annotation when you want TypeScript to check a callback's
-return, for example `disabled: (): boolean => !!profile.purpose()` or
+TypeScript's circular initializer inference. Static options remain type checked. Add an explicit
+result annotation when you want to restrict a callback's result, for example
+`disabled: (): boolean => !!profile.purpose()` or
 `disabled: (): boolean | string => profile.purpose() ? 'Locked' : false`.
 
 This supports references resolved when the state is read, including through a component computed

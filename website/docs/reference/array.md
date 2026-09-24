@@ -489,7 +489,7 @@ Its `index` tracks the node's nearest containing array item and is `null` outsid
 
 **Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness and the state signal stays boolean. The return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets the initial hidden state or derives it reactively for the complete array subtree. It defaults
 to `false`.
@@ -506,7 +506,7 @@ usernames.hidden(); // follows showUsernames()
 
 **Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness. A nonempty string also supplies a disabled reason; static strings, including an empty one, retain their reason. The callback return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets or reactively derives disabled state for the complete subtree. A string both disables the
 array and becomes a message in `disabledReasons()`. It defaults to `false`.
@@ -524,7 +524,7 @@ usernames.disabledReasons()[0]?.message; // 'Profile is locked'
 
 **Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
-Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
+Callback results follow JavaScript truthiness and the state signal stays boolean. The return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
 Sets the initial readonly state or derives it reactively for the complete array subtree. It
 defaults to `false`.

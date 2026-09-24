@@ -78,7 +78,8 @@ An array additionally accepts `initialValue` and `trackBy`. Only `field()` accep
 ### ◆ Static and reactive state {#static-and-reactive-state}
 
 `hidden` and `readonly` accept a boolean or a reactive function. `disabled` also accepts a reason
-string or a function returning a boolean or reason string:
+string. Reactive callback results follow JavaScript truthiness; a nonempty string returned by
+`disabled` also supplies a reason:
 
 ```ts
 const profileForm = form({

@@ -31,11 +31,13 @@ export type MarkAsTouchedOptions = {
 
 /**
  * A static or reactive condition that disables a node, optionally with a user-facing reason.
- * Reactive callbacks must return a boolean or string. Their return type is intentionally unchecked
- * to support self-referencing declarations; an explicit return annotation restores result checking.
+ * Reactive callback results follow JavaScript truthiness. Nonempty strings also supply a reason;
+ * static strings, including an empty one, disable with a reason. The callback return type is
+ * intentionally unchecked to support self-referencing declarations; an explicit return annotation
+ * can restrict the result type.
  * The callback receives `NodeCallbackContext.index` for the nearest containing array item.
  *
- * **Return Type:** `boolean | string` for the callback.
+ * **Return Type:** `unknown` for the callback; truthy results disable the node.
  */
 export type DisabledStateSource = boolean | string | ((context: NodeCallbackContext) => any);
 

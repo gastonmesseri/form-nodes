@@ -36,6 +36,32 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNodeDirective in Chromium', () => {
+  it('reflects truthy disabled callback results on a native input', () => {
+    @Component({ template: '<input [formNode]="form.name" />', imports: [FormNodeDirective] })
+    class Host {
+      availability = signal<unknown>(0);
+
+      form = form({ name: field('Ada', { disabled: () => this.availability() }) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const host = fixture.componentInstance;
+    expect(input.disabled).toBe(false);
+
+    host.availability.set('Locked');
+    fixture.detectChanges();
+    expect(host.form.name.disabled()).toBe(true);
+    expect(host.form.name.disabledReasons()).toEqual([{ sourceNode: host.form.name, message: 'Locked' }]);
+    expect(input.disabled).toBe(true);
+
+    host.availability.set(null);
+    fixture.detectChanges();
+    expect(host.form.name.disabled()).toBe(false);
+    expect(input.disabled).toBe(false);
+    fixture.destroy();
+  });
+
   it('renders server errors after native submission and clears them on input and reset', async () => {
     @Component({
       template: `<form [formNode]="profile"><input [formNode]="profile.email"><button type="submit">Save</button><button type="reset">Reset</button></form>`,

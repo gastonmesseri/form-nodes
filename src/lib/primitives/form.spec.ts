@@ -367,6 +367,34 @@ describe('self-referencing form state', () => {
     expect(profile.dirty()).toBe(false);
   });
 
+  it.each(['disabled', 'hidden', 'readonly'] as const)('coerces reactive %s results on aggregate nodes and descendants', (state) => {
+    const condition = signal<unknown>(false);
+    const profile = form({
+      details: group({ name: field('', [required]) }),
+      rows: array({ name: field('', [required]) }, { initialLength: 1 }),
+    }, {
+      disabled: state === 'disabled' ? () => condition() : false,
+      hidden: state === 'hidden' ? () => condition() : false,
+      readonly: state === 'readonly' ? () => condition() : false,
+    });
+    profile.details.name.markAsTouched();
+
+    for (const result of [0, null, undefined, '', 1, 'Locked', {}, false]) {
+      condition.set(result);
+      const active = Boolean(result);
+      expect(profile[state]()).toBe(active);
+      expect(profile.details.name[state]()).toBe(active);
+      expect(profile.rows[0]!.name[state]()).toBe(active);
+      expect(profile.valid()).toBe(active);
+      expect(profile.details.name.touched()).toBe(!active);
+      if (state === 'disabled') {
+        expect(profile.rows[0]!.name.disabledReasons()).toEqual(active
+          ? [{ sourceNode: profile, ...(typeof result === 'string' ? { message: result } : {}) }]
+          : []);
+      }
+    }
+  });
+
   it('supports group and array conditions through a later declared component computed', () => {
     class Editor {
       form = form({

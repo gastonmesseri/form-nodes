@@ -41,7 +41,7 @@ Mark public parameterized functions that participate in signal dependency tracki
 
 ### Callback return contracts
 
-When a callback intentionally declares an unchecked return such as `any` to support self-referencing inference, include a separate `**Return Type:**` paragraph in its JSDoc. Put the supported runtime type in inline code: `boolean` for `hidden`, `readonly`, and validator conditions, or `boolean | string` for `disabled`. Preserve the explanation of why the declaration uses `any` and how an explicit return annotation restores checking.
+When a callback intentionally declares an unchecked return such as `any` to support self-referencing inference, include a separate `**Return Type:**` paragraph in its JSDoc. For availability callbacks (`disabled`, `hidden`, and `readonly`), use `unknown` and explain that JavaScript truthiness determines the state; nonempty disabled strings also supply a reason. Validator conditions still use `boolean`. Preserve the explanation of why the declaration uses `any` and how an explicit return annotation can restrict the result type.
 
 Document the callback result, not merely the permissive TypeScript signature. Include `null`, `undefined`, or `void` only when the callback contract admits them. For validators, link the result contract and explain success, errors, and composition; for asynchronous validators, show the Promise-like or Observable-like wrapper as well as its resolved result. When the JSDoc belongs to a factory such as `requiredIf()`, identify the callback parameter explicitly so its return type cannot be confused with the factory's return type. Apply this to inline options, relevant overloads, and shared public callback types.
 

@@ -369,6 +369,36 @@ describe.each([false, true])('self-referencing field state with injection=%s', (
       injector.destroy();
     }
   });
+
+  it.each(['disabled', 'hidden', 'readonly'] as const)('coerces reactive %s results to a boolean state', (state) => {
+    const condition = signal<unknown>(false);
+    const profile = form({
+      name: field('', [required], {
+        disabled: state === 'disabled' ? () => condition() : false,
+        hidden: state === 'hidden' ? () => condition() : false,
+        readonly: state === 'readonly' ? () => condition() : false,
+      }),
+    });
+    profile.name.markAsTouched();
+    profile.name.markAsDirty();
+
+    for (const result of [0, null, undefined, '', NaN, 1, 'Locked', {}, false]) {
+      condition.set(result);
+      const active = Boolean(result);
+      expect(profile.name[state]()).toBe(active);
+      expect(profile.name.valid()).toBe(active);
+      expect(profile.invalid()).toBe(!active);
+      expect(profile.name.touched()).toBe(!active);
+      expect(profile.name.dirty()).toBe(!active);
+      if (state === 'disabled') {
+        expect(profile.name.disabledReasons()).toEqual(active
+          ? [{ sourceNode: profile.name, ...(typeof result === 'string' ? { message: result } : {}) }]
+          : []);
+      }
+    }
+
+    expect(field('', { disabled: '' }).disabled()).toBe(true);
+  });
 });
 
 describe('minimum length for empty strings', () => {
