@@ -9,8 +9,10 @@ import { array, field, form, FormNodeDirective } from '../../../src/public-api';
   template: `
     <form [formNode]="profile" (formNodeSubmit)="$event.value.age.toFixed()" (formNodeSubmitBlocked)="$event.form.$api.submitted()"></form>
     <input #binding="formNode" [formNode]="name" (formNodeValueChange)="$event.toUpperCase()" (formNodeChange)="$event.toUpperCase()"
+      (formNodeModelChange)="$event.toUpperCase()"
       (formNodeControlValueChange)="$event.toUpperCase()">
     <input [formNode]="profile.age" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()"
+      (formNodeModelChange)="$event.toFixed()"
       (formNodeControlValueChange)="$event.toFixed()">
     @if (profile.get('dynamicName'); as dynamicName) {
       <input [formNode]="dynamicName">
@@ -85,7 +87,8 @@ class ValidSignalControlHost {
   standalone: true,
   imports: [ValidProfileControl, ValidPeopleControl, FormNodeDirective],
   template: `
-    <valid-profile-control [formNode]="profile" (formNodeChange)="$event.name?.toUpperCase()" />
+    <valid-profile-control [formNode]="profile" (formNodeChange)="$event.name?.toUpperCase()"
+      (formNodeModelChange)="$event.name?.toUpperCase()" />
     <valid-people-control [formNode]="people" (formNodeControlValueChange)="$event[0]?.name?.toUpperCase()" />
   `,
 })

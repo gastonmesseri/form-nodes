@@ -9,6 +9,7 @@ import templateActionsSource from '!!raw-loader!../../examples/form-node-templat
 import bindingQuerySource from '!!raw-loader!../../examples/form-node-query.typecheck.ts';
 import submitSource from '!!raw-loader!../../examples/form-node-submit.typecheck.ts';
 import valueOutputsSource from '!!raw-loader!../../examples/form-node-value-outputs.typecheck.ts';
+import modelChangeSource from '!!raw-loader!../../examples/form-node-model-change.typecheck.ts';
 import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-handler.typecheck.ts';
 
 # [formNode] directive {#formnode-directive}
@@ -30,6 +31,7 @@ Bind a node, listen to control edits, or attach the directive to `<form>` for su
 | [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
 | [`[formNodeValue]`](#value-input) | `[formNodeValue]="suggestedName()"` | Supplies a raw value to an independent field or to the explicitly bound node. |
 | [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="onValueChange($event)"` | Receives the committed value after debounce. |
+| [`(formNodeModelChange)`](#value-outputs) | `(formNodeModelChange)="onModelChange($event)"` | Receives committed node value changes from controls and programmatic writes. |
 | [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="onFormSubmit($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
 | [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="onFormSubmitBlocked($event)"` | Reports an attempt rejected by `submitWhen`. |
 | [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="onControlValueChange($event)"` | Receives the parsed control value immediately, before debounce. |
@@ -58,6 +60,14 @@ draft length immediately; `formNodeChange` receives the committed description. Y
 such as `this.form.description.set(...)` do not emit these control events.
 
 <CodeBlock language="ts" title="description-editor.component.ts">{valueOutputsSource}</CodeBlock>
+
+### Observe every committed node value change {#template-model-value-events}
+
+`formNodeModelChange` follows the node bound to `[formNode]`. Typing into the control emits
+both `formNodeChange` and `formNodeModelChange`; the button's programmatic `set()` emits only
+`formNodeModelChange`. Both outputs carry the exposed value of the bound node.
+
+<CodeBlock language="ts" title="name-editor.component.ts">{modelChangeSource}</CodeBlock>
 
 ### Observe submission attempts and blocked forms {#template-submission-events}
 
@@ -156,12 +166,12 @@ debounce, or participation in a larger form.
 
 :::info Control edits and programmatic changes
 
-These outputs report edits from the bound control. Programmatic `set()`, `patch()`, `update()`,
-and reset calls do not emit them. To observe committed value changes from both control edits and
-programmatic writes, use [`onValueChange` in the node options](../guides/configuring-nodes.md#value-changes),
-such as [`field('', { onValueChange })`](./field.md#onvaluechange).
-Both `onValueChange` and `(formNodeChange)` / `(formNodeValueChange)` wait for control input to commit under the debounce
-rules; `(formNodeControlValueChange)` reports the control value immediately, before debounce.
+`formNodeControlValueChange` and `formNodeChange` / `formNodeValueChange` report edits from
+the bound control. `formNodeModelChange` observes all committed public value changes on the
+bound node, including programmatic `set()`, `patch()`, `update()`, and resets. It follows the
+same rules as [`node.onValueChange()`](../guides/configuring-nodes.md#value-subscriptions).
+The committed outputs wait for control input to commit under debounce;
+`formNodeControlValueChange` reports the control value immediately.
 
 :::
 
@@ -174,6 +184,7 @@ CVA callback, or custom control output. `$event` is the value, not a DOM event.
 | `formNodeControlValueChange` | `NodeValue<TNode>` | Immediately after the control value and dirty state are updated. |
 | `formNodeChange` | `NodeValue<TNode>` | After the control-originated value is committed, respecting debounce. |
 | `formNodeValueChange` | `NodeValue<TNode>` | The same committed event as `formNodeChange`. |
+| `formNodeModelChange` | `NodeValue<TNode>` | Whenever the bound node's exposed committed value changes, from any source. |
 
 See the [control-edit example](#template-value-events) for both draft and committed events.
 
@@ -190,25 +201,33 @@ Touch, blur, submission, or `flush()` can confirm pending input early under the 
 [debounce rules](../guides/value-flow-and-debounce.md). Asynchronous debounce emits the committed
 output only on successful completion or an explicit flush.
 
-Without debounce, the control and committed outputs are synchronous and the node is already updated in both handlers.
-The control-value output runs first. The committed output follows with the exposed value returned
+Without debounce, the control-originated draft and committed outputs are synchronous and the node
+is already updated in both handlers. The control-value output runs before `formNodeChange`.
+The committed output carries the exposed value returned
 by `node()`, including any configured value equality. Parent values and synchronous validation are
 current; asynchronous validation can still be pending. If the first handler replaces the value,
 the superseded committed notification is suppressed.
 
-These outputs belong to the concrete control binding. Programmatic `set()`, `patch()`, `update()`,
+The control-originated outputs belong to the concrete control binding. Programmatic `set()`, `patch()`, `update()`,
 `reset()`, and `value.control.set()` calls do not emit them. A flush can emit a previously pending
 control edit. Replaced or cancelled debounce work does not emit a committed notification, and a
 binding does not emit a pending notification after it is destroyed or rebound to a different node.
-Native `<form>` bindings and pass-through wrappers do not aggregate or forward descendants' outputs;
-listen on the binding that owns the control transport.
+Native `<form>` bindings and pass-through wrappers do not aggregate or forward descendants' control
+outputs; listen on the binding that owns the control transport.
+
+`formNodeModelChange` uses the bound node's exposed value and equality rule. It emits once for a
+complete aggregate operation and observes descendant writes on a bound form or group. It does not
+emit the initial value, a newly bound node's initial value, pending control drafts, or state-only
+changes. It stops observing the old node on rebinding and stops on directive destruction. A later
+`[formNodeValue]` source update can emit after the initial binding. A control commit that changes
+the public value emits once through this output and once through `formNodeChange` when both are used.
 
 For native controls, unchanged parsed values are ignored, so an `input` followed by `change`, or
 `compositionend` followed by `input`, does not duplicate the notification or restart debounce.
 Composition is buffered, and invalid native input does not emit the previous value as a new value.
-Native validity-monitor notifications do not emit either output.
+Native validity-monitor notifications do not emit value outputs.
 
-For a CVA, these events originate in the callback registered with `registerOnChange`.
+For a CVA, the control-originated events start in the callback registered with `registerOnChange`.
 Call that callback to communicate a view-to-model edit; `writeValue` must not call it as feedback.
 Signal controls use their selected `value` or `checked` model output; enabled input/output pairs
 use the corresponding output. Repeated custom callbacks are preserved even if their payloads are
@@ -218,7 +237,7 @@ These binding outputs do not participate in `value/valueChange` or `checked/chec
 discovery. Avoid declaring a component output with either of these same
 names on the binding host, since Angular can subscribe to both outputs.
 
-Both outputs also expose `OutputRef<NodeValue<TNode>>` on `FormNodeBinding<TNode>` for programmatic
+The value outputs also expose `OutputRef<NodeValue<TNode>>` on `FormNodeBinding<TNode>` for programmatic
 subscriptions. Consumers can subscribe and unsubscribe but cannot emit through that public view.
 
 ## 🔌 Binding instance {#binding-instance}
@@ -233,6 +252,7 @@ same binding. Its methods act on that rendered control, while `node()` returns t
 | --- | --- |
 | [`formNodeChange`](#value-outputs) | Short name for the committed control-originated value output. |
 | [`formNodeValueChange`](#value-outputs) | An alias of the same committed-value output. |
+| [`formNodeModelChange`](#value-outputs) | All committed public value changes on the bound node. |
 | [`formNodeControlValueChange`](#value-outputs) | Immediate control value output. |
 | [`formNodeSubmit`](#submission-outputs) | Native submission attempt before validation policy and action. |
 | [`formNodeSubmitBlocked`](#submission-outputs) | Attempt rejected by the validation policy. |

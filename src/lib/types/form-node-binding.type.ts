@@ -139,6 +139,30 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    */
   readonly formNodeChange: OutputRef<NodeValue<TNode>>;
   /**
+   * Observes exposed committed value changes on the currently bound node from both
+   * control edits and programmatic writes. Uses node `onValueChange()` semantics:
+   * no initial or rebind emission, equality filtering, and no notification for
+   * pending control drafts. Later `[formNodeValue]` updates can emit.
+   *
+   * ```ts
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
+   *
+   * @Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     this.binding.formNodeModelChange
+   *       .subscribe(value => {
+   *         console.log(value);
+   *       });
+   *   }
+   * }
+   * ```
+   */
+  readonly formNodeModelChange: OutputRef<NodeValue<TNode>>;
+  /**
    * Latest parsed value received from the selected control adapter, before waiting for debounce.
    * This does not guarantee a physical user interaction: custom controls can emit from code.
    *

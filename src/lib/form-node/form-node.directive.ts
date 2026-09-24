@@ -114,6 +114,35 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
   formNodeChange = this.formNodeValueChange;
 
   /**
+   * Exposed committed value changes on the currently bound node, regardless of whether
+   * they originate in the control or a programmatic node operation. Uses the same
+   * equality and notification timing as `node.onValueChange()`. Initial binding and
+   * rebinding do not emit; later changes to `[formNodeValue]` do.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     <input
+   *       [formNode]="form.name"
+   *       (formNodeModelChange)="onName($event)"
+   *     />
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   form = form({ name: field('Ada') });
+   *
+   *   onName(value: string) {
+   *     console.log(value);
+   *   }
+   * }
+   * ```
+   */
+  formNodeModelChange = output<NodeValue<BoundNode<TNode, TValue>>>();
+
+  /**
    * Latest parsed value received from the selected control adapter, before waiting for debounce.
    * This does not guarantee a physical user interaction: custom controls can emit from code.
    *
@@ -225,6 +254,10 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
 
   private _synchronizedValue: unknown = UNSET_VALUE;
 
+  private modelChangeNode: BoundNode<TNode, TValue> | undefined;
+
+  private stopModelChange: (() => void) | undefined;
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /**
@@ -267,6 +300,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
   constructor() {
     this.interop.connect(this);
     this.destroyRef.onDestroy(() => {
+      this.stopModelChange?.();
       this.customEvents = undefined;
       this.formNodeStateCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
@@ -284,16 +318,29 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
   }
 
   ngOnChanges() {
+    const node = this.node();
+    const changedNode = node !== this.modelChangeNode;
+    if (changedNode) {
+      this.stopModelChange?.();
+      this.stopModelChange = undefined;
+      this.modelChangeNode = undefined;
+    }
     const value = this._formNodeValue();
-    if (value === UNSET_VALUE) return;
-    untracked(() => {
-      const node = this.node();
-      if (node !== this._synchronizedNode || !Object.is(value, this._synchronizedValue)) {
-        node.$api.set(value);
-      }
-      this._synchronizedNode = node;
-      this._synchronizedValue = value;
-    });
+    if (value !== UNSET_VALUE) {
+      untracked(() => {
+        if (node !== this._synchronizedNode || !Object.is(value, this._synchronizedValue)) {
+          node.$api.set(value);
+        }
+        this._synchronizedNode = node;
+        this._synchronizedValue = value;
+      });
+    }
+    if (changedNode) {
+      this.stopModelChange = node.$api.onValueChange((next) => {
+        this.formNodeModelChange.emit(next as NodeValue<BoundNode<TNode, TValue>>);
+      }, { injector: this.injector });
+      this.modelChangeNode = node;
+    }
   }
 
   ngOnInit() {
@@ -483,7 +530,8 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
  * Public Angular directive for binding native and custom controls to a node.
  * `[formNodeValue]` supplies an external value and creates one independent field when
  * `[formNode]` is absent or undefined. Source changes preserve interaction state and do not
- * emit value outputs. Control edits emit committed and pending value events.
+ * emit control-originated outputs. `formNodeModelChange` observes committed value
+ * changes from both control edits and programmatic writes on the bound node.
  * CVAs receive their initial value and optional disabled state synchronously during setup,
  * before child initialization. Subsequent model-to-view updates run through Angular effects;
  * they are not guaranteed to render before a programmatic node setter returns.

@@ -22,6 +22,7 @@ Use for an injected binding, directive query, or integration callback. It descri
 type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
     readonly formNodeValueChange: OutputRef<NodeValue<TNode>>;
     readonly formNodeChange: OutputRef<NodeValue<TNode>>;
+    readonly formNodeModelChange: OutputRef<NodeValue<TNode>>;
     readonly formNodeControlValueChange: OutputRef<NodeValue<TNode>>;
     readonly formNodeSubmit: OutputRef<FormNodeSubmitEvent<TNode>>;
     readonly formNodeSubmitBlocked: OutputRef<FormNodeSubmitEvent<TNode>>;
@@ -49,6 +50,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | --- | --- |
 | `formNodeValueChange` | Control-originated value after it is committed, respecting debounce and flush. Programmatic node writes do not emit. Synchronous state is current in the handler; asynchronous validation may still be pending. |
 | `formNodeChange` | Short name for formNodeValueChange. Both names share the same committed-value output. Emits control-originated values after debounce; programmatic writes do not emit. Listen with (formNodeChange) alongside [formNode]. |
+| `formNodeModelChange` | Observes exposed committed value changes on the currently bound node from both control edits and programmatic writes. Uses node `onValueChange()` semantics: no initial or rebind emission, equality filtering, and no notification for pending control drafts. Later `[formNodeValue]` updates can emit. |
 | `formNodeControlValueChange` | Latest parsed value received from the selected control adapter, before waiting for debounce. This does not guarantee a physical user interaction: custom controls can emit from code. |
 | `formNodeSubmit` | Native submission attempt on a form() binding, after preparing values and interaction state, before the validation gate and declared action. Emits even without onSubmit or when blocked. Programmatic submit() does not emit. Async listeners are not awaited. |
 | `formNodeSubmitBlocked` | Native attempt rejected by submitWhen, including pending validation with 'valid'. Emits after formNodeSubmit, even without a declared onSubmit action. Concurrent attempts, group bindings, and programmatic submit() do not emit this output. |

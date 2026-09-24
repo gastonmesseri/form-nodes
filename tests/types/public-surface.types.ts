@@ -127,11 +127,15 @@ type _ShortCommittedOutput = Expect<Equal<typeof nameBinding.formNodeChange, Out
 nameBinding.formNodeChange.subscribe(value => value.toUpperCase());
 
 type _CommittedOutput = Expect<Equal<typeof nameBinding.formNodeValueChange, OutputRef<string>>>;
+type _ModelOutput = Expect<Equal<typeof nameBinding.formNodeModelChange, OutputRef<string>>>;
 type _ControlOutput = Expect<Equal<typeof nameBinding.formNodeControlValueChange, OutputRef<string>>>;
 nameBinding.formNodeValueChange.subscribe(value => value.toUpperCase());
+nameBinding.formNodeModelChange.subscribe(value => value.toUpperCase());
 nameDirective.formNodeControlValueChange.subscribe(value => value.toUpperCase());
 // @ts-expect-error consumers subscribe to binding outputs but cannot emit them
 nameBinding.formNodeValueChange.emit('external');
+// @ts-expect-error consumers cannot emit model changes through the binding view
+nameBinding.formNodeModelChange.emit('external');
 
 name.resetToInitial();
 nameBinding.node().resetToInitial();

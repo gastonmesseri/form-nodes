@@ -144,10 +144,11 @@ continues to receive the normal API for installing validators and initializing t
 :::info Observe the node or a specific control
 
 `onValueChange` observes committed value changes from both control edits and programmatic writes.
-Use the [binding outputs](../reference/form-node-binding.md#value-outputs) to observe only edits from
-a specific control: `(formNodeValueChange)` reports committed input after debounce, and
-`(formNodeControlValueChange)` reports the control value immediately, before debounce.
-Programmatic writes do not emit either output.
+For the same behavior in a template, use
+[`(formNodeModelChange)`](../reference/form-node-binding.md#template-model-value-events).
+The control-only binding outputs remain separate: `(formNodeValueChange)` reports committed input
+after debounce, and `(formNodeControlValueChange)` reports the control value immediately.
+Programmatic writes do not emit either control-only output.
 
 :::
 

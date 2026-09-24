@@ -3764,17 +3764,31 @@ under both names registers two listeners. Unsubscribing one leaves other listene
 Only the selected control adapter initiates
 these notifications. Native forms and pass-through bindings do not forward child notifications.
 Without debounce, the node and synchronous parent/validation state are updated before either
-handler; the control-value output runs first. With debounce, the committed notification runs after
+control-originated handler; the control-value output runs before the committed control output.
+With debounce, the committed notification runs after
 successful completion or an early touch/blur/flush/submission commit, without waiting for async
 validation. Each pending edit carries its own completion callback, so replacement, reset,
 programmatic writes, and rejected debounce completion cannot notify for cancelled edits. A
 notification is suppressed when the originating binding is destroyed or points to a different node.
-Programmatic node writes (including public `value.control.set`) do not independently emit outputs.
+Programmatic node writes (including direct public `value.control.set`) do not independently emit
+the control-originated outputs.
 
-Native duplicate parsed values do not restart debounce or emit duplicate outputs; Date values are
+`formNodeModelChange` subscribes to the currently bound node's public `onValueChange()` stream.
+It reports changes to the exposed committed value from control edits, programmatic writes,
+`[formNodeValue]` source updates after binding, and descendant writes on a bound aggregate.
+The node's public equality rule suppresses equivalent values. A complete aggregate write emits
+once for its resulting public value. Pending control drafts and state-only updates do not emit.
+The first binding and a replacement node's initial value do not emit; a replacement releases the
+previous node subscription, and directive destruction releases the current one. Debounced
+control edits emit only after commit. This output is separate from the control-originated
+`formNodeChange` / `formNodeValueChange` alias and can be used on native form bindings to observe
+aggregate value changes. It adds observation without changing node state, validation, or
+control synchronization.
+
+Native duplicate parsed values do not restart debounce or emit duplicate control outputs; Date values are
 compared by timestamp and multiple-selection values by their entries. IME buffering and parsing
 errors retain their existing behavior. Validity-monitor updates are not output events. Custom/CVA
-callbacks retain each transport notification, including equal payloads; callbacks identify the
+callbacks retain each control transport notification, including equal payloads; callbacks identify the
 control-to-model direction but cannot certify physical user input. Model-to-view writes remain
 guarded. Output names are separate from the value/checked pair discovery contract.
 
@@ -3787,6 +3801,13 @@ updates, deferred committed values, touch flushes, and replacement cancellation.
 outputs and native duplicate suppression are library-specific contracts rather than Angular API
 parity. Configured public equality can retain an equivalent exposed committed snapshot; control
 output payloads still report the current control value.
+
+The model-change binding behavior was also checked against Angular `v22.2.0` commit
+`fc187d4aec254b52a0cff7a16a390a4b0c3e57d8`, in
+`packages/forms/signals/src/directive/form_field.ts` and `src/directive/control_cva.ts`,
+with `packages/forms/signals/test/web/interop.spec.ts`. Those paths govern model/view
+synchronization and suppression of control feedback; the additional directive output follows
+Form Nodes `onValueChange()` semantics.
 
 ### Field literal-union IntelliSense
 

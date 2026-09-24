@@ -21,6 +21,11 @@ These outputs report edits from the selected control adapter, not programmatic n
 See the [value output reference and complete example](../reference/form-node-binding.md#value-outputs)
 for event order, cancellation, native parsing, and custom control contracts.
 
+Use `(formNodeModelChange)` to observe every exposed committed value change on the bound node,
+including programmatic writes and descendant changes on a bound form or group. It waits for a
+debounced control edit to commit and ignores pending drafts. See the
+[template example](../reference/form-node-binding.md#template-model-value-events).
+
 ## 📝 Committed values {#committed-values}
 
 Calling a node is the preferred committed-value read:

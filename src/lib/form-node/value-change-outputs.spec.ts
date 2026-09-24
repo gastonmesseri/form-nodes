@@ -57,6 +57,24 @@ it('coalesces numeric debounce without delaying the latest control value', () =>
   expect(host.events).toHaveLength(3);
 });
 
+it('observes programmatic writes and debounced control commits through the model output', () => {
+  vi.useFakeTimers();
+  const { fixture, host, edit } = setup(100);
+  const binding = fixture.debugElement.query(By.css('textarea')).injector.get(FormNodeDirective);
+  const observed: string[] = [];
+  binding.formNodeModelChange.subscribe(value => observed.push(value));
+
+  host.text.set('programmatic');
+  expect(observed).toEqual(['programmatic']);
+  expect(host.events).toEqual([]);
+  edit('pending');
+  expect(observed).toEqual(['programmatic']);
+  expect(host.events.map(({ kind }) => kind)).toEqual(['control']);
+  vi.advanceTimersByTime(100);
+  expect(observed).toEqual(['programmatic', 'pending']);
+  expect(host.events.map(({ kind }) => kind)).toEqual(['control', 'value']);
+});
+
 it.each(['blur', 'flush', 'touch'] as const)('emits once when %s confirms a pending edit', (action) => {
   const { host, edit, input } = setup('blur');
   edit('latest');

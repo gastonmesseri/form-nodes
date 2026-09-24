@@ -40,6 +40,8 @@ Access children through their model path, such as `profile.name.debouncing()`. K
 
 For the `index()` sections of the field, form, and group reference pages, render the same canonical `field-indexed-sibling.example.ts`. Its validator uses the field's current index to find a typed sibling in a known array, applies to array template clones, and verifies that the rule follows a moved row. Explain on the form and group pages that their nodes share the same index behavior even though the example reads a field's index. State that `index()` can return `null` outside an array or after detachment, and that an index identifies a position, not its containing array.
 
+When documenting `[formNode]` value outputs, distinguish control-originated edits from all committed node value changes. Show `(formNodeModelChange)` with a programmatic write and a control edit, and keep `(formNodeChange)` / `(formNodeValueChange)` identified as one control-originated output.
+
 Name a component's single form member `form`, as in `form = form({ username: field('') })`. Use `this.form.username` in component code and `[formNode]="form.username"` in the template. Use descriptive names such as `loginForm` and `profileForm` for multiple forms or when the distinction matters. Standalone variables should retain meaningful names such as `profile`; `const form = form(...)` would shadow the factory.
 
 Do not mark ordinary `form()`, `field()`, or `array()` component properties as `readonly`. Keep the modifier only where it communicates a relevant contract outside those declarations.

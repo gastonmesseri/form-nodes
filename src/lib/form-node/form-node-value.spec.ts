@@ -19,6 +19,7 @@ import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOut
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalInputForJit(FormNodeDirective, 'formNodeValue', '_formNodeValue');
 registerSignalOutputForJit(FormNodeDirective, 'formNodeValueChange');
+registerSignalOutputForJit(FormNodeDirective, 'formNodeModelChange');
 registerSignalOutputForJit(FormNodeDirective, 'formNodeControlValueChange');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
@@ -53,7 +54,8 @@ class StandaloneCva implements ControlValueAccessor {
 
 @Component({
   template: `<standalone-cva [formNode]="bound()" [formNodeValue]="source()"
-    (formNodeValueChange)="commits.push($event)" (formNodeChange)="changes.push($event)" (formNodeControlValueChange)="drafts.push($event)" />`,
+    (formNodeValueChange)="commits.push($event)" (formNodeChange)="changes.push($event)"
+    (formNodeModelChange)="models.push($event)" (formNodeControlValueChange)="drafts.push($event)" />`,
   imports: [FormNodeDirective, StandaloneCva],
 })
 class Host {
@@ -64,6 +66,8 @@ class Host {
   commits: unknown[] = [];
 
   changes: unknown[] = [];
+
+  models: unknown[] = [];
 
   drafts: unknown[] = [];
 }
@@ -78,6 +82,38 @@ const setup = () => {
 };
 
 describe('formNodeValue', () => {
+  it('observes committed changes from the bound node and follows rebinding without an initial event', () => {
+    const { fixture, host, control, binding } = setup();
+    const initial = binding.node();
+    expect(host.models).toEqual([]);
+
+    initial.$api.set('Bea');
+    expect(host.models).toEqual(['Bea']);
+    expect(host.commits).toEqual([]);
+    control.change('Cia');
+    expect(host.models).toEqual(['Bea', 'Cia']);
+    expect(host.commits).toEqual(['Cia']);
+
+    host.source.set('Dia');
+    fixture.detectChanges();
+    expect(host.models).toEqual(['Bea', 'Cia', 'Dia']);
+    expect(host.commits).toEqual(['Cia']);
+
+    const replacement = field<unknown>('new');
+    host.bound.set(replacement);
+    fixture.detectChanges();
+    expect(replacement()).toBe('Dia');
+    expect(host.models).toEqual(['Bea', 'Cia', 'Dia']);
+    initial.$api.set('old node');
+    expect(host.models).toEqual(['Bea', 'Cia', 'Dia']);
+    replacement.set('Eve');
+    expect(host.models).toEqual(['Bea', 'Cia', 'Dia', 'Eve']);
+
+    fixture.destroy();
+    replacement.set('after destroy');
+    expect(host.models).toEqual(['Bea', 'Cia', 'Dia', 'Eve']);
+  });
+
   it('seeds one independent field during CVA setup and preserves local edits', () => {
     const { fixture, host, control, binding } = setup();
     const node = binding.node();

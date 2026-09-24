@@ -22,6 +22,7 @@ import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalOutputForJit(FormNodeDirective, 'formNodeModelChange');
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -36,6 +37,40 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNodeDirective in Chromium', () => {
+  it('reports control and programmatic value changes from bound fields and forms', () => {
+    @Component({
+      template: `<form [formNode]="form" (formNodeModelChange)="formChanges.push($event.name)">
+        <input [formNode]="form.name" (formNodeModelChange)="fieldChanges.push($event)" />
+      </form>`,
+      imports: [FormNodeDirective],
+    })
+    class Host {
+      form = form({ name: field('Ada') });
+
+      formChanges: string[] = [];
+
+      fieldChanges: string[] = [];
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(host.formChanges).toEqual([]);
+    expect(host.fieldChanges).toEqual([]);
+
+    host.form.name.set('Grace');
+    expect(host.formChanges).toEqual(['Grace']);
+    expect(host.fieldChanges).toEqual(['Grace']);
+    input.value = 'Lin';
+    dispatch(input, 'input');
+    expect(host.formChanges).toEqual(['Grace', 'Lin']);
+    expect(host.fieldChanges).toEqual(['Grace', 'Lin']);
+    host.form.resetToInitial();
+    expect(host.formChanges).toEqual(['Grace', 'Lin', 'Ada']);
+    expect(host.fieldChanges).toEqual(['Grace', 'Lin', 'Ada']);
+    fixture.destroy();
+  });
+
   it('reflects truthy disabled callback results on a native input', () => {
     @Component({ template: '<input [formNode]="form.name" />', imports: [FormNodeDirective] })
     class Host {

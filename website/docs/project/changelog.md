@@ -17,6 +17,7 @@ canonical release record.
 ### Added
 
 - Add a reactive `node.index()` signal and `index: number | null` to validator, availability, value-change, and form submission callback contexts. They report the current zero-based item position in the nearest containing array, including through nested groups and forms; reactive reads follow row moves, attachment, and detachment without a value edit.
+- Add typed `(formNodeModelChange)` to `[formNode]` for every exposed committed value change on the bound node, including control edits, programmatic writes, source input updates, and descendant writes on forms and groups. Pending drafts, initial binding, and rebinding do not emit; the output follows the node's value equality rule.
 
 ## 📦 5.4.0 — 2026-09-22 {#540--2026-09-22}
 
