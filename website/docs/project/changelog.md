@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.5.0 — 2026-09-24 {#550--2026-09-24}
+
 ### Fixed
 
 - Interpret reactive `disabled`, `readonly`, and `hidden` callback results by JavaScript truthiness while keeping their public state signals boolean. Falsy results such as `0`, `null`, and an empty callback string no longer activate the state; nonempty disabled strings still supply a reason.
