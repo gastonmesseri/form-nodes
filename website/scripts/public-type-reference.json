@@ -47,6 +47,10 @@
     }
   },
   "types": {
+    "NodeCallbackContext": {
+      "family": "configuration",
+      "usage": "The callback context shared by availability, value-change, and form submission callbacks. `index` is the zero-based position of the item containing the node in its nearest array ancestor, or `null` outside arrays. The same location is available on every node as a readonly `index()` signal. Reactive availability callbacks track the structural read; event callbacks receive the current position when invoked. Validators inherit this context through `ValidatorContext`."
+    },
     "FormNodeBinding": {
       "family": "controls",
       "usage": "Use for an injected binding, directive query, or integration callback. It describes the rendered binding, including outputs and host access; it is not a form node."
@@ -370,7 +374,7 @@
     },
     "ValidatorContext": {
       "family": "validation",
-      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access."
+      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. `ctx.index` is the current zero-based position in the nearest containing array, or null when there is none; it is a number read rather than a signal call. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access."
     },
     "ValidationSuccess": {
       "family": "errors",

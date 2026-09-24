@@ -11,6 +11,7 @@ type _RootKinds = Expect<Equal<ReturnType<Root['nodeType']>, 'field' | 'form' | 
 type _ParentKinds = Expect<Equal<ReturnType<Parent['nodeType']>, 'form' | 'group' | 'array'>>;
 
 const checkAncestry = (ctx: ValidatorContext<string | null>) => {
+  type _Index = Expect<Equal<typeof ctx.index, number | null>>;
   const api = ctx.node().$api;
   type _Form = Expect<Equal<ReturnType<typeof api.form>, ValidatorForm | null>>;
   type _Parent = Expect<Equal<ReturnType<typeof ctx.parent>, Parent | null>>;

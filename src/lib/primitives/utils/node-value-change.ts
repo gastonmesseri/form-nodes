@@ -1,6 +1,7 @@
 import { untracked } from '@angular/core';
 
 import type { AnyNode } from '../../types/node.type';
+import { createNodeIndexContext } from '../../utils/node-array-index';
 import { subscribeToNodeValue, valueSubscriptions, type ValueChangeCallback, type ValueSubscription } from './node-value-subscription';
 
 const callbacks = new WeakMap<AnyNode, ValueChangeCallback>();
@@ -51,7 +52,7 @@ const flush = (errors: unknown[]) => {
         }
         const callback = callbacks.get(node);
         try {
-          callback?.(value, node);
+          if (callback) callback(value, node, createNodeIndexContext(node));
         } catch (error) {
           errors.push(error);
         }

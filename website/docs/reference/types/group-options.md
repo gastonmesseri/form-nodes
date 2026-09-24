@@ -20,13 +20,13 @@ Use when a structural group needs its own validators or state options. Groups do
 
 ```ts
 type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
-    onValueChange?(value: TValue, node: TGroup): void;
+    onValueChange?(value: TValue, node: TGroup, context: NodeCallbackContext): void;
     configure?: (api: TGroup['$api']) => void;
     validators?: ValidatorSource<TValue, TGroup>;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => any);
-    disabled?: boolean | string | (() => any);
-    readonly?: boolean | (() => any);
+    hidden?: boolean | ((context: NodeCallbackContext) => any);
+    disabled?: boolean | string | ((context: NodeCallbackContext) => any);
+    readonly?: boolean | ((context: NodeCallbackContext) => any);
 };
 ```
 
@@ -43,7 +43,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
+| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. The third argument provides the node's current nearest containing array index. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
 | `configure` | Configures each new instance once, synchronously after its API and children are ready. Receives the collision-safe callable `$api`. Runs untracked; validators installed here track dependencies when they execute. Ancestors may not be attached yet. Use the callback argument rather than the variable being initialized. Fresh template clones run their own callback; reset, reordering, and edits do not rerun it. Returned values are ignored; this is neither an async hook nor a cleanup registration. |
 | `validators` | Registers rules on this node's exposed value. Aggregate rules receive the complete object or array; put per-field rules on children. A synchronous composition may return validators; asynchronous rules must be wrapped with `asyncValidator()`. Null and undefined entries are ignored. Contexts are typed; inline returns intentionally allow self-reference inference. Use `validator()` or an explicit result annotation when returned errors also need strict checking. |
 | `debounce` | Delays control-originated value commits. Descendants inherit this strategy unless they supply their own. Programmatic writes commit immediately. A later edit aborts the previous delay; `flush()` or an interactive `markAsTouched()` commits pending input. |
@@ -58,4 +58,5 @@ The declaration above also includes inherited contracts and overloads where appl
 - [AnyNode](./any-node.md)
 - [FormOptions](./form-options.md)
 - [GroupNode](./group-node.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [ValidatorSource](./validator-source.md)

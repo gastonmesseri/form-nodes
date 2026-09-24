@@ -54,6 +54,13 @@ const profile = form({
 
 A normal function may read signals directly; no extra `computed()` is needed.
 
+These functions also receive `{ index }`, where `index` is the zero-based position of the item
+containing this node in its nearest array ancestor. It is `null` outside arrays, including after
+detachment. The read is reactive: moving a row reevaluates availability even when no value changes.
+Nested groups and forms keep the containing row index, while nested arrays use their innermost
+containing array. The value is a number, not a signal. See the
+[indexed callback example](./configuring-nodes.md#value-changes) for typed sibling access.
+
 Effective state is the union of three independent causes:
 
 1. Mutable local state controlled by actions.

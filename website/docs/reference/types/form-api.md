@@ -21,7 +21,7 @@ Use for form API operations such as submission without exposing direct child-nam
 ```ts
 type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'form';
-    onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>) => void, options?: {
+    onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>, context: NodeCallbackContext) => void, options?: {
         injector?: Injector;
         debounce?: number;
         emitCurrent?: boolean;
@@ -44,6 +44,7 @@ type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
     parent: Signal<TParent | null>;
     path: Signal<readonly string[]>;
     keyInParent: Signal<NodeKeyInParent<TParent>>;
+    index: Signal<number | null>;
     value: NodeValueSignal<{
         [K in keyof TNodes]: NodeValue<TNodes[K]>;
     }, FormSet<TNodes>>;
@@ -132,6 +133,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `parent` | Immediate structural parent of this form, or `null` when it is a root or has been detached. |
 | `path` | Property and array-index segments from the complete root to this form. Root forms use `[]`. |
 | `keyInParent` | Property or array index under which this form is stored, or `null` when it is a root form. |
+| `index` | Zero-based position of the item containing this form in its nearest array ancestor. Nested groups and forms keep their containing row's position; nested arrays use the innermost containing array. Root and detached branches return `null`. This readonly signal tracks moves, attachment, and detachment without a value edit. Use `$api.index()` when a child named `index` hides the direct member. |
 | `value` | Exposed aggregate of public child values. The `equal` option may retain a previous snapshot. |
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `set` | Assigns a complete form value immediately without marking the form or its descendants dirty. |
@@ -192,6 +194,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [FormPatch](./form-patch.md)
 - [FormSet](./form-set.md)
 - [FormValue](./form-value.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)

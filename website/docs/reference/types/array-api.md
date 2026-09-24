@@ -21,7 +21,7 @@ Use for item-management helpers that need array operations. The callable `$api` 
 ```ts
 type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'array';
-    onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>) => void, options?: {
+    onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>, context: NodeCallbackContext) => void, options?: {
         injector?: Injector;
         debounce?: number;
         emitCurrent?: boolean;
@@ -34,6 +34,7 @@ type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     parent: Signal<TParent | null>;
     path: Signal<readonly string[]>;
     keyInParent: Signal<NodeKeyInParent<TParent>>;
+    index: Signal<number | null>;
     value: NodeValueSignal<ArrayValue<TItem>, ArraySet<TItem> | null | undefined>;
     asReadonly(): Signal<ArrayValue<TItem>>;
     at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
@@ -143,6 +144,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `parent` | Immediate structural parent of this array, or `null` when it is a root or has been detached. |
 | `path` | Property and array-index segments from the complete root to this array. Root arrays use `[]`. |
 | `keyInParent` | Property or array index under which this array is stored, or `null` when it is a root array. |
+| `index` | Zero-based position of the item containing this array in its nearest array ancestor. This describes the array node's own placement, not an item inside it. A standalone array returns `null`; nested arrays use their nearest outer containing array. This readonly signal tracks moves, attachment, and detachment without a value edit. Use `$api.index()` when a child named `index` hides the direct member. |
 | `value` | Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array independently of current item values and structure. |
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `at` | Returns the live item node at `index`, or `undefined` when no item exists there. Negative indexes count from the end: `-1` selects the last item. Like `Array.prototype.at()`, fractional indexes truncate toward zero, `NaN` selects index zero, and infinite or out-of-range indexes return `undefined`. |
@@ -220,6 +222,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [ArrayValue](./array-value.md)
 - [CustomValidationError](./custom-validation-error.md)
 - [DisabledReason](./disabled-reason.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)

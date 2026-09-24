@@ -21,6 +21,10 @@ field and form error ownership through both failing and valid states.
 For typed sibling access within an array row, use the [configure option](./configuring-nodes.md).
 It receives the inferred children after construction; reusable validators can alternatively declare
 an explicit `ctx.parent<TParent>()` contract.
+Use [`ctx.index`](../reference/validator.md#custom-validator-context-index) when a rule depends on
+the row's current position in its nearest containing array, including from nested groups or forms.
+Read [`node.index()`](../concepts/tree-and-api.md#parent-root-and-path) for the same location as
+a signal outside validator callbacks.
 
 Pass validators in a node's options or as the positional validator argument:
 

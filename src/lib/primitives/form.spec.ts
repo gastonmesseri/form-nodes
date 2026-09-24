@@ -43,7 +43,7 @@ describe('form onValueChange emitCurrent', () => {
     const notify = vi.fn();
     const stop = profile.$api.onValueChange(notify, { emitCurrent: true });
 
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' }, onValueChange: 'child' }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' }, onValueChange: 'child' }, profile, { index: null });
     expect(configured).not.toHaveBeenCalled();
     expect(parentChanged).not.toHaveBeenCalled();
     expect(childChanged).not.toHaveBeenCalled();
@@ -52,7 +52,7 @@ describe('form onValueChange emitCurrent', () => {
     expect(profile.touched()).toBe(false);
     profile.nested.name.set('');
     expect(profile.invalid()).toBe(true);
-    expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' }, onValueChange: 'child' }, profile);
+    expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' }, onValueChange: 'child' }, profile, { index: null });
     stop();
     profile.nested.name.set('Lin');
     expect(notify).toHaveBeenCalledTimes(2);
@@ -67,14 +67,14 @@ describe('form onValueChange emitCurrent', () => {
       const notify = vi.fn();
       const stop = profile.onValueChange(notify, { emitCurrent: true, debounce: 100 });
 
-      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile, { index: null });
       expect([profile.valid(), profile.dirty(), profile.touched(), profile.pending(), profile.debouncing()]).toEqual(state);
       expect(profile.nested.name.value.control()).toBe('');
       profile.flush();
       expect(profile.invalid()).toBe(true);
       expect(notify).toHaveBeenCalledTimes(1);
       vi.advanceTimersByTime(100);
-      expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' } }, profile);
+      expect(notify).toHaveBeenLastCalledWith({ nested: { name: '' } }, profile, { index: null });
       profile.nested.name.set('Grace');
       stop();
       vi.runAllTimers();
@@ -114,7 +114,7 @@ describe('form onValueChange emitCurrent', () => {
 
       expect(() => profile.onValueChange(notify, { emitCurrent: true, debounce: 100 })).toThrow(failure);
       expect(profile()).toEqual({ nested: { name: 'Grace' } });
-      expect(existing).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile);
+      expect(existing).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile, { index: null });
       expect(vi.getTimerCount()).toBe(0);
       profile.nested.name.set('Lin');
       vi.runAllTimers();
@@ -132,7 +132,7 @@ describe('form onValueChange emitCurrent', () => {
     });
 
     profile.nested.name.set('Grace');
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, profile, { index: null });
     stopChild();
     profile.nested.name.set('Lin');
     expect(notify).toHaveBeenCalledTimes(2);
@@ -1224,7 +1224,7 @@ describe('form', () => {
     expect(contexts).toEqual([[initial.details.people, initial.details.people, initial.details.people]]);
     expect(validateParent).toHaveBeenCalledTimes(2);
     expect(await profile.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile, { index: null });
     externalError.set(true);
     expect(profile.invalid()).toBe(true);
     expect(people.getError('external')).toBeDefined();
@@ -1310,7 +1310,7 @@ describe('form', () => {
     expect(contexts).toEqual([['Marco', 'Marco', 'Marco']]);
     expect(validateParent).toHaveBeenCalledTimes(2);
     expect(await profile.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile, { index: null });
     externalError.set(true);
     expect(profile.invalid()).toBe(true);
     expect(name.getError('external')).toBeDefined();
@@ -1411,7 +1411,7 @@ describe('form', () => {
     expect(target.valid()).toBe(true);
     expect(contexts).toEqual([[initial, initial, initial]]);
     expect(await target.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(initial, target);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, target, { index: null });
     const updater = vi.fn(value => ({ name: `${value.name}!` }));
     target.update(updater);
     expect(updater).toHaveBeenCalledExactlyOnceWith(initial);
@@ -1861,7 +1861,7 @@ describe('form', () => {
     expect(profile.untouched()).toBe(true);
     reset({ set: 'ready', details: { city: 'Geneva' } });
     expect(await submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith({ set: 'ready', details: { city: 'Geneva' } }, profile);
+    expect(action).toHaveBeenCalledExactlyOnceWith({ set: 'ready', details: { city: 'Geneva' } }, profile, { index: null });
     expect(profile.submitting()).toBe(false);
   });
 
@@ -2571,7 +2571,7 @@ describe('form', () => {
     expect(profile.details.submitting()).toBe(true);
     expect(profile.touched()).toBe(true);
     expect(profile.name.touched()).toBe(true);
-    expect(action).toHaveBeenCalledWith({ name: 'Marco', details: { age: 42 } }, profile);
+    expect(action).toHaveBeenCalledWith({ name: 'Marco', details: { age: 42 } }, profile, { index: null });
     expect(await profile.submit()).toBe(false);
     expect(action).toHaveBeenCalledTimes(1);
 
@@ -2589,14 +2589,14 @@ describe('form', () => {
 
     expect(await blocked.submit()).toBe(false);
     expect(action).not.toHaveBeenCalled();
-    expect(onSubmitBlocked).toHaveBeenCalledWith(blocked);
+    expect(onSubmitBlocked).toHaveBeenCalledWith(blocked, { index: null });
     expect(blocked.name.touched()).toBe(true);
 
     const forced = form({ name: field('', [required]) }, {
       onSubmit: action, submitWhen: 'always',
     });
     expect(await forced.submit()).toBe(true);
-    expect(action).toHaveBeenCalledWith({ name: '' }, forced);
+    expect(action).toHaveBeenCalledWith({ name: '' }, forced, { index: null });
     expect(forced.invalid()).toBe(true);
     expect(forced.name.getError('required')).toBeDefined();
   });
@@ -2632,7 +2632,7 @@ describe('form', () => {
     await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
     expect(profile.invalid()).toBe(false);
     expect(await profile.submit()).toBe(false);
-    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile);
+    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile, { index: null });
     expect(onSubmit).not.toHaveBeenCalled();
     expect(profile.submitting()).toBe(false);
     expect(profile.details.name.touched()).toBe(true);
@@ -2642,14 +2642,14 @@ describe('form', () => {
     expect(onSubmit).not.toHaveBeenCalled();
     expect(validate).toHaveBeenCalledTimes(1);
     expect(await profile.submit()).toBe(true);
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile);
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile, { index: null });
     expect(nestedSubmit).not.toHaveBeenCalled();
     expect(onSubmitBlocked).toHaveBeenCalledTimes(1);
     expect(profile.submitting()).toBe(false);
     expect(profile.details.submitting()).toBe(false);
 
     expect(await profile.details.submit()).toBe(true);
-    expect(nestedSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile.details);
+    expect(nestedSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile.details, { index: null });
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
@@ -2667,7 +2667,7 @@ describe('form', () => {
     expect(profile.submitting()).toBe(true);
     expect(profile.name.submitting()).toBe(true);
     expect(await profile.submit()).toBe(false);
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile);
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile, { index: null });
     expect(onSubmitBlocked).not.toHaveBeenCalled();
 
     finish();
@@ -2698,7 +2698,7 @@ describe('form', () => {
     const profile = form({ details: { name: field('Marco') } }, { onSubmit: action });
 
     const completion = profile.submit();
-    expect(action).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile);
+    expect(action).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile, { index: null });
     expect(profile.submitting()).toBe(true);
     expect(profile.details.submitting()).toBe(true);
     expect(profile.details.name.touched()).toBe(true);
@@ -2732,7 +2732,7 @@ describe('form', () => {
     const profile = form({ name: field('', [required]) }, { onSubmit: action, onSubmitBlocked });
 
     const completion = profile.submit();
-    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile);
+    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile, { index: null });
     expect(action).not.toHaveBeenCalled();
     expect(profile.submitting()).toBe(false);
     expect(profile.name.touched()).toBe(true);
@@ -6048,7 +6048,7 @@ it('prevents reentrant blocked callbacks and permits a later valid submission', 
   expect(profile.submitting()).toBe(false);
   nested.name.set('Ada');
   expect(await profile.submit()).toBe(true);
-  expect(action).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+  expect(action).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile, { index: null });
   profile.reset();
   expect(profile.submitted()).toBe(false);
   expect(nested.name.touched()).toBe(false);
@@ -6472,7 +6472,7 @@ describe('form instance onValueChange', () => {
     expect(later).not.toHaveBeenCalled();
     stop();
     profile.name.set('Grace');
-    expect(later).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile);
+    expect(later).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile, { index: null });
   });
 
   it('follows inherited ownership when nodes are attached, detached, and reparented', () => {
@@ -6538,7 +6538,7 @@ describe('form instance onValueChange', () => {
     expect(notify).not.toHaveBeenCalled();
     profile.markAsTouched();
     expect(profile.valid()).toBe(true);
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile, { index: null });
     profile.reset();
     expect(profile.pristine()).toBe(true);
     expect(profile.untouched()).toBe(true);
@@ -6603,8 +6603,8 @@ describe('form onValueChange', () => {
       onValueChange: field('ordinary child'),
     }, { onValueChange: outer });
     profile.contact.name.set('ADA');
-    expect(inner).toHaveBeenCalledExactlyOnceWith({ name: 'ADA', slug: 'ada' }, profile.contact);
-    expect(outer).toHaveBeenCalledExactlyOnceWith({ contact: { name: 'ADA', slug: 'ada' }, onValueChange: 'ordinary child' }, profile);
+    expect(inner).toHaveBeenCalledExactlyOnceWith({ name: 'ADA', slug: 'ada' }, profile.contact, { index: null });
+    expect(outer).toHaveBeenCalledExactlyOnceWith({ contact: { name: 'ADA', slug: 'ada' }, onValueChange: 'ordinary child' }, profile, { index: null });
   });
 
   it('skips configured initialization, honors aggregate equality, and observes reset and structure', () => {
@@ -6620,13 +6620,13 @@ describe('form onValueChange', () => {
     expect(child).toHaveBeenCalledOnce();
     expect(notify).not.toHaveBeenCalled();
     profile.resetToInitial();
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile, { index: null });
     const dynamic = form({}, { onValueChange: notify });
     notify.mockClear();
     const name = dynamic.add('name', field('Ada'));
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, dynamic);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, dynamic, { index: null });
     dynamic.remove('name');
-    expect(notify).toHaveBeenLastCalledWith({}, dynamic);
+    expect(notify).toHaveBeenLastCalledWith({}, dynamic, { index: null });
     const calls = notify.mock.calls.length;
     name.set('Grace');
     expect(notify).toHaveBeenCalledTimes(calls);
@@ -6638,10 +6638,10 @@ describe('form onValueChange', () => {
     const profile = form({ name: field('', { onValueChange() { throw failure; } }) }, { onValueChange: notify });
     expect(() => profile.name.set('Ada')).toThrow(failure);
     expect(profile()).toEqual({ name: 'Ada' });
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile, { index: null });
     const other = field('', { onValueChange: notify });
     other.set('Grace');
-    expect(notify).toHaveBeenLastCalledWith('Grace', other);
+    expect(notify).toHaveBeenLastCalledWith('Grace', other, { index: null });
   });
 
   it('combines callback failures without losing subsequent delivery', () => {
@@ -6659,7 +6659,7 @@ describe('form onValueChange', () => {
     profile.last.value.control.set('Hopper');
     expect(notify).not.toHaveBeenCalled();
     profile.flush();
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ first: 'Grace', last: 'Hopper' }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ first: 'Grace', last: 'Hopper' }, profile, { index: null });
     expect(profile.debouncing()).toBe(false);
     profile.disable();
     profile.enable();
@@ -6892,7 +6892,7 @@ describe('form patch array replacement', () => {
     expect(profile.details.cities[0]).toBe(first);
     expect(profile.pristine()).toBe(true);
     expect(profile.untouched()).toBe(true);
-    expect(changed).toHaveBeenCalledExactlyOnceWith(profile(), profile);
+    expect(changed).toHaveBeenCalledExactlyOnceWith(profile(), profile, { index: null });
     profile.patch({ age: 39 });
     expect(profile.details.cities.length()).toBe(2);
     profile.patch({ age: undefined, details: { cities: [{ city: '', country: '', aliases: [] }] } });
@@ -7273,7 +7273,7 @@ describe('form instance onValueChange subscription debounce', () => {
       expect(node.pending()).toBe(true);
       expect(notify).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(100);
-      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Grace' } }, node, { index: null });
       expect(node.pending()).toBe(true);
       expect(validate).toHaveBeenCalledTimes(2);
       completions[0]!(null);
@@ -7315,9 +7315,9 @@ describe('form instance onValueChange subscription debounce', () => {
       expect(nested).not.toHaveBeenCalled();
       expect(tags).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(nested).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', contact: { email: 'ada@example.com' } }, profile.details);
-      expect(contact).toHaveBeenCalledExactlyOnceWith({ email: 'ada@example.com' }, profile.details.contact);
-      expect(tags).toHaveBeenCalledExactlyOnceWith(['second', 'third'], profile.tags);
+      expect(nested).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', contact: { email: 'ada@example.com' } }, profile.details, { index: null });
+      expect(contact).toHaveBeenCalledExactlyOnceWith({ email: 'ada@example.com' }, profile.details.contact, { index: null });
+      expect(tags).toHaveBeenCalledExactlyOnceWith(['second', 'third'], profile.tags, { index: null });
       expect(root).not.toHaveBeenCalled();
       profile.details.name.value.control.set('');
       expect(profile.invalid()).toBe(true);
@@ -7326,12 +7326,12 @@ describe('form instance onValueChange subscription debounce', () => {
       vi.advanceTimersByTime(99);
       expect(root).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(root).toHaveBeenCalledExactlyOnceWith({ details: { name: '', contact: { email: 'ada@example.com' } }, tags: ['second', 'third'] }, profile);
+      expect(root).toHaveBeenCalledExactlyOnceWith({ details: { name: '', contact: { email: 'ada@example.com' } }, tags: ['second', 'third'] }, profile, { index: null });
       profile.patch({ details: { name: 'Grace' } });
       profile.resetToInitial();
       vi.advanceTimersByTime(100);
       expect(root).toHaveBeenCalledTimes(2);
-      expect(root).toHaveBeenLastCalledWith({ details: { name: '', contact: { email: '' } }, tags: ['first'] }, profile);
+      expect(root).toHaveBeenLastCalledWith({ details: { name: '', contact: { email: '' } }, tags: ['first'] }, profile, { index: null });
       expect(profile.pristine()).toBe(true);
       expect(profile.untouched()).toBe(true);
     } finally {
@@ -7387,7 +7387,7 @@ describe('form instance onValueChange subscription debounce', () => {
       first.remove('nested');
       destroy(firstOwner);
       vi.advanceTimersByTime(100);
-      expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, nested);
+      expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, nested, { index: null });
       second.add('nested', nested);
       nested.name.set('Grace');
       destroy(secondOwner);
@@ -7539,4 +7539,80 @@ it('initializes nested object arrays by length and configures each cloned row in
   expect(configured).toHaveBeenCalledTimes(4);
   expect(changed).toHaveBeenCalledOnce();
   expect(model.details.rows()).toEqual([{ code: '', detail: 'saved' }, { code: '', detail: 'saved' }]);
+});
+
+it('revalidates nested forms when their containing array index changes', () => {
+  const observed = vi.fn((index: number | null) => index === 1 ? { kind: 'secondRow' } : null);
+  const model = form({
+    rows: array({
+      details: form({ email: field('') }, { validators: ({ index }) => observed(index) }),
+    }, { initialLength: 2 }),
+  }, { validators: ({ index }) => index === null ? null : { kind: 'unexpectedArray' } });
+  const first = model.rows[0]!.details;
+  const second = model.rows[1]!.details;
+  expect(model.index()).toBeNull();
+  expect(first.index()).toBe(0);
+  expect(second.index()).toBe(1);
+  expect(model.hasError('unexpectedArray')).toBe(false);
+  expect(first.valid()).toBe(true);
+  expect(second.hasError('secondRow')).toBe(true);
+  expect(observed.mock.calls.map(([index]) => index)).toEqual([0, 1]);
+
+  model.rows.swap(0, 1);
+  expect(first.index()).toBe(1);
+  expect(second.index()).toBe(0);
+  expect(first.hasError('secondRow')).toBe(true);
+  expect(second.valid()).toBe(true);
+  expect(observed.mock.calls.map(([index]) => index)).toEqual([0, 1, 1, 0]);
+  expect(model.invalid()).toBe(true);
+});
+
+it('updates nested form availability from its containing array index', () => {
+  const observed: Array<number | null> = [];
+  const model = form({
+    rows: array({
+      details: form({ email: field('') }, {
+        readonly: ({ index }) => {
+          observed.push(index);
+          return index === 0;
+        },
+      }),
+    }, { initialLength: 2 }),
+  });
+  const first = model.rows[0]!.details;
+  const second = model.rows[1]!.details;
+  expect(first.readonly()).toBe(true);
+  expect(first.email.readonly()).toBe(true);
+  expect(second.readonly()).toBe(false);
+  expect(observed).toEqual([0, 1]);
+
+  model.rows.swap(0, 1);
+  expect(first.readonly()).toBe(false);
+  expect(first.email.readonly()).toBe(false);
+  expect(second.readonly()).toBe(true);
+  expect(second.email.readonly()).toBe(true);
+  expect(observed).toEqual([0, 1, 1, 0]);
+});
+
+it('passes the containing array index to nested form submission callbacks', async () => {
+  const submitted: Array<number | null> = [];
+  const blocked: Array<number | null> = [];
+  const model = form({
+    rows: array({
+      details: form({ name: field('', [required]) }, {
+        onSubmit(_value, _node, { index }) { submitted.push(index); },
+        onSubmitBlocked(_node, { index }) { blocked.push(index); },
+      }),
+    }, { initialLength: 2 }),
+  });
+  const first = model.rows[0]!.details;
+  expect(await first.submit()).toBe(false);
+  expect(blocked).toEqual([0]);
+
+  model.rows.move(0, 1);
+  expect(await first.submit()).toBe(false);
+  expect(blocked).toEqual([0, 1]);
+  first.name.set('Ada');
+  expect(await first.submit()).toBe(true);
+  expect(submitted).toEqual([1]);
 });

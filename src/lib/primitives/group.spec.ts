@@ -14,12 +14,12 @@ describe('group', () => {
     const node = group({ name: field('Ada'), onValueChange: field('child') }, {
       configure(api) { api.onValueChange(configured, { emitCurrent: true }); },
     });
-    expect(configured).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node);
+    expect(configured).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node, { index: null });
     const notify = vi.fn();
     const stop = node.$api.onValueChange(notify, { emitCurrent: true });
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada', onValueChange: 'child' }, node, { index: null });
     node.name.set('Grace');
-    expect(notify).toHaveBeenLastCalledWith({ name: 'Grace', onValueChange: 'child' }, node);
+    expect(notify).toHaveBeenLastCalledWith({ name: 'Grace', onValueChange: 'child' }, node, { index: null });
     stop();
   });
 
@@ -28,7 +28,7 @@ describe('group', () => {
     const notify = vi.fn();
     const stop = node.$api.onValueChange(notify);
     node.patch({ name: 'Grace', onValueChange: 'updated child' });
-    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace', onValueChange: 'updated child' }, node);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace', onValueChange: 'updated child' }, node, { index: null });
     stop();
     node.name.set('Lin');
     expect(notify).toHaveBeenCalledOnce();
@@ -417,7 +417,7 @@ describe('group', () => {
     const profile = form({ payment: form({ card: field('4242') }, { onSubmit: action }) });
 
     expect(await profile.payment.submit()).toBe(true);
-    expect(action).toHaveBeenCalledWith({ card: '4242' }, profile.payment);
+    expect(action).toHaveBeenCalledWith({ card: '4242' }, profile.payment, { index: null });
     expect(profile.payment.form()).toBe(profile.payment);
     expect(profile.payment.card.form()).toBe(profile.payment);
     expect(profile.payment.root()).toBe(profile);

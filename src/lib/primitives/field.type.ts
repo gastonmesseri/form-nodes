@@ -5,6 +5,7 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
+import type { NodeCallbackContext } from '../types/node-callback-context.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NavigationRoot, NearestForm, AnyNode, IsUnknownNode, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -12,6 +13,7 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 export type FieldOptions<TValue = any> = {
   /**
    * Runs synchronously after the exposed value changes, including programmatic writes.
+   * The third argument provides the node's current nearest containing array index.
    * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
    * Callbacks run untracked, without requiring an injector or waiting for async validation.
    * Aggregate writes notify descendants before their parent, once after child updates.
@@ -30,7 +32,7 @@ export type FieldOptions<TValue = any> = {
    * values.length; // 1
    * ```
    */
-  onValueChange?(value: TValue, node: FieldNode<TValue>): void;
+  onValueChange?(value: TValue, node: FieldNode<TValue>, context: NodeCallbackContext): void;
 
   /**
    * Configures each new instance once, synchronously after its API and children are ready.
@@ -344,7 +346,8 @@ export type FieldOptions<TValue = any> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * field('', {
@@ -361,7 +364,7 @@ export type FieldOptions<TValue = any> = {
    * });
    * ```
    */
-  hidden?: boolean | (() => any);
+  hidden?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local disabled state, inherited by descendants. A string disables
    * the node and contributes a user-facing reason, including an empty string.
@@ -380,7 +383,8 @@ export type FieldOptions<TValue = any> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    * - **Strings**: Disable locally and record the text in `disabledReasons()`.
    *
    * ```ts
@@ -404,7 +408,7 @@ export type FieldOptions<TValue = any> = {
    * });
    * ```
    */
-  disabled?: boolean | string | (() => any);
+  disabled?: boolean | string | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local readonly state. Descendants inherit active readonly state.
    * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
@@ -422,7 +426,8 @@ export type FieldOptions<TValue = any> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * field('', {
@@ -439,7 +444,7 @@ export type FieldOptions<TValue = any> = {
    * });
    * ```
    */
-  readonly?: boolean | (() => any);
+  readonly?: boolean | ((context: NodeCallbackContext) => any);
 };
 
 export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
@@ -517,10 +522,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and original node after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+   * @param callback Receives the exposed value, original node, and current array index context after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
    * @param options Optional emitCurrent (default false) delivers the current value synchronously before returning. Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
    */
-  onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+  onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Nearest explicit `form()` containing this field, or `null` when no form workflow owns it.
    * A nested explicit form is the workflow owner instead of the complete structural root.
@@ -578,6 +583,24 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
+  /**
+   * Zero-based position of the item containing this field in its nearest array ancestor.
+   * Nested object groups and forms keep their containing row's position. Nested arrays use
+   * the innermost containing array. A standalone or detached branch returns `null`.
+   * This readonly signal tracks moves, attachment, and detachment without a value edit.
+   * Use `$api.index()` when a child named `index` hides the direct member.
+   *
+   * ```ts
+   * const rows = array({
+   *   details: { email: field('') },
+   * }, { initialLength: 2 });
+   * const email = rows[0]!.details.email;
+   * email.index(); // 0
+   * rows.move(0, 1);
+   * email.index(); // 1
+   * ```
+   */
+  index: Signal<number | null>;
   /**
    * Exposed field value. The `equal` option may retain an earlier equivalent value independently
    * of the latest committed write used by controls and reset.

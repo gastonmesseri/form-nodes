@@ -11,6 +11,7 @@ import type { SyncInputName } from '../configuration/node-input-config';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { AngularControlLike } from './utils/angular-control-like.type';
+import type { NodeCallbackContext } from '../types/node-callback-context.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode, ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
@@ -55,6 +56,7 @@ type WidenFieldShorthand<TValue> =
 export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
   /**
    * Runs synchronously after the exposed value changes, including programmatic writes.
+   * The third argument provides the node's current nearest containing array index.
    * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
    * Callbacks run untracked, without requiring an injector or waiting for async validation.
    * Aggregate writes notify descendants before their parent, once after child updates.
@@ -73,7 +75,7 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * values.length; // 1
    * ```
    */
-  onValueChange?(value: TValue, node: TForm): void;
+  onValueChange?(value: TValue, node: TForm, context: NodeCallbackContext): void;
 
   /**
    * Configures each new instance once, synchronously after its API and children are ready.
@@ -450,7 +452,8 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * form({
@@ -471,7 +474,7 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  hidden?: boolean | (() => any);
+  hidden?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local disabled state, inherited by descendants. A string disables
    * the node and contributes a user-facing reason, including an empty string.
@@ -490,7 +493,8 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    * - **Strings**: Disable locally and record the text in `disabledReasons()`.
    *
    * ```ts
@@ -520,7 +524,7 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  disabled?: boolean | string | (() => any);
+  disabled?: boolean | string | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local readonly state. Descendants inherit active readonly state.
    * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
@@ -538,7 +542,8 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * form({
@@ -559,13 +564,14 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  readonly?: boolean | (() => any);
+  readonly?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Handles permitted submissions with the exposed value snapshot and this form.
    * Return void/null for success, or an error/error array to reject the attempt.
    * Untargeted errors belong to this form. Errors clear on target edits/reset or retry;
    * obsolete async responses are ignored. Rejections and thrown exceptions propagate.
    * Only one submission runs at a time.
+   * The third argument provides this form's current nearest containing array index.
    *
    * **Default:** `undefined`; `submit()` has no submission handler to run.
    *
@@ -591,11 +597,12 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * });
    * ```
    */
-  onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
+  onSubmit?(value: TValue, form: TForm, context: NodeCallbackContext): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
   /**
    * Runs when validation blocks a submission, including pending validation under `valid`.
    * Does not run for concurrent attempts or when `onSubmit` is absent. Native attempts
    * emit `formNodeSubmitBlocked` first; that output also works without a submission handler.
+   * The second argument provides this form's current nearest containing array index.
    *
    * **Default:** `undefined`; no blocked-submission callback.
    *
@@ -611,7 +618,7 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * await profile.submit(); // false
    * ```
    */
-  onSubmitBlocked?(form: TForm): void;
+  onSubmitBlocked?(form: TForm, context: NodeCallbackContext): void;
   /**
    * Selects the validation gate for submission. Pending validation is checked immediately
    * and is not awaited. This option never disables validators.
@@ -806,10 +813,10 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and original node after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+   * @param callback Receives the exposed value, original node, and current array index context after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
    * @param options Optional emitCurrent (default false) delivers the current value synchronously before returning. Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
    */
-  onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+  onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode.
    *
@@ -986,6 +993,21 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
+  /**
+   * Zero-based position of the item containing this form in its nearest array ancestor.
+   * Nested groups and forms keep their containing row's position; nested arrays use the
+   * innermost containing array. Root and detached branches return `null`.
+   * This readonly signal tracks moves, attachment, and detachment without a value edit.
+   * Use `$api.index()` when a child named `index` hides the direct member.
+   *
+   * ```ts
+   * const rows = array({
+   *   details: form({ email: field('') }),
+   * }, { initialLength: 2 });
+   * rows[0]!.details.index(); // 0
+   * ```
+   */
+  index: Signal<number | null>;
   /**
    * Exposed aggregate of public child values. The `equal` option may retain a previous snapshot.
    *

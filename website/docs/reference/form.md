@@ -3,15 +3,16 @@ title: form()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
-import submissionHistorySource from '!!raw-loader!../../examples/submission-history.example.ts';
-import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
-import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
-import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
-import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
-import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
+import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
+import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
+import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
+import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
+import submissionHistorySource from '!!raw-loader!../../examples/submission-history.example.ts';
+import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import formValueContractSource from '!!raw-loader!../../examples/form-value-contract.typecheck.ts';
+import fieldIndexedSiblingSource from '!!raw-loader!../../examples/field-indexed-sibling.example.ts';
+import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
 import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.typecheck.ts';
 import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
@@ -349,9 +350,12 @@ const search = form({
 
 ### ◆ Availability {#availability}
 
+Reactive callbacks receive [`NodeCallbackContext`](./types/node-callback-context.md).
+Its `index` tracks the node's nearest containing array item and is `null` outside arrays.
+
 #### – hidden {#form-hidden-option}
 
-**Signature:** `hidden?: boolean | (() => any)`
+**Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -367,7 +371,7 @@ const businessDetails = form({
 
 #### – disabled {#form-disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => any)`
+**Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -386,7 +390,7 @@ profile.disabledReasons()[0]?.message; // 'Profile is locked'
 
 #### – readonly {#form-readonly-option}
 
-**Signature:** `readonly?: boolean | (() => any)`
+**Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -454,8 +458,8 @@ const profile = form({
 **Signatures:**
 
 ```ts
-onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
-onSubmitBlocked?(form: TForm): void;
+onSubmit?(value: TValue, form: TForm, context: NodeCallbackContext): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
+onSubmitBlocked?(form: TForm, context: NodeCallbackContext): void;
 submitWhen?: 'valid' | 'not-invalid' | 'always';
 ```
 
@@ -464,10 +468,11 @@ form; explicit targets must belong to its captured subtree. `null`, `undefined`,
 indicate success. Errors clear on edits/reset and before retrying; stale responses are ignored.
 See [Server rejection errors](../guides/submission.md#server-errors) for ownership, retry, and lifecycle rules.
 
-Configures `submit()`. `onSubmit(value, form)` runs when the current validation policy allows
-submission. `onSubmitBlocked(form)` runs when validation blocks it, including pending validation
+Configures `submit()`. `onSubmit(value, form, context)` runs when the current validation policy allows
+submission. `onSubmitBlocked(form, context)` runs when validation blocks it, including pending validation
 with `submitWhen: 'valid'`. Pending validation is not awaited. Concurrent attempts and missing
 actions return `false` without invoking `onSubmitBlocked`.
+The context supplies the form's current nearest containing array index, or `null` outside arrays.
 
 ```ts
 const profile = form({
@@ -512,6 +517,7 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
+| [`index()`](#index) | Zero-based position in the nearest containing array, or `null` outside arrays. |
 | [`$api`](#api-1) | Guaranteed collision-safe form API. |
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
@@ -798,6 +804,23 @@ const profile = form({
 
 profile.settings.keyInParent(); // 'settings'
 ```
+
+#### – index() {#index}
+
+**Signature:** `index: Signal<number | null>`
+
+Returns the zero-based position of the item containing this node in its nearest array
+ancestor, or `null` outside arrays. It follows moves, attachment, and detachment.
+An explicit form nested inside a row keeps that row's index. Use `$api.index()` if an
+`index` child hides the direct signal.
+
+The example below reads a field's `index()` to find its typed sibling. A form inside
+the same array row reports that row's index too. The example assumes the node belongs
+to `form.users`: an index identifies a position, not the containing array.
+
+<CodeBlock language="ts" title="field-indexed-sibling.ts">{fieldIndexedSiblingSource}</CodeBlock>
+
+See [tree navigation](../concepts/tree-and-api.md#parent-root-and-path) for the signal contract.
 
 ### ◆ API properties {#api-properties}
 
@@ -1753,12 +1776,12 @@ empty declaration while retaining its configured defaults.
 ## Value change callback {#onvaluechange}
 
 ```ts
-onValueChange?(value: TValue, node: TForm): void;
+onValueChange?(value: TValue, node: TForm, context: NodeCallbackContext): void;
 ```
 
 Add `onValueChange` to the options to react synchronously to committed public value changes.
 The callback skips initialization, respects `equal` and control debounce, and receives the typed
-node. Aggregate operations notify after their children are updated. It runs without dependency
+node plus its current array index context. Aggregate operations notify after their children are updated. It runs without dependency
 tracking or an injection-context requirement and does not wait for asynchronous validation.
 See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
 reset and array behavior, callback ordering, and error handling.
@@ -1768,13 +1791,15 @@ reset and array behavior, callback ordering, and error handling.
 
 ```ts
 onValueChange(
-  callback: (value: FormValue<TNodes>, node: TNode) => void,
+  callback: (value: FormValue<TNodes>, node: TNode, context: NodeCallbackContext) => void,
   options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean },
 ): () => void;
 ```
 
 Here `TNode` is the inferred type of this form instance. Call the instance method to register
 independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
+The third argument supplies the nearest containing array index at delivery time, including for
+`emitCurrent` and debounced subscriptions.
 It returns an idempotent cancellation function and emits no initial value by default. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.

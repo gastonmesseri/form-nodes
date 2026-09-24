@@ -1,9 +1,11 @@
 import { DestroyRef, Injector, untracked } from '@angular/core';
 
 import type { AnyNode } from '../../types/node.type';
+import { createNodeIndexContext } from '../../utils/node-array-index';
+import type { NodeCallbackContext } from '../../types/node-callback-context.type';
 import { getCurrentInjector, resolveNodeInjector, watchNodeInjector } from '../../utils/node-injector';
 
-export type ValueChangeCallback = (value: any, node: any) => void;
+export type ValueChangeCallback = (value: any, node: any, context: NodeCallbackContext) => void;
 
 export const valueSubscriptions = new WeakMap<AnyNode, Set<ValueSubscription>>();
 
@@ -46,7 +48,7 @@ export class ValueSubscription {
     const callback = this.callback;
     if (!callback) return;
     if (this.debounce === 0) {
-      callback(value, node);
+      callback(value, node, createNodeIndexContext(node));
       return;
     }
     clearTimeout(this.timer);
@@ -60,7 +62,7 @@ export class ValueSubscription {
     this.pendingValue = undefined;
     const node = this.node.deref();
     const callback = this.callback;
-    if (node && callback) untracked(() => callback(value, node));
+    if (node && callback) untracked(() => callback(value, node, createNodeIndexContext(node)));
   }
 
   attach(injector: Injector | undefined) {
@@ -110,7 +112,7 @@ export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallbac
     subscription.consumerCleanup = subscription.attach(consumer);
     subscription.setNodeInjector(resolveNodeInjector(node));
     subscription.watchCleanup = watchNodeInjector(node, updateSubscriptionOwner(subscription.reference));
-    if (options?.emitCurrent) untracked(() => callback(node(), node));
+    if (options?.emitCurrent) untracked(() => callback(node(), node, createNodeIndexContext(node)));
   } catch (error) {
     subscription.unsubscribe();
     throw error;

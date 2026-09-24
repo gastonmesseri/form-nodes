@@ -171,8 +171,8 @@ export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: As
       try {
         const validateAsync = validator as unknown as (context: AsyncValidatorContext<TValue> | ParameterizedAsyncValidatorContext<TValue, unknown>) => AsyncValidationResult;
         const validatorContext = options.params === undefined
-          ? { ...baseContext, abortSignal: controller.signal }
-          : { ...baseContext, abortSignal: controller.signal, params };
+          ? { ...baseContext, get index() { return baseContext.index; }, abortSignal: controller.signal }
+          : { ...baseContext, get index() { return baseContext.index; }, abortSignal: controller.signal, params };
         const asyncResult = options.params === undefined
           ? runTracked(validator, () => validateAsync(validatorContext))
           : untracked(() => validateAsync(validatorContext));

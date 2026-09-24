@@ -4,6 +4,7 @@ import type { AnyNode } from './node.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
 import type { CallableNodeApi } from './callable-node-api.type';
+import type { NodeCallbackContext } from './node-callback-context.type';
 import type { ValidationErrorWithTargetNode, ValidationErrorMap, CustomValidationError, ValidatorSource } from '../validation/validation.type';
 
 type UnknownChildrenMembers = 'children' | 'forEachChild' | 'add';
@@ -14,7 +15,7 @@ type UnknownChildrenApi = {
 };
 type GenericOwnerApi<TNode extends AnyNode> = {
   /** Subscribes to exposed value changes; emitCurrent also delivers the current value synchronously before returning. Returns an idempotent cancellation function. */
-  onValueChange(callback: (value: any, node: TNode) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+  onValueChange(callback: (value: any, node: TNode, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   root: Signal<AnyNode>;
   errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>;
   setValidators(validators: ValidatorSource<any, TNode>): void;
@@ -51,4 +52,3 @@ export type GenericFormNode = Signal<any> & { (): any; $api: CallableNodeApi<Gen
  * ```
  */
 export type GenericGroupNode = Signal<any> & { (): any; $api: CallableNodeApi<GenericGroupApi> };
-

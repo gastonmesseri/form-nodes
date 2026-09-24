@@ -8,6 +8,7 @@ import { isNode, markAsNode } from './utils/node-marker';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
+import { getClosestArrayIndex, createNodeIndexContext } from '../utils/node-array-index';
 import { watchCommittedValue } from './utils/watch-committed-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -130,6 +131,8 @@ export class FormGroupNode<TNodes extends Nodes> {
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
 
+  index = computed(() => getClosestArrayIndex(this.node));
+
   form = computed(() => this.nodeType === 'form' ? this.node : this.parent()?.$api.form() ?? null);
 
   root = computed(() => this.parent()?.$api.root() ?? this.node) as FormApi<TNodes>['root'];
@@ -159,7 +162,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   ownDisabledReason = computed(() => createDisabledReason(this.selfDisabled(), this.node), { equal: shallowEqual });
 
   configuredDisabledReason = computed(() => {
-    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled), this.node);
+    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled, this.node), this.node);
   }, { equal: shallowEqual });
 
   disabledReasons = computed(() => [
@@ -173,7 +176,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   readonly = computed(() => {
     return this.selfReadonly()
-      || readStateSource(this.options?.readonly)
+      || readStateSource(this.options?.readonly, this.node)
       || this.parent()?.$api.readonly() === true;
   });
 
@@ -181,7 +184,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   hidden = computed(() => {
     return this.selfHidden()
-      || readStateSource(this.options?.hidden)
+      || readStateSource(this.options?.hidden, this.node)
       || this.parent()?.$api.hidden() === true;
   });
 
@@ -494,7 +497,7 @@ export class FormGroupNode<TNodes extends Nodes> {
         || (this.options?.submitWhen === 'valid' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
       if (!shouldRun) {
         notifications?.blocked();
-        if (onSubmit) untracked(() => this.options?.onSubmitBlocked?.(this.node));
+        if (onSubmit) untracked(() => this.options?.onSubmitBlocked?.(this.node, createNodeIndexContext(this.node)));
         return false;
       }
       if (!onSubmit) return false;
@@ -504,7 +507,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     }
     try {
       const complete = captureSubmission(this.node);
-      const result = await untracked(() => onSubmit(this.exposedValue(), this.node));
+      const result = await untracked(() => onSubmit(this.exposedValue(), this.node, createNodeIndexContext(this.node)));
       return complete(result);
     } finally {
       this.selfSubmitting.set(false);
@@ -586,6 +589,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
+      index: this.index,
       value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: FormSet<TNodes>) => this.set(next), (next: FormSet<TNodes>) => this.controlValueBuffer.set(next)),
       set: (value: FormSet<TNodes>) => this.set(value),
       update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),

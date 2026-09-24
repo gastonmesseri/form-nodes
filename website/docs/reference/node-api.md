@@ -77,6 +77,7 @@ See its dedicated reference for the signature, examples, and package-instance li
 | `parent()` | Direct parent or null at the root |
 | `path()` | Reactive string path from the root |
 | `keyInParent()` | Property name, array index, or null |
+| `index()` | Reactive zero-based position in the nearest containing array, or null |
 
 Forms and arrays additionally expose `patch()`, aggregate `flush()`, `debouncing()`, and subtree
 `focus()`. Use `set()` rather than patching a leaf field.

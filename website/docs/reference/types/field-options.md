@@ -20,7 +20,7 @@ Use when sharing field configuration. Let `field()` infer value and owner types 
 
 ```ts
 type FieldOptions<TValue = any> = {
-    onValueChange?(value: TValue, node: FieldNode<TValue>): void;
+    onValueChange?(value: TValue, node: FieldNode<TValue>, context: NodeCallbackContext): void;
     configure?: (api: FieldNode<TValue>['$api']) => void;
     syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | {
         inputs: 'declared' | 'all' | readonly SyncInputName[];
@@ -33,9 +33,9 @@ type FieldOptions<TValue = any> = {
     inheritInjector?: boolean;
     adoptBindingInjector?: boolean;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => any);
-    disabled?: boolean | string | (() => any);
-    readonly?: boolean | (() => any);
+    hidden?: boolean | ((context: NodeCallbackContext) => any);
+    disabled?: boolean | string | ((context: NodeCallbackContext) => any);
+    readonly?: boolean | ((context: NodeCallbackContext) => any);
 };
 ```
 
@@ -51,7 +51,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
+| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. The third argument provides the node's current nearest containing array index. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
 | `configure` | Configures each new instance once, synchronously after its API and children are ready. Receives the collision-safe callable `$api`. Runs untracked; validators installed here track dependencies when they execute. Ancestors may not be attached yet. Use the callback argument rather than the variable being initialized. Fresh template clones run their own callback; reset, reordering, and edits do not rerun it. Returned values are ignored; this is neither an async hook nor a cleanup registration. |
 | `syncInputs` | Reactively copies node state and constraints into matching custom-control inputs. This is one-way node-to-component synchronization; it does not enable value binding, execute validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs. |
 | `bindInputOutputPairs` | Connects recognized value/valueChange or checked/checkedChange input/output pairs. CVAs and actual model signals keep priority. Enabling a pair connects values and interaction hooks; optional state inputs are selected independently by `syncInputs`. |
@@ -70,5 +70,6 @@ The declaration above also includes inherited contracts and overloads where appl
 - [Configuration reference](../configuration.md)
 - [Public types index](./index.md)
 - [FieldNode](./field-node.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [SyncInputName](./sync-input-name.md)
 - [ValidatorSource](./validator-source.md)

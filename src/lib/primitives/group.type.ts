@@ -4,6 +4,7 @@ import type { NodeSignal } from '../types/node-signal.type';
 import type { GenericGroupNode } from '../types/generic-node.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
+import type { NodeCallbackContext } from '../types/node-callback-context.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, AnyNode, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -13,6 +14,7 @@ import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, No
 export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * Runs synchronously after the exposed value changes, including programmatic writes.
+   * The third argument provides the node's current nearest containing array index.
    * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
    * Callbacks run untracked, without requiring an injector or waiting for async validation.
    * Aggregate writes notify descendants before their parent, once after child updates.
@@ -31,7 +33,7 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * values.length; // 1
    * ```
    */
-  onValueChange?(value: TValue, node: TGroup): void;
+  onValueChange?(value: TValue, node: TGroup, context: NodeCallbackContext): void;
 
   /**
    * Configures each new instance once, synchronously after its API and children are ready.
@@ -163,7 +165,8 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * group({
@@ -184,7 +187,7 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * });
    * ```
    */
-  hidden?: boolean | (() => any);
+  hidden?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local disabled state, inherited by descendants. A string disables
    * the node and contributes a user-facing reason, including an empty string.
@@ -203,7 +206,8 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    * - **Strings**: Disable locally and record the text in `disabledReasons()`.
    *
    * ```ts
@@ -233,7 +237,7 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * });
    * ```
    */
-  disabled?: boolean | string | (() => any);
+  disabled?: boolean | string | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local readonly state. Descendants inherit active readonly state.
    * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
@@ -251,7 +255,8 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * group({
@@ -272,7 +277,7 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * });
    * ```
    */
-  readonly?: boolean | (() => any);
+  readonly?: boolean | ((context: NodeCallbackContext) => any);
 };
 
 /**
@@ -398,10 +403,10 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * stop();
      * ```
      *
-     * @param callback Receives the exposed value and original node after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+     * @param callback Receives the exposed value, original node, and current array index context after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
      * @param options Optional emitCurrent (default false) delivers the current value synchronously before returning. Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
      */
-    onValueChange(callback: (value: FormValue<TNodes>, node: GroupNode<TNodes, TParent>) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+    onValueChange(callback: (value: FormValue<TNodes>, node: GroupNode<TNodes, TParent>, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
     /**
      * Replaces this group's validators while preserving its node type in inline callbacks.
      *

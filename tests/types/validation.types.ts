@@ -8,6 +8,7 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
   const node = context.node();
   type _ApiPath = Expect<Equal<ReturnType<typeof node.$api.path>, readonly string[]>>;
   type _Path = Expect<Equal<ReturnType<typeof context.path>, readonly string[]>>;
+  type _Index = Expect<Equal<typeof context.index, number | null>>;
   return context.value() ? null : { kind: 'missingName' };
 };
 

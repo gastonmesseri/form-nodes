@@ -123,6 +123,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/global-form-nodes-config",
       "reference/types/group-options",
       "reference/types/mark-as-touched-options",
+      "reference/types/node-callback-context",
       "reference/types/sync-input-name",
       "reference/types/sync-inputs",
       "reference/types/validator-message-parameters",

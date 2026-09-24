@@ -21,7 +21,7 @@ Use for helpers that operate on field state and actions without accepting a node
 ```ts
 type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'field';
-    onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: {
+    onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>, context: NodeCallbackContext) => void, options?: {
         injector?: Injector;
         debounce?: number;
         emitCurrent?: boolean;
@@ -31,6 +31,7 @@ type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
     parent: Signal<TParent | null>;
     path: Signal<readonly string[]>;
     keyInParent: Signal<NodeKeyInParent<TParent>>;
+    index: Signal<number | null>;
     value: NodeValueSignal<TValue, TValue>;
     asReadonly(): Signal<TValue>;
     set(value: TValue): void;
@@ -115,6 +116,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `parent` | Immediate structural parent of this field, or `null` when it is a root or has been detached. |
 | `path` | Property and array-index segments from the complete root to this field. Root fields use `[]`. |
 | `keyInParent` | Property or array index under which this field is stored, or `null` when it is a root field. |
+| `index` | Zero-based position of the item containing this field in its nearest array ancestor. Nested object groups and forms keep their containing row's position. Nested arrays use the innermost containing array. A standalone or detached branch returns `null`. This readonly signal tracks moves, attachment, and detachment without a value edit. Use `$api.index()` when a child named `index` hides the direct member. |
 | `value` | Exposed field value. The `equal` option may retain an earlier equivalent value independently of the latest committed write used by controls and reset. |
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `set` | Assigns a committed value immediately without marking the field dirty. |
@@ -173,6 +175,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [CustomValidationError](./custom-validation-error.md)
 - [DisabledReason](./disabled-reason.md)
 - [FieldNode](./field-node.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)

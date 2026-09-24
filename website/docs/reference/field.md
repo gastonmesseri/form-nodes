@@ -3,12 +3,13 @@ title: field()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
-import fieldLiteralUnionSource from '!!raw-loader!../../examples/field-literal-union.example.ts';
-import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
 import fieldEqualitySource from '!!raw-loader!../../examples/field-equality.example.ts';
 import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.example.ts';
+import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
+import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
+import fieldLiteralUnionSource from '!!raw-loader!../../examples/field-literal-union.example.ts';
+import fieldIndexedSiblingSource from '!!raw-loader!../../examples/field-indexed-sibling.example.ts';
 
 # field() {#field}
 
@@ -337,9 +338,12 @@ const username = field('', {
 
 ### ◆ Availability {#availability}
 
+Reactive callbacks receive [`NodeCallbackContext`](./types/node-callback-context.md).
+Its `index` tracks the node's nearest containing array item and is `null` outside arrays.
+
 #### – disabled {#field-disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => any)`
+**Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -355,7 +359,7 @@ username.disabled(); // true
 
 #### – readonly {#field-readonly-option}
 
-**Signature:** `readonly?: boolean | (() => any)`
+**Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -369,7 +373,7 @@ const username = field('', {
 
 #### – hidden {#field-hidden-option}
 
-**Signature:** `hidden?: boolean | (() => any)`
+**Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -442,6 +446,7 @@ state API. Signal properties must be called to read their current value.
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
+| [`index()`](#index) | Zero-based position in the nearest containing array, or `null` outside arrays. |
 | [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Value and control** | |
 | [`set(value)`](#set) | Immediately assigns a committed value without marking the field dirty. |
@@ -670,6 +675,25 @@ const profile = form({
 
 profile.username.keyInParent(); // 'username'
 ```
+
+#### – index() {#index}
+
+**Signature:** `index: Signal<number | null>`
+
+Returns the zero-based position of the item containing this node in its nearest array
+ancestor, or `null` outside arrays. It follows moves, attachment, and detachment.
+Nested groups and forms keep their containing row index. Use `$api.index()` if an
+`index` child hides the direct signal.
+
+Here the validator belongs to the array template, so every cloned email field can use
+`node().index()` to select its typed row and read `name`. The non-null assertion assumes
+the field belongs to `form.users`; `index()` itself can return `null` when detached.
+An index identifies a position, not the containing array. The rule reacts to sibling
+edits and row moves.
+
+<CodeBlock language="ts" title="field-indexed-sibling.ts">{fieldIndexedSiblingSource}</CodeBlock>
+
+See [tree navigation](../concepts/tree-and-api.md#parent-root-and-path) for the signal contract.
 
 #### – $api {#api-1}
 
@@ -1381,7 +1405,7 @@ and native reset buttons.
 ## Value change callback {#onvaluechange}
 
 ```ts
-onValueChange?(value: TValue, node: FieldNode<TValue>): void;
+onValueChange?(value: TValue, node: FieldNode<TValue>, context: NodeCallbackContext): void;
 ```
 
 :::info Node callback and binding outputs
@@ -1397,7 +1421,7 @@ Use the callback for model changes from either source, or the outputs for edits 
 
 Add `onValueChange` to the options to react synchronously to committed public value changes.
 The callback skips initialization, respects `equal` and control debounce, and receives the typed
-node. Aggregate operations notify after their children are updated. It runs without dependency
+node plus its current array index context. Aggregate operations notify after their children are updated. It runs without dependency
 tracking or an injection-context requirement and does not wait for asynchronous validation.
 See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
 reset and array behavior, callback ordering, and error handling.
@@ -1407,13 +1431,15 @@ reset and array behavior, callback ordering, and error handling.
 
 ```ts
 onValueChange(
-  callback: (value: TValue, node: TNode) => void,
+  callback: (value: TValue, node: TNode, context: NodeCallbackContext) => void,
   options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean },
 ): () => void;
 ```
 
 Here `TNode` is the inferred type of this field instance. Call the instance method to register
 independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
+The third argument supplies the nearest containing array index at delivery time, including for
+`emitCurrent` and debounced subscriptions.
 It returns an idempotent cancellation function and emits no initial value by default. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.

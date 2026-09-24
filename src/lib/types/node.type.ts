@@ -8,6 +8,7 @@ import type { ArrayNode } from '../primitives/array.type';
 import type { CallableNodeApi } from './callable-node-api.type';
 import type { NodeValueSignal } from './node-value-signal.type';
 import type { NodeErrorsSignal } from './node-errors-signal.type';
+import type { NodeCallbackContext } from './node-callback-context.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorMap, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
@@ -32,10 +33,11 @@ export type MarkAsTouchedOptions = {
  * A static or reactive condition that disables a node, optionally with a user-facing reason.
  * Reactive callbacks must return a boolean or string. Their return type is intentionally unchecked
  * to support self-referencing declarations; an explicit return annotation restores result checking.
+ * The callback receives `NodeCallbackContext.index` for the nearest containing array item.
  *
  * **Return Type:** `boolean | string` for the callback.
  */
-export type DisabledStateSource = boolean | string | (() => any);
+export type DisabledStateSource = boolean | string | ((context: NodeCallbackContext) => any);
 
 /** Internal strategy used to delay control-originated values before committing them to the model. */
 export type ControlDebounce = number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
@@ -106,10 +108,10 @@ export type NodeApi = {
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and node; emitCurrent also delivers the current value at registration.
+   * @param callback Receives the exposed value, node, and current array index context; emitCurrent also delivers the current value at registration.
    * @param options Optional subscription injector, debounce in milliseconds, and emitCurrent (default false).
    */
-  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+  onValueChange(callback: (value: any, node: AnyNode, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Nearest explicit `form()` containing this node, or `null` when no form workflow owns it.
    *
@@ -195,6 +197,8 @@ export type NodeApi = {
    * ```
    */
   keyInParent: Signal<string | number | null>;
+  /** Zero-based position in the nearest containing array, or `null` outside any array. */
+  index: Signal<number | null>;
   /**
    * Assigns a complete committed value immediately without marking the node dirty.
    *

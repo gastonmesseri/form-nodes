@@ -1,3 +1,4 @@
+import { createNodeIndexContext } from '../../utils/node-array-index';
 import type { DisabledReason, DisabledStateSource, AnyNode } from '../../types/node.type';
 
 export type DisabledState = boolean | string;
@@ -8,8 +9,8 @@ export const getInitialDisabledState = (source?: DisabledStateSource): DisabledS
 };
 
 /** Reads only a continuing reactive disabled condition; static options belong to mutable state. */
-export const readConfiguredDisabledState = (source?: DisabledStateSource): DisabledState => {
-  return typeof source === 'function' ? source() : false;
+export const readConfiguredDisabledState = (source: DisabledStateSource | undefined, node: AnyNode): DisabledState => {
+  return typeof source === 'function' ? source(createNodeIndexContext(node)) : false;
 };
 
 /** Converts an active disabled state into its public reason while preserving an optional message. */

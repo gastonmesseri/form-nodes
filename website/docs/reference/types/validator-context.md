@@ -14,12 +14,12 @@ import type { ValidatorContext } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access.
+Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. `ctx.index` is the current zero-based position in the nearest containing array, or null when there is none; it is a number read rather than a signal call. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access.
 
 ## Declaration
 
 ```ts
-type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
+type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & NodeCallbackContext & {
     readonly root: ValidatorRootSignal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
     readonly parent: Pick<TApi['parent'], keyof TApi['parent']> & {
         <TParent extends {
@@ -60,5 +60,6 @@ The declaration above also includes inherited contracts and overloads where appl
 - [Validation reference](../validation.md)
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [ValidatorApi](./validator-api.md)
 - [ValidatorReadonlyApi](./validator-readonly-api.md)

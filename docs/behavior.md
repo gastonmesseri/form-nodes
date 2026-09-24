@@ -951,7 +951,7 @@ This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
-Validator callbacks receive a stable context containing `value`, `node`, `field`, `parent`, and `path`. Read interaction, availability, required, and submission signals through `node()` or `field()`; those signals are no longer copied onto the context. `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `node().$api` and `field().$api` expose the node API when an alias is needed:
+Validator callbacks receive a stable context containing `value`, `node`, `field`, `parent`, `path`, and `index`. Read interaction, availability, required, and submission signals through `node()` or `field()`; those signals are no longer copied onto the context. `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `node().$api` and `field().$api` expose the node API when an alias is needed:
 
 ```ts
 field('David', {
@@ -966,7 +966,40 @@ field('David', {
 });
 ```
 
-The value and navigation properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` is a readonly signal of the generic field/form/group/array API union.
+The value and signal navigation properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` is a readonly signal of the generic field/form/group/array API union.
+
+`context.index` is a zero-based `number | null` property, not a signal. The same
+`NodeCallbackContext` index is available to configured `disabled`, `readonly`, and `hidden`
+functions and as the third argument of construction and instance `onValueChange` callbacks.
+Form `onSubmit` receives it as a third argument; `onSubmitBlocked` receives it as a second argument.
+It reads the node's public `index()` signal when the callback accesses the property. Every node
+exposes `index: Signal<number | null>`, which reports the current position of the item containing
+that node in the nearest array ancestor, even through
+nested groups or forms. For nested arrays, the innermost containing array wins. An array node
+inside an outer array reads its position in that outer array; a standalone node or detached
+branch without an array ancestor reads `null`. Availability callbacks track this structural read
+and reevaluate after row movement without a value edit. Value-change callbacks run untracked and
+receive the index at delivery time, including immediate `emitCurrent` and delayed subscriptions;
+movement alone does not notify a child whose exposed value is unchanged. Submission callbacks
+read the current position when invoked. Reads inside reactive synchronous validators, or
+before the first `await` of ordinary asynchronous validators, depend on the relevant parent and
+item-key signals. Moving, attaching, or detaching the row then revalidates without a value edit;
+pending async work is canceled and restarted with the current index. Parameterized async validators
+should read `index` in `params` when the position must trigger a new request. Nonreactive rules do not
+track the read. This intentionally extends Angular 22 Signal Forms' `ItemFieldContext.index`,
+which is available for direct array items only. Inspected Angular `22.2.x` at commit
+`1ba9b865a9f3dfcd6057f3b18150c961995a4057`: `packages/forms/signals/src/api/types.ts`,
+`packages/forms/signals/src/field/context.ts`, `packages/forms/signals/src/field/structure.ts`,
+and `packages/forms/signals/test/node/field_context.spec.ts`.
+Unlike Angular's item-only context signal, this library exposes the same nearest-array location
+on every node. `keyInParent()` remains the immediate property or item key and can be a string
+inside a row. `index()` and `$api.index()` are the same readonly signal; child-name collisions
+use the `$api` member. The computed signal tracks parent and item-key changes, including row
+moves, reattachment, and detachment, without depending on value edits or keeping a node alive.
+For submission timing and blocked-action behavior, also inspected
+`packages/forms/signals/src/api/structure.ts` (`submit`) and
+`packages/forms/signals/test/node/submit.spec.ts` on the same branch. Angular passes a submitted
+field and detail object to its action; this library's node callback context is its own API.
 
 Synchronous validators execute inside the node's internal `computed()`. Any Angular signal read directly by the callback becomes a dependency, including signals external to the form tree. No additional `computed()` wrapper is required:
 
@@ -4232,8 +4265,8 @@ normalization are Form Nodes API additions; Angular's public CVA validator bridg
 
 ## Committed value change callbacks
 
-All node options accept `onValueChange(value, node)`, with the primitive's inferred exposed value
-and node type. Registration is per instance, captured at construction, and copied into template
+All node options accept `onValueChange(value, node, context)`, with the primitive's inferred exposed value
+and node type and the shared `NodeCallbackContext`. Registration is per instance, captured at construction, and copied into template
 clones. No initial call occurs: configure-time writes and initial row assignment are suppressed.
 Committed writes, control commits after debounce, aggregate patch/reset/flush, and structural
 changes notify when the publicly exposed value changes. Pending or canceled control drafts do
@@ -4269,7 +4302,7 @@ do not emit a callback, and recovery compares against the last successfully obse
 
 Every node and its collision-safe `$api` expose `onValueChange(callback, { injector?, debounce?, emitCurrent? })`, returning
 an idempotent cancellation function. Callback value and node arguments preserve the concrete
-primitive and parent types. Multiple registrations are independent, including registrations of
+primitive and parent types; the third argument supplies the current array index. Multiple registrations are independent, including registrations of
 the same function, and coexist with the unchanged factory callback. Instance subscriptions are
 not copied into template clones; a configure callback can register a fresh subscription per clone.
 

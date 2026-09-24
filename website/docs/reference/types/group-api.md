@@ -21,7 +21,7 @@ Use for structural-group API operations. A group's `$api` combines this contract
 ```ts
 type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = Omit<FormApi<TNodes, TParent>, 'onValueChange' | 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitted' | 'submitting' | 'validationStatus'> & {
     nodeType(): 'group';
-    onValueChange(callback: (value: FormValue<TNodes>, node: GroupNode<TNodes, TParent>) => void, options?: {
+    onValueChange(callback: (value: FormValue<TNodes>, node: GroupNode<TNodes, TParent>, context: NodeCallbackContext) => void, options?: {
         injector?: Injector;
         debounce?: number;
         emitCurrent?: boolean;
@@ -90,6 +90,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [FormValue](./form-value.md)
 - [GroupNode](./group-node.md)
 - [GroupValue](./group-value.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

@@ -75,11 +75,13 @@ These properties belong directly in the second `form()` argument.
 - `'not-invalid'` is the default: pending validation permits submission unless errors make the form invalid.
 - `'always'` runs the action regardless of validation state, without disabling validators. Previous submission errors are cleared before every non-concurrent attempt with an action.
 
-`onSubmit(value, form)` receives the exposed value snapshot first and the submitted form second.
+`onSubmit(value, form, context)` receives the exposed value snapshot, submitted form, and
+[`NodeCallbackContext`](../reference/types/node-callback-context.md). `context.index` is the
+form's current zero-based position in its nearest containing array, or `null` outside arrays.
 It may return an error, a readonly error array, `null`, or `void`, directly or through a promise-like value.
 Submission waits for the result; thrown or rejected failures propagate.
 
-Use `onSubmitBlocked(form)` for synchronous UI feedback when validation blocks an attempt. It also
+Use `onSubmitBlocked(form, context)` for synchronous UI feedback when validation blocks an attempt. It also
 runs for pending validation with `'valid'`; submission does not wait for validation or retry automatically.
 It does not run for concurrent attempts or when `onSubmit` is absent. Without `onSubmit`, `submit()`
 still marks and flushes the subtree and returns `false`.

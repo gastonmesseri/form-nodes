@@ -4,14 +4,15 @@ description: Reference for object groups without an independent submission workf
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
-import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
-import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
-import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
-import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
-import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts';
 import groupFocusSource from '!!raw-loader!../../examples/group-focus.typecheck.ts';
+import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
+import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
+import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
+import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
+import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
+import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
+import fieldIndexedSiblingSource from '!!raw-loader!../../examples/field-indexed-sibling.example.ts';
 import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
 # group() {#group}
@@ -334,9 +335,12 @@ const address = group({
 
 ### ◆ Availability {#availability}
 
+Reactive callbacks receive [`NodeCallbackContext`](./types/node-callback-context.md).
+Its `index` tracks the node's nearest containing array item and is `null` outside arrays.
+
 #### – hidden {#group-hidden-option}
 
-**Signature:** `hidden?: boolean | (() => any)`
+**Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -352,7 +356,7 @@ const shippingAddress = group({
 
 #### – disabled {#group-disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => any)`
+**Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -371,7 +375,7 @@ address.disabledReasons()[0]?.message; // 'Address is managed by your organizati
 
 #### – readonly {#group-readonly-option}
 
-**Signature:** `readonly?: boolean | (() => any)`
+**Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -470,6 +474,7 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
+| [`index()`](#index) | Zero-based position in the nearest containing array, or `null` outside arrays. |
 | [`$api`](#api-1) | Guaranteed collision-safe group API. |
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
@@ -806,6 +811,23 @@ const profile = form({
 
 profile.address.keyInParent(); // 'address'
 ```
+
+#### – index() {#index}
+
+**Signature:** `index: Signal<number | null>`
+
+Returns the zero-based position of the item containing this node in its nearest array
+ancestor, or `null` outside arrays. It follows moves, attachment, and detachment.
+A group nested inside a row keeps that row's index. Use `$api.index()` if an `index`
+child hides the direct signal.
+
+The example below reads a field's `index()` to find its typed sibling. A group inside
+the same array row reports that row's index too. The example assumes the node belongs
+to `form.users`: an index identifies a position, not the containing array.
+
+<CodeBlock language="ts" title="field-indexed-sibling.ts">{fieldIndexedSiblingSource}</CodeBlock>
+
+See [tree navigation](../concepts/tree-and-api.md#parent-root-and-path) for the signal contract.
 
 ### ◆ API properties {#api-properties}
 
@@ -1725,12 +1747,12 @@ empty declaration while retaining its configured defaults.
 ## Value change callback {#onvaluechange}
 
 ```ts
-onValueChange?(value: TValue, node: TGroup): void;
+onValueChange?(value: TValue, node: TGroup, context: NodeCallbackContext): void;
 ```
 
 Add `onValueChange` to the options to react synchronously to committed public value changes.
 The callback skips initialization, respects `equal` and control debounce, and receives the typed
-node. Aggregate operations notify after their children are updated. It runs without dependency
+node plus its current array index context. Aggregate operations notify after their children are updated. It runs without dependency
 tracking or an injection-context requirement and does not wait for asynchronous validation.
 See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
 reset and array behavior, callback ordering, and error handling.
@@ -1740,13 +1762,15 @@ reset and array behavior, callback ordering, and error handling.
 
 ```ts
 onValueChange(
-  callback: (value: GroupValue<TNodes>, node: TNode) => void,
+  callback: (value: GroupValue<TNodes>, node: TNode, context: NodeCallbackContext) => void,
   options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean },
 ): () => void;
 ```
 
 Here `TNode` is the inferred type of this group instance. Call the instance method to register
 independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
+The third argument supplies the nearest containing array index at delivery time, including for
+`emitCurrent` and debounced subscriptions.
 It returns an idempotent cancellation function and emits no initial value by default. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.

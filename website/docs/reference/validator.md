@@ -5,6 +5,7 @@ title: validator()
 import CodeBlock from '@theme/CodeBlock';
 import nonReactiveValidatorSource from '!!raw-loader!../../examples/non-reactive-validator.example.ts';
 import reusableValidatorNodeSource from '!!raw-loader!../../examples/reusable-validator-node.typecheck.ts';
+import validatorIndexSource from '!!raw-loader!../../examples/validator-index.example.ts';
 
 # validator() {#validator}
 
@@ -162,6 +163,7 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 | [`root()`](#custom-validator-context-root) | Complete structural root; identical to node root navigation. |
 | [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
+| [`index`](#custom-validator-context-index) | Current zero-based position in the nearest containing array, or `null`. |
 | [Node state](#custom-validator-context-state) | Read interaction and availability signals through `ctx.node()` or `ctx.field()`. |
 
 The context and its signals are stable. By default, signal reads while the validator executes
@@ -191,6 +193,7 @@ create a cycle at runtime. `ValidatorNodeView` is an internal helper name, not a
 | [`root`](#custom-validator-context-root) | root-node signal | Complete structural root |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
+| [`index`](#custom-validator-context-index) | `number | null` | Current position in the nearest containing array |
 
 <div className="api-member-reference">
 
@@ -289,6 +292,26 @@ validator that reads the path can rerun when an array item moves.
 ```ts
 validator<string>(({ path }) => path().length > 3 ? { kind: 'tooDeep' } : null);
 ```
+
+#### – index {#custom-validator-context-index}
+
+**Signature:** `index: number | null`
+
+The zero-based position of the item containing the validated node in its nearest array ancestor.
+It is available from a row's fields, nested groups and forms, and from array items themselves.
+With nested arrays, the innermost containing array wins. A nested array node reads its own
+position in an outer array. Nodes with no containing array, including detached rows, read `null`.
+
+`index` is a number read, not a signal call; the same location is available as the readonly
+[`node.index()` signal](./node-api.md#shared-value-and-tree-api). Reactive validators that read it run again when
+the row moves, attaches, or detaches, even if its value does not change. Ordinary asynchronous
+validators track a read made before their first `await`, cancel stale work, and restart with the
+new position. For parameterized asynchronous validators, read it in `params` when the position
+should start a new request. Rules configured with `reactive: false` do not track index changes.
+Reading `index` does not identify or type the containing array; a numeric lookup on a known array
+can still return `undefined`.
+
+<CodeBlock language="ts" title="validator-index.example.ts">{validatorIndexSource}</CodeBlock>
 
 ### ◆ State {#state}
 

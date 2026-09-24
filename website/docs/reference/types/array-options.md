@@ -20,16 +20,16 @@ Use for array initialization and reconciliation options. Keep initial records an
 
 ```ts
 type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
-    onValueChange?(value: TValue, node: TArray): void;
+    onValueChange?(value: TValue, node: TArray, context: NodeCallbackContext): void;
     configure?: (api: TArray['$api']) => void;
     configureEach?: (api: TArray extends {
         readonly [index: number]: AnyNode | undefined;
     } ? NonNullable<TArray[number]>['$api'] : never) => void;
     validators?: ValidatorSource<TValue, TArray>;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => any);
-    disabled?: boolean | string | (() => any);
-    readonly?: boolean | (() => any);
+    hidden?: boolean | ((context: NodeCallbackContext) => any);
+    disabled?: boolean | string | ((context: NodeCallbackContext) => any);
+    readonly?: boolean | ((context: NodeCallbackContext) => any);
     initialValue?: TValue | number | null;
     initialLength?: number;
     trackBy?: TValue extends readonly (infer TItemValue)[] ? ((value: TItemValue, index: number) => unknown) | (TItemValue extends object ? Extract<keyof TItemValue, string> : never) : never;
@@ -53,7 +53,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
+| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. The third argument provides the node's current nearest containing array index. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
 | `configure` | Configures each new instance once, synchronously after its API and children are ready. Receives the collision-safe callable `$api`. Runs untracked; validators installed here track dependencies when they execute. Ancestors may not be attached yet. Use the callback argument rather than the variable being initialized. Fresh template clones run their own callback; reset, reordering, and edits do not rerun it. Returned values are ignored; this is neither an async hook nor a cleanup registration. |
 | `configureEach` | Configures each newly created item once with its typed, collision-safe callable `$api`. Runs after the item's own configure callback and supplied initial value, before attachment to this array and capture of its reset-to-initial baseline. Children are ready; ancestors may not be attached. Works with templates and factories, without requiring an injector. Runs synchronously and untracked, with value-change notifications suppressed. Returned values are ignored; promises are not awaited and returned functions are not cleanup hooks. Edits, moves, and resets of reused items do not rerun it; newly created items do. The original template and templateValue() drafts do not run this callback. |
 | `validators` | Registers rules on this node's exposed value. Aggregate rules receive the complete object or array; put per-field rules on children. A synchronous composition may return validators; asynchronous rules must be wrapped with `asyncValidator()`. Null and undefined entries are ignored. Contexts are typed; inline returns intentionally allow self-reference inference. Use `validator()` or an explicit result annotation when returned errors also need strict checking. |
@@ -72,4 +72,5 @@ The declaration above also includes inherited contracts and overloads where appl
 - [AnyNode](./any-node.md)
 - [ArrayNode](./array-node.md)
 - [FormOptions](./form-options.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [ValidatorSource](./validator-source.md)

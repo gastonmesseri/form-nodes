@@ -15,14 +15,76 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('passes the nearest array index to value callbacks at delivery time', () => {
+    vi.useFakeTimers();
+    try {
+      const configured: Array<number | null> = [];
+      const subscribed: Array<number | null> = [];
+      const rows = array({
+        details: {
+          email: field('', { onValueChange(_value, _node, { index }) { configured.push(index); } }),
+        },
+      }, { initialLength: 2 });
+      const email = rows[0]!.details.email;
+      email.onValueChange((_value, _node, { index }) => { subscribed.push(index); }, { emitCurrent: true, debounce: 50 });
+      expect(subscribed).toEqual([0]);
+
+      email.set('Ada');
+      expect(configured).toEqual([0]);
+      rows.move(0, 1);
+      expect(configured).toEqual([0]);
+      vi.advanceTimersByTime(50);
+      expect(subscribed).toEqual([0, 1]);
+
+      email.set('Grace');
+      expect(configured).toEqual([0, 1]);
+      rows.removeAt(1);
+      vi.advanceTimersByTime(50);
+      expect(subscribed).toEqual([0, 1, null]);
+      email.set('Lin');
+      expect(configured).toEqual([0, 1, null]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses the innermost containing array for nested row callbacks', () => {
+    const observed: Array<number | null> = [];
+    const outer = array({
+      inner: array({
+        code: field('', {
+          readonly: ({ index }) => index === 0,
+          onValueChange(_value, _node, { index }) { observed.push(index); },
+        }),
+      }, { initialLength: 2 }),
+    }, { initialLength: 2 });
+    const code = outer[1]!.inner[0]!.code;
+    expect(outer.index()).toBeNull();
+    expect(outer[1]!.inner.index()).toBe(1);
+    expect(code.index()).toBe(0);
+    expect(code.readonly()).toBe(true);
+    code.set('A');
+    expect(observed).toEqual([0]);
+
+    outer.move(1, 0);
+    expect(outer[0]!.inner.index()).toBe(0);
+    expect(code.index()).toBe(0);
+    expect(code.readonly()).toBe(true);
+    outer[0]!.inner.move(0, 1);
+    expect(code.index()).toBe(1);
+    expect(code.readonly()).toBe(false);
+    code.set('B');
+    expect(observed).toEqual([0, 1]);
+  });
+
   it('emits its current array value synchronously when emitCurrent is requested', () => {
     const rows = array({ name: field('Ada') }, { initialLength: 1 });
     const notify = vi.fn();
     const stop = rows.onValueChange(notify, { emitCurrent: true });
 
-    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Ada' }], rows);
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Ada' }], rows, { index: null });
     rows.push({ name: 'Grace' });
-    expect(notify).toHaveBeenLastCalledWith([{ name: 'Ada' }, { name: 'Grace' }], rows);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Ada' }, { name: 'Grace' }], rows, { index: null });
     stop();
     rows.clear();
     expect(notify).toHaveBeenCalledTimes(2);
@@ -44,9 +106,9 @@ describe('array', () => {
     expect(configured).toHaveBeenCalledTimes(2);
     expect(rows[1]).toBe(first);
     first.code.set('updated');
-    expect(configured).toHaveBeenLastCalledWith('updated', first.code);
+    expect(configured).toHaveBeenLastCalledWith('updated', first.code, { index: 1 });
     rows.push({ code: 'third' });
-    expect(configured).toHaveBeenLastCalledWith('third', rows[2]!.code);
+    expect(configured).toHaveBeenLastCalledWith('third', rows[2]!.code, { index: 2 });
     expect(second.code()).toBe('second');
   });
 
@@ -72,11 +134,11 @@ describe('array', () => {
     const notify = vi.fn();
     const stop = rows.onValueChange(notify);
     rows[0]!.set('Grace');
-    expect(notify).toHaveBeenCalledExactlyOnceWith(['Grace'], rows);
+    expect(notify).toHaveBeenCalledExactlyOnceWith(['Grace'], rows, { index: null });
     rows.push('Lin');
-    expect(notify).toHaveBeenLastCalledWith(['Grace', 'Lin'], rows);
+    expect(notify).toHaveBeenLastCalledWith(['Grace', 'Lin'], rows, { index: null });
     rows.removeAt(0);
-    expect(notify).toHaveBeenLastCalledWith(['Lin'], rows);
+    expect(notify).toHaveBeenLastCalledWith(['Lin'], rows, { index: null });
     expect(templateChanged).not.toHaveBeenCalled();
     stop();
     rows.clear();
@@ -2119,19 +2181,19 @@ describe('array onValueChange', () => {
     expect(notify).not.toHaveBeenCalled();
     expect(row).not.toHaveBeenCalled();
     items.set([{ name: 'Lin' }, { name: 'Pat' }]);
-    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Lin' }, { name: 'Pat' }], items);
-    expect(parent).toHaveBeenCalledExactlyOnceWith({ items: [{ name: 'Lin' }, { name: 'Pat' }] }, profile);
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Lin' }, { name: 'Pat' }], items, { index: null });
+    expect(parent).toHaveBeenCalledExactlyOnceWith({ items: [{ name: 'Lin' }, { name: 'Pat' }] }, profile, { index: null });
     expect(row).toHaveBeenCalledTimes(2);
     items.patch([{ name: 'Sam' }, { name: 'Jo' }]);
     expect(notify).toHaveBeenCalledTimes(2);
     items.move(0, 1);
-    expect(notify).toHaveBeenLastCalledWith([{ name: 'Jo' }, { name: 'Sam' }], items);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Jo' }, { name: 'Sam' }], items, { index: null });
     items.swap(0, 1);
-    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'Jo' }], items);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'Jo' }], items, { index: null });
     const previousCalls = row.mock.calls.length;
     const inserted = items.insert(1, { name: 'New' });
     expect(row).toHaveBeenCalledTimes(previousCalls);
-    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'New' }, { name: 'Jo' }], items);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'New' }, { name: 'Jo' }], items, { index: null });
     items.removeAt(1);
     const calls = notify.mock.calls.length;
     inserted.name.set('Detached');
@@ -2140,7 +2202,7 @@ describe('array onValueChange', () => {
     expect(notify).toHaveBeenCalledTimes(calls + 1);
     expect(items()).toEqual([{ name: 'Ada' }, { name: 'Grace' }]);
     items.clear();
-    expect(notify).toHaveBeenLastCalledWith([], items);
+    expect(notify).toHaveBeenLastCalledWith([], items, { index: null });
     const afterClear = notify.mock.calls.length;
     items.clear();
     expect(notify).toHaveBeenCalledTimes(afterClear);
@@ -2158,8 +2220,8 @@ describe('array onValueChange', () => {
     items.value.control.set([{ name: 'Grace' }]);
     expect(notify).not.toHaveBeenCalled();
     items.flush();
-    expect(row).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, items[0]);
-    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Grace' }], items);
+    expect(row).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, items[0], { index: 0 });
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Grace' }], items, { index: null });
     items[0]!.name.set('Pat');
     expect(notify).toHaveBeenCalledTimes(2);
   });
@@ -2197,7 +2259,7 @@ describe('array patch replacement', () => {
     expect(ada.parent()).toBeNull();
     expect(people[1]!.pristine()).toBe(true);
     expect(people.allErrors()).toMatchObject([{ kind: 'required', targetNode: people[1]!.name }]);
-    expect(changed).toHaveBeenCalledExactlyOnceWith(people(), people);
+    expect(changed).toHaveBeenCalledExactlyOnceWith(people(), people, { index: null });
     const before = people.items();
     expect(() => people.patch([{ id: 'b', name: 'One', age: 1 }, { id: 'b', name: 'Two', age: 2 }])).toThrow();
     expect(people.items()).toBe(before);
@@ -2611,4 +2673,24 @@ describe('array initialLength', () => {
     expect(() => Reflect.apply(createFormPrimitives().array, undefined, [factory, ...args])).toThrow(/only one initial source/);
     expect(factory).not.toHaveBeenCalled();
   });
+});
+
+it('uses the nearest containing array for nested array and field validators', () => {
+  const outer = array({
+    values: array(field('', ({ index }) => index === 1 ? { kind: 'innerSecond' } : null), {
+      initialLength: 2,
+      validators: ({ index }) => index === 1 ? { kind: 'outerSecond' } : null,
+    }),
+  }, { initialLength: 2 });
+  const nested = outer[1]!.values;
+  expect(nested.hasError('outerSecond')).toBe(true);
+  expect(nested[0]!.valid()).toBe(true);
+  expect(nested[1]!.hasError('innerSecond')).toBe(true);
+
+  outer.move(1, 0);
+  expect(nested.hasError('outerSecond')).toBe(false);
+  expect(nested[1]!.hasError('innerSecond')).toBe(true);
+  outer.removeAt(0);
+  expect(nested.hasError('outerSecond')).toBe(false);
+  expect(nested[1]!.hasError('innerSecond')).toBe(true);
 });

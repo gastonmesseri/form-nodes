@@ -2,6 +2,7 @@ import { computed, signal, untracked, type Injector, type Signal } from '@angula
 
 import { group } from './group';
 import { isNotNil } from '../utils/is-nil';
+import { getClosestArrayIndex } from '../utils/node-array-index';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
@@ -124,6 +125,8 @@ export class ArrayNode<TItem extends AnyNode> {
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
 
+  index = computed(() => getClosestArrayIndex(this.node));
+
   form = computed(() => this.parent()?.$api.form() ?? null) as ArrayApi<TItem>['form'];
 
   root = computed(() => this.parent()?.$api.root() ?? this.node) as ArrayApi<TItem>['root'];
@@ -151,7 +154,7 @@ export class ArrayNode<TItem extends AnyNode> {
   ownDisabledReason = computed(() => createDisabledReason(this.selfDisabled(), this.node), { equal: shallowEqual });
 
   configuredDisabledReason = computed(() => {
-    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled), this.node);
+    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled, this.node), this.node);
   }, { equal: shallowEqual });
 
   disabledReasons = computed(() => [
@@ -165,7 +168,7 @@ export class ArrayNode<TItem extends AnyNode> {
 
   readonly = computed(() => {
     return this.selfReadonly()
-      || readStateSource(this.options?.readonly)
+      || readStateSource(this.options?.readonly, this.node)
       || this.parent()?.$api.readonly() === true;
   });
 
@@ -173,7 +176,7 @@ export class ArrayNode<TItem extends AnyNode> {
 
   hidden = computed(() => {
     return this.selfHidden()
-      || readStateSource(this.options?.hidden)
+      || readStateSource(this.options?.hidden, this.node)
       || this.parent()?.$api.hidden() === true;
   });
 
@@ -651,6 +654,7 @@ export class ArrayNode<TItem extends AnyNode> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
+      index: this.index,
       value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: ArraySet<TItem> | null | undefined) => this.set(next), (next: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(next))),
       at: index => this.items().at(index) as ArrayItemNode<TItem> | undefined,
       forEach: callback => this.forEach(callback),

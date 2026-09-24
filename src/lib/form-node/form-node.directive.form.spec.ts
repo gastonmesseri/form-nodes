@@ -94,7 +94,7 @@ describe('FormNodeDirective on a native form', () => {
 
     expect(element.noValidate).toBe(true);
     expect(event.defaultPrevented).toBe(true);
-    expect(action).toHaveBeenCalledWith({ name: 'Marco' }, fixture.componentInstance.profile);
+    expect(action).toHaveBeenCalledWith({ name: 'Marco' }, fixture.componentInstance.profile, { index: null });
   });
 
   it('prevents an invalid action and resets model and interaction state from a native reset', () => {

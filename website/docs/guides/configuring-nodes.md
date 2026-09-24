@@ -11,6 +11,7 @@ import emitCurrentSource from '!!raw-loader!../../examples/emit-current-value-su
 import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subscriptions.typecheck.ts';
 import initializeFromInputsSource from '!!raw-loader!../../examples/initialize-form-from-inputs.typecheck.ts';
 import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
+import callbackIndexSource from '!!raw-loader!../../examples/callback-index.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureEachSource from '!!raw-loader!../../examples/configure-each.example.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
@@ -150,12 +151,21 @@ Programmatic writes do not emit either output.
 
 :::
 
-Use `onValueChange(value, node)` in the options of `field()`, `form()`, `group()`, or `array()`
-to react to a change in the node's committed public value. Both arguments retain the inferred
-value and node types. The callback runs synchronously before the operation returns; reading
+Use `onValueChange(value, node, context)` in the options of `field()`, `form()`, `group()`, or `array()`
+to react to a change in the node's committed public value. The first two arguments retain the
+inferred value and node types. The callback runs synchronously before the operation returns; reading
 other signals inside it does not subscribe the callback to those signals. No injector is needed.
 
 <CodeBlock language="ts" title="on-value-change.ts">{valueChangeSource}</CodeBlock>
+
+`context.index` is the zero-based position of the item containing the callback's node in its
+nearest array ancestor. It is `null` outside an array. Nested object groups and forms use the
+containing row's position; nested arrays use the innermost containing array. Read it each time
+the callback runs after moves or detachment. Availability callbacks receive the same context.
+The node also exposes the same location as a readonly [`index()` signal](../concepts/tree-and-api.md#parent-root-and-path).
+The typed index can select a sibling from the array when the array is in scope:
+
+<CodeBlock language="ts" title="callback-index.ts">{callbackIndexSource}</CodeBlock>
 
 The callback observes control input and programmatic changes through `set()`, `update()`, aggregate
 `patch()`, and resets that change the value. `value.committed.set()` also notifies. Control input
@@ -198,7 +208,7 @@ the [binding outputs](../reference/form-node-binding.md) instead.
 ### Subscribe to an existing node {#value-subscriptions}
 
 Call `node.onValueChange(callback, { injector?, debounce?, emitCurrent? })` after creating a field, form, group, or array.
-The callback receives the inferred value and original node. Each call creates an independent
+The callback receives the inferred value, original node, and `NodeCallbackContext`. Each call creates an independent
 subscription and returns an idempotent cancellation function. The method also exists on `$api`
 when an object child is named `onValueChange`.
 
@@ -216,7 +226,7 @@ earlier listener makes another write.
 ### Emit the current value when subscribing {#emit-current-value}
 
 Pass `{ emitCurrent: true }` to call the new listener synchronously with the node's current exposed
-value and the original node before `onValueChange()` returns. The default is `false`. This reads
+value, original node, and current index context before `onValueChange()` returns. The default is `false`. This reads
 the value at registration time, including earlier programmatic changes, rather than the original
 default or any uncommitted control input.
 

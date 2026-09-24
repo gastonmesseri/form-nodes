@@ -20,7 +20,7 @@ Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `on
 
 ```ts
 type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
-    onValueChange?(value: TValue, node: TForm): void;
+    onValueChange?(value: TValue, node: TForm, context: NodeCallbackContext): void;
     configure?: (api: TForm['$api']) => void;
     syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | {
         inputs: 'declared' | 'all' | readonly SyncInputName[];
@@ -34,11 +34,11 @@ type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
     adoptBindingInjector?: boolean;
     validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-    hidden?: boolean | (() => any);
-    disabled?: boolean | string | (() => any);
-    readonly?: boolean | (() => any);
-    onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
-    onSubmitBlocked?(form: TForm): void;
+    hidden?: boolean | ((context: NodeCallbackContext) => any);
+    disabled?: boolean | string | ((context: NodeCallbackContext) => any);
+    readonly?: boolean | ((context: NodeCallbackContext) => any);
+    onSubmit?(value: TValue, form: TForm, context: NodeCallbackContext): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
+    onSubmitBlocked?(form: TForm, context: NodeCallbackContext): void;
     submitWhen?: 'valid' | 'not-invalid' | 'always';
 };
 ```
@@ -56,7 +56,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
+| `onValueChange` | Runs synchronously after the exposed value changes, including programmatic writes. The third argument provides the node's current nearest containing array index. Initialization and writes retained by `equal` do not notify. Control writes wait for debounce. Callbacks run untracked, without requiring an injector or waiting for async validation. Aggregate writes notify descendants before their parent, once after child updates. Reentrant writes are delivered after the current callback; returned values are ignored. |
 | `configure` | Configures each new instance once, synchronously after its API and children are ready. Receives the collision-safe callable `$api`. Runs untracked; validators installed here track dependencies when they execute. Ancestors may not be attached yet. Use the callback argument rather than the variable being initialized. Fresh template clones run their own callback; reset, reordering, and edits do not rerun it. Returned values are ignored; this is neither an async hook nor a cleanup registration. |
 | `syncInputs` | Reactively copies node state and constraints into matching custom-control inputs. This is one-way node-to-component synchronization; it does not enable value binding, execute validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs. |
 | `bindInputOutputPairs` | Connects recognized value/valueChange or checked/checkedChange input/output pairs. CVAs and actual model signals keep priority. Enabling a pair connects values and interaction hooks; optional state inputs are selected independently by `syncInputs`. |
@@ -70,8 +70,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `hidden` | Controls this node's local hidden state. Descendants inherit active hidden state; programmatic writes remain available. Hidden nodes suppress their own validation and reported interaction state. Hiding does not delete values or stored dirty/touched state. |
 | `disabled` | Controls this node's local disabled state, inherited by descendants. A string disables the node and contributes a user-facing reason, including an empty string. Disabled nodes retain their values and accept programmatic writes; their own validation and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally. |
 | `readonly` | Controls this node's local readonly state. Descendants inherit active readonly state. It prevents control-originated edits, not programmatic writes. Readonly nodes suppress their own validation and reported dirty/touched state without discarding stored interaction. |
-| `onSubmit` | Handles permitted submissions with the exposed value snapshot and this form. Return void/null for success, or an error/error array to reject the attempt. Untargeted errors belong to this form. Errors clear on target edits/reset or retry; obsolete async responses are ignored. Rejections and thrown exceptions propagate. Only one submission runs at a time. |
-| `onSubmitBlocked` | Runs when validation blocks a submission, including pending validation under `valid`. Does not run for concurrent attempts or when `onSubmit` is absent. Native attempts emit `formNodeSubmitBlocked` first; that output also works without a submission handler. |
+| `onSubmit` | Handles permitted submissions with the exposed value snapshot and this form. Return void/null for success, or an error/error array to reject the attempt. Untargeted errors belong to this form. Errors clear on target edits/reset or retry; obsolete async responses are ignored. Rejections and thrown exceptions propagate. Only one submission runs at a time. The third argument provides this form's current nearest containing array index. |
+| `onSubmitBlocked` | Runs when validation blocks a submission, including pending validation under `valid`. Does not run for concurrent attempts or when `onSubmit` is absent. Native attempts emit `formNodeSubmitBlocked` first; that output also works without a submission handler. The second argument provides this form's current nearest containing array index. |
 | `submitWhen` | Selects the validation gate for submission. Pending validation is checked immediately and is not awaited. This option never disables validators. |
 
 ## Related reference
@@ -80,6 +80,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
 - [FormNode](./form-node.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [SyncInputName](./sync-input-name.md)
 - [ValidationErrorWithOptionalTargetNode](./validation-error-with-optional-target-node.md)
 - [ValidatorMessages](./validator-messages.md)

@@ -1,6 +1,7 @@
 import { computed, signal, untracked, type Injector } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
+import { getClosestArrayIndex } from '../utils/node-array-index';
 import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -119,6 +120,8 @@ export class FieldNode<TValue> {
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
 
+  index = computed(() => getClosestArrayIndex(this.node));
+
   form = computed(() => this.parent()?.$api.form() ?? null) as FieldApi<TValue>['form'];
 
   root = computed(() => this.parent()?.$api.root() ?? this.node) as FieldApi<TValue>['root'];
@@ -133,7 +136,7 @@ export class FieldNode<TValue> {
   ownDisabledReason = computed(() => createDisabledReason(this.selfDisabled(), this.node), { equal: shallowEqual });
 
   configuredDisabledReason = computed(() => {
-    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled), this.node);
+    return createDisabledReason(readConfiguredDisabledState(this.options?.disabled, this.node), this.node);
   }, { equal: shallowEqual });
 
   disabledReasons = computed(() => [
@@ -147,7 +150,7 @@ export class FieldNode<TValue> {
 
   readonly = computed(() => {
     return this.selfReadonly()
-      || readStateSource(this.options?.readonly)
+      || readStateSource(this.options?.readonly, this.node)
       || this.parent()?.$api.readonly() === true;
   });
 
@@ -155,7 +158,7 @@ export class FieldNode<TValue> {
 
   hidden = computed(() => {
     return this.selfHidden()
-      || readStateSource(this.options?.hidden)
+      || readStateSource(this.options?.hidden, this.node)
       || this.parent()?.$api.hidden() === true;
   });
 
@@ -447,6 +450,7 @@ export class FieldNode<TValue> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
+      index: this.index,
       value: createNodeValueSignal(this.exposedValue, this.value, this.controlValue.asReadonly(), (next: TValue) => this.set(next), (next: TValue) => this.setControlValue(next)),
       set: (next: TValue) => this.set(next),
       patch: (next: TValue) => this.set(next),

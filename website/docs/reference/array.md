@@ -92,6 +92,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Validate a field using a sibling in the same row | `ctx.parent<TParent>()` | [Sibling validation](#sibling-validation) |
+| Read a row's current index inside a validator | `ctx.index` | [Validator context index](./validator.md#custom-validator-context-index) |
 | Prepare an item value without adding a row | `templateValue()` | [Template values](#templatevalue) |
 | Choose a template and initial items | `array(template, ...)` | [Signatures](#signatures) and [options](#options) |
 | Read values, nodes, or array position | `myArray()`, `items()`, `myArray[index]` | [Properties and methods](#properties-and-methods) |
@@ -481,9 +482,12 @@ const usernames = array(field(''), {
 
 ### ◆ Availability {#availability}
 
+Reactive callbacks receive [`NodeCallbackContext`](./types/node-callback-context.md).
+Its `index` tracks the node's nearest containing array item and is `null` outside arrays.
+
 #### – hidden {#hidden-option}
 
-**Signature:** `hidden?: boolean | (() => any)`
+**Signature:** `hidden?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -500,7 +504,7 @@ usernames.hidden(); // follows showUsernames()
 
 #### – disabled {#disabled-option}
 
-**Signature:** `disabled?: boolean | string | (() => any)`
+**Signature:** `disabled?: boolean | string | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean or reason string; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -518,7 +522,7 @@ usernames.disabledReasons()[0]?.message; // 'Profile is locked'
 
 #### – readonly {#readonly-option}
 
-**Signature:** `readonly?: boolean | (() => any)`
+**Signature:** `readonly?: boolean | ((context: NodeCallbackContext) => any)`
 
 Callbacks must return a boolean; their return type is unchecked to support [self-referencing declarations](../guides/interaction-and-availability.md#self-referencing-state).
 
@@ -605,6 +609,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
+| [`index()`](#index) | Zero-based position in the nearest containing array, or `null` outside arrays. |
 | [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Item access and collection** | |
 | [`templateValue()`](#templatevalue) | Returns a typed, independent item value without adding a row. |
@@ -1053,6 +1058,16 @@ const profile = form({
 profile.usernames.keyInParent(); // 'usernames'
 profile.usernames[0]?.keyInParent(); // 0
 ```
+
+#### – index() {#index}
+
+**Signature:** `index: Signal<number | null>`
+
+Returns the zero-based position of the item containing this node in its nearest array
+ancestor, or `null` outside arrays. It follows moves, attachment, and detachment.
+For an array node, this describes the array itself in an outer array, not one of its items.
+Nested groups and forms keep their containing row index. Use `$api.index()` if an
+`index` child hides the direct signal. See [tree navigation](../concepts/tree-and-api.md#parent-root-and-path).
 
 #### – $api {#api-1}
 
@@ -2211,12 +2226,12 @@ placeholder remains `null` even with `nullable: false`, matching an unspecified 
 ## Value change callback {#onvaluechange}
 
 ```ts
-onValueChange?(value: TValue, node: TArray): void;
+onValueChange?(value: TValue, node: TArray, context: NodeCallbackContext): void;
 ```
 
 Add `onValueChange` to the options to react synchronously to committed public value changes.
 The callback skips initialization, respects `equal` and control debounce, and receives the typed
-node. Aggregate operations notify after their children are updated. It runs without dependency
+node plus its current array index context. Aggregate operations notify after their children are updated. It runs without dependency
 tracking or an injection-context requirement and does not wait for asynchronous validation.
 See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
 reset and array behavior, callback ordering, and error handling.
@@ -2226,13 +2241,15 @@ reset and array behavior, callback ordering, and error handling.
 
 ```ts
 onValueChange(
-  callback: (value: ArrayValue<TItem>, node: TNode) => void,
+  callback: (value: ArrayValue<TItem>, node: TNode, context: NodeCallbackContext) => void,
   options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean },
 ): () => void;
 ```
 
 Here `TNode` is the inferred type of this array instance. Call the instance method to register
 independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
+The third argument supplies the nearest containing array index at delivery time, including for
+`emitCurrent` and debounced subscriptions.
 It returns an idempotent cancellation function and emits no initial value by default. The explicit injector,
 otherwise the registration context, owns the listener; node ownership provides a fallback and
 also ends the subscription when destroyed. Observation remains available without DI.

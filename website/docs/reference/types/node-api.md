@@ -21,7 +21,7 @@ Use when a helper needs only shared state and operations. This is the API object
 ```ts
 type NodeApi = {
     nodeType(): NodeType;
-    onValueChange(callback: (value: any, node: AnyNode) => void, options?: {
+    onValueChange(callback: (value: any, node: AnyNode, context: NodeCallbackContext) => void, options?: {
         injector?: Injector;
         debounce?: number;
         emitCurrent?: boolean;
@@ -33,6 +33,7 @@ type NodeApi = {
     value: NodeValueSignal<any>;
     asReadonly(): Signal<any>;
     keyInParent: Signal<string | number | null>;
+    index: Signal<number | null>;
     set(value: any): void;
     update(updater: (value: any) => any): void;
     patch(value: any): void;
@@ -100,6 +101,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `value` | Current committed value represented by this node. Reading it participates in signal tracking. |
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `keyInParent` | Property or array index under which this node is stored, or `null` when it is a root node. |
+| `index` | Zero-based position in the nearest containing array, or `null` outside any array. |
 | `set` | Assigns a complete committed value immediately without marking the node dirty. |
 | `update` | Computes and assigns a complete committed value without marking the node dirty. |
 | `patch` | Updates supplied object branches or replaces complete array/field values without marking the node dirty. |
@@ -147,6 +149,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
 - [DisabledReason](./disabled-reason.md)
+- [NodeCallbackContext](./node-callback-context.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)

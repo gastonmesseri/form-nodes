@@ -230,7 +230,7 @@ describe('profile submission', () => {
     });
 
     await expect(profileForm.submit()).resolves.toBe(false);
-    expect(onSubmitBlocked).toHaveBeenCalledWith(profileForm);
+    expect(onSubmitBlocked).toHaveBeenCalledWith(profileForm, { index: null });
     expect(profileForm.displayName.touched()).toBe(true);
     expect(saveProfile).not.toHaveBeenCalled();
 

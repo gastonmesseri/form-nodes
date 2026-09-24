@@ -3,12 +3,12 @@ title: Tree navigation and API access
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-
+import nodeIndexSource from '!!raw-loader!../../examples/node-index.example.ts';
+import genericNodeApiSource from '!!raw-loader!../../examples/generic-node-api.example.ts';
 import ancestryLookupsSource from '!!raw-loader!../../examples/ancestry-lookups.example.ts';
 import validatorAncestrySource from '!!raw-loader!../../examples/validator-ancestry.typecheck.ts';
 import validatorFieldSignalSource from '!!raw-loader!../../examples/validator-field-signal.example.ts';
 import inlineValidatorNodesSource from '!!raw-loader!../../examples/inline-validator-nodes.typecheck.ts';
-import genericNodeApiSource from '!!raw-loader!../../examples/generic-node-api.example.ts';
 
 # Tree navigation and API access {#tree-navigation-and-api-access}
 
@@ -140,6 +140,14 @@ profile.address.city.form(); // profile
 profile.address.city.root(); // profile
 profile.address.city.path(); // ['address', 'city']
 ```
+
+`index()` is a readonly `Signal<number | null>` on every node. It reports the zero-based
+position of the item containing that node in the nearest array ancestor, including through
+nested groups and forms. A root or detached branch returns `null`; nested arrays use their
+innermost containing array. The signal updates on moves without a value edit. `keyInParent()`
+still reports the immediate property name or array index.
+
+<CodeBlock language="ts" title="node-index.ts">{nodeIndexSource}</CodeBlock>
 
 - A root node has `parent() === null` and path `[]`.
 - `form()` returns the nearest explicit `form()` workflow. A nested form returns itself, and every

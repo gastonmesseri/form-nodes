@@ -9,6 +9,7 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
+import type { NodeCallbackContext } from '../types/node-callback-context.type';
 import type { DisabledReason, DynamicNode, AnyNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidatorNodeView, ValidatorValueSignal } from './validator-node-view.type';
@@ -1290,7 +1291,7 @@ type ValidatorRootSignal<TNode> = TNode extends { $api: { root: Signal<infer TRo
  * });
  * ```
  */
-export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & NodeCallbackContext & {
   /**
    * Reactive structural root, identical to `ctx.node().$api.root()`.
    * Returns the validated node itself when standalone and follows attachment and detachment.

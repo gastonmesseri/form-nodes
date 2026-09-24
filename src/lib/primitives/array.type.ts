@@ -7,6 +7,7 @@ import type { NodeSignal } from '../types/node-signal.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
+import type { NodeCallbackContext } from '../types/node-callback-context.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, AnyNode, IsUnknownNode, NodeKeyInParent, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -14,6 +15,7 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * Runs synchronously after the exposed value changes, including programmatic writes.
+   * The third argument provides the node's current nearest containing array index.
    * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
    * Callbacks run untracked, without requiring an injector or waiting for async validation.
    * Aggregate writes notify descendants before their parent, once after child updates.
@@ -34,7 +36,7 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * values.length; // 1
    * ```
    */
-  onValueChange?(value: TValue, node: TArray): void;
+  onValueChange?(value: TValue, node: TArray, context: NodeCallbackContext): void;
 
   /**
    * Configures each new instance once, synchronously after its API and children are ready.
@@ -191,7 +193,8 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * array({
@@ -212,7 +215,7 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * });
    * ```
    */
-  hidden?: boolean | (() => any);
+  hidden?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local disabled state, inherited by descendants. A string disables
    * the node and contributes a user-facing reason, including an empty string.
@@ -231,7 +234,8 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    * - **Strings**: Disable locally and record the text in `disabledReasons()`.
    *
    * ```ts
@@ -261,7 +265,7 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * });
    * ```
    */
-  disabled?: boolean | string | (() => any);
+  disabled?: boolean | string | ((context: NodeCallbackContext) => any);
   /**
    * Controls this node's local readonly state. Descendants inherit active readonly state.
    * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
@@ -279,7 +283,8 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * **Accepted values:**
    *
    * - **Booleans**: Enable or clear the local configured state.
-   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state. The callback
+   *   receives `context.index` for the nearest containing array item, or `null` outside arrays.
    *
    * ```ts
    * array({
@@ -300,7 +305,7 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * });
    * ```
    */
-  readonly?: boolean | (() => any);
+  readonly?: boolean | ((context: NodeCallbackContext) => any);
   /**
    * Initializes collection items from complete values or the template defaults.
    * Null and undefined normalize to an empty array; the collection value is never nullable.
@@ -523,10 +528,10 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * stop();
    * ```
    *
-   * @param callback Receives the exposed value and original node after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
+   * @param callback Receives the exposed value, original node, and current array index context after a committed change, and at registration when emitCurrent is true. Return values are ignored. Errors from later synchronous notifications propagate after other listeners are notified; debounced errors are thrown from the timer callback.
    * @param options Optional emitCurrent (default false) delivers the current value synchronously before returning. Optional debounce in finite, non-negative milliseconds (default zero); invalid delays throw RangeError. Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
    */
-  onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
+  onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>, context: NodeCallbackContext) => void, options?: { injector?: Injector; debounce?: number; emitCurrent?: boolean }): () => void;
   /**
    * Returns an independent value for one new item without adding it to this array.
    * Template declarations use their captured defaults, independently of current rows and this
@@ -652,6 +657,22 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
+  /**
+   * Zero-based position of the item containing this array in its nearest array ancestor.
+   * This describes the array node's own placement, not an item inside it. A standalone
+   * array returns `null`; nested arrays use their nearest outer containing array.
+   * This readonly signal tracks moves, attachment, and detachment without a value edit.
+   * Use `$api.index()` when a child named `index` hides the direct member.
+   *
+   * ```ts
+   * const rows = array({
+   *   tags: array(field('')),
+   * }, { initialLength: 2 });
+   * rows.index(); // null
+   * rows[0]!.tags.index(); // 0
+   * ```
+   */
+  index: Signal<number | null>;
   /**
    * Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array
    * independently of current item values and structure.

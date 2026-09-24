@@ -50,14 +50,14 @@ describe('field onValueChange emitCurrent', () => {
     const notify = vi.fn();
     const stop = node.onValueChange(notify, { emitCurrent: true });
 
-    expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+    expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
     expect(configured).not.toHaveBeenCalled();
     expect(existing).not.toHaveBeenCalled();
     const silent = vi.fn();
     node.onValueChange(silent, { emitCurrent: false });
     expect(silent).not.toHaveBeenCalled();
     node.set('Lin');
-    expect(notify).toHaveBeenLastCalledWith('Lin', node);
+    expect(notify).toHaveBeenLastCalledWith('Lin', node, { index: null });
     stop();
     stop();
     node.set('Pat');
@@ -73,7 +73,7 @@ describe('field onValueChange emitCurrent', () => {
       const notify = vi.fn();
       const stop = node.onValueChange(notify, { emitCurrent: true, debounce: 100 });
 
-      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
       expect(node.value.control()).toBe('');
       expect([node.valid(), node.dirty(), node.touched(), node.pending(), node.debouncing()]).toEqual(state);
       expect(vi.getTimerCount()).toBe(0);
@@ -82,7 +82,7 @@ describe('field onValueChange emitCurrent', () => {
       expect(node.debouncing()).toBe(false);
       expect(notify).toHaveBeenCalledTimes(1);
       vi.advanceTimersByTime(100);
-      expect(notify).toHaveBeenLastCalledWith('', node);
+      expect(notify).toHaveBeenLastCalledWith('', node, { index: null });
       node.set('Grace');
       stop();
       vi.runAllTimers();
@@ -123,12 +123,12 @@ describe('field onValueChange emitCurrent', () => {
 
       expect(() => node.onValueChange(notify, { emitCurrent: true, debounce: 100, injector: owner })).toThrow(failure);
       expect(node()).toBe('Grace');
-      expect(existing).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(existing).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
       expect(vi.getTimerCount()).toBe(0);
       node.set('Lin');
       vi.runAllTimers();
       expect(notify).toHaveBeenCalledOnce();
-      expect(existing).toHaveBeenLastCalledWith('Lin', node);
+      expect(existing).toHaveBeenLastCalledWith('Lin', node, { index: null });
     } finally { owner.destroy(); vi.useRealTimers(); }
   });
 
@@ -3951,7 +3951,7 @@ describe('field instance onValueChange', () => {
     expect(notify).not.toHaveBeenCalled();
     node.set('Grace');
     expect(notify).toHaveBeenCalledTimes(2);
-    expect(notify).toHaveBeenLastCalledWith('Grace', node);
+    expect(notify).toHaveBeenLastCalledWith('Grace', node, { index: null });
     expect(configured).toHaveBeenCalledOnce();
     expect(node.pristine()).toBe(true);
     expect(node.untouched()).toBe(true);
@@ -3981,7 +3981,7 @@ describe('field instance onValueChange', () => {
         else vi.runAllTimers();
       }
       expect(node.valid()).toBe(true);
-      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
       node.value.control.set('draft');
       node.reset('');
       const calls = notify.mock.calls.length;
@@ -4003,7 +4003,7 @@ describe('field instance onValueChange', () => {
     const node = field('', { configure(api) { api.onValueChange(notify); api.set('initial'); } });
     expect(notify).not.toHaveBeenCalled();
     node.set('next');
-    expect(notify).toHaveBeenCalledExactlyOnceWith('next', node);
+    expect(notify).toHaveBeenCalledExactlyOnceWith('next', node, { index: null });
   });
 
   it('uses stable delivery snapshots, skips canceled listeners, and queues reentrant writes', () => {
@@ -4023,7 +4023,7 @@ describe('field instance onValueChange', () => {
     node.onValueChange(value => events.push(`third:${value}`));
     node.set(1);
     expect(events).toEqual(['first:1', 'third:1', 'first:2', 'third:2']);
-    expect(later).toHaveBeenCalledExactlyOnceWith(2, node);
+    expect(later).toHaveBeenCalledExactlyOnceWith(2, node, { index: null });
   });
 
   it('delivers all listeners after failures without rolling back the value', () => {
@@ -4035,7 +4035,7 @@ describe('field instance onValueChange', () => {
     node.onValueChange(notify);
     expect(() => node.set('Ada')).toThrow(new AggregateError([first, second], 'Node value operation or onValueChange callbacks failed.'));
     expect(node()).toBe('Ada');
-    expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+    expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
   });
 
   it.each(['node', 'consumer', 'explicit'] as const)('automatically cancels on %s destruction', (owner) => {
@@ -4143,16 +4143,16 @@ describe('field onValueChange', () => {
     node.set('GRACE');
     expect(notify).not.toHaveBeenCalled();
     node.set('Lin');
-    expect(notify).toHaveBeenLastCalledWith('Lin', node);
+    expect(notify).toHaveBeenLastCalledWith('Lin', node, { index: null });
     expect(node()).toBe('Lin');
     node.update(value => value + '!');
-    expect(notify).toHaveBeenLastCalledWith('Lin!', node);
+    expect(notify).toHaveBeenLastCalledWith('Lin!', node, { index: null });
     node.value.committed.set('Pat');
-    expect(notify).toHaveBeenLastCalledWith('Pat', node);
+    expect(notify).toHaveBeenLastCalledWith('Pat', node, { index: null });
     node.reset();
     expect(notify).toHaveBeenCalledTimes(3);
     node.resetToInitial();
-    expect(notify).toHaveBeenLastCalledWith('Ada', node);
+    expect(notify).toHaveBeenLastCalledWith('Ada', node, { index: null });
     expect(node.dirty()).toBe(false);
     expect(node.touched()).toBe(false);
     expect(notify).toHaveBeenCalledTimes(4);
@@ -4174,7 +4174,7 @@ describe('field onValueChange', () => {
         else vi.advanceTimersByTime(20);
         expect(notify).toHaveBeenCalledOnce();
       }
-      expect(notify).toHaveBeenLastCalledWith('first', node);
+      expect(notify).toHaveBeenLastCalledWith('first', node, { index: null });
       expect(node.debouncing()).toBe(false);
       node.value.control.set('pending');
       node.set('programmatic');
@@ -4258,7 +4258,7 @@ it('notifies only the latest successful custom-debounce commit', async () => {
   completions[1]!();
   await Promise.resolve();
   await Promise.resolve();
-  expect(notify).toHaveBeenCalledExactlyOnceWith('latest', node);
+  expect(notify).toHaveBeenCalledExactlyOnceWith('latest', node, { index: null });
   expect(node.debouncing()).toBe(false);
 });
 
@@ -4275,7 +4275,7 @@ it('recovers value-change delivery after public equality throws', () => {
   expect(node.value.committed()).toBe('bad');
   expect(notify).not.toHaveBeenCalled();
   node.set('Grace');
-  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
   expect(node()).toBe('Grace');
 });
 
@@ -4293,7 +4293,7 @@ it('recovers a configured comparator failure before the first callback snapshot'
     onValueChange: notify,
   });
   node.set('Grace');
-  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
 });
 
 describe('file field values', () => {
@@ -4826,7 +4826,7 @@ describe('field instance onValueChange subscription debounce', () => {
       expect(node.pending()).toBe(true);
       expect(notify).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(100);
-      expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
       expect(node.pending()).toBe(true);
       expect(validate).toHaveBeenCalledTimes(2);
       completions[0]!(null);
@@ -4864,7 +4864,7 @@ describe('field instance onValueChange subscription debounce', () => {
       expect(node.pristine()).toBe(true);
       expect(node.untouched()).toBe(true);
       expect(node.debouncing()).toBe(false);
-      expect(immediate).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(immediate).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
       expect(configured).toHaveBeenCalledTimes(2);
       vi.advanceTimersByTime(99);
       expect(fast).not.toHaveBeenCalled();
@@ -4872,7 +4872,7 @@ describe('field instance onValueChange subscription debounce', () => {
       vi.advanceTimersByTime(99);
       expect(fast).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(fast).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(fast).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
       node.set('GRACE');
       node.markAsTouched();
       node.reset();
@@ -4880,7 +4880,7 @@ describe('field instance onValueChange subscription debounce', () => {
       vi.advanceTimersByTime(199);
       expect(slow).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(slow).toHaveBeenCalledExactlyOnceWith('Grace', node);
+      expect(slow).toHaveBeenCalledExactlyOnceWith('Grace', node, { index: null });
       expect(immediate).toHaveBeenCalledTimes(2);
       node.set('Ada');
       node.set('Grace');
@@ -4915,7 +4915,7 @@ describe('field instance onValueChange subscription debounce', () => {
       vi.advanceTimersByTime(99);
       expect(notify).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
-      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
       node.value.control.set('draft');
       node.reset('');
       expect(node()).toBe('');
@@ -4924,7 +4924,7 @@ describe('field instance onValueChange subscription debounce', () => {
       expect(node.untouched()).toBe(true);
       vi.advanceTimersByTime(100);
       expect(notify).toHaveBeenCalledTimes(2);
-      expect(notify).toHaveBeenLastCalledWith('', node);
+      expect(notify).toHaveBeenLastCalledWith('', node, { index: null });
       expect(node.value.control()).toBe('');
     } finally {
       vi.useRealTimers();
@@ -4977,9 +4977,9 @@ describe('field instance onValueChange subscription debounce', () => {
       const stop = node.onValueChange(notify, { debounce: 100 });
       node.set('Ada');
       vi.advanceTimersByTime(100);
-      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node, { index: null });
       vi.advanceTimersByTime(100);
-      expect(notify).toHaveBeenLastCalledWith(undefined, node);
+      expect(notify).toHaveBeenLastCalledWith(undefined, node, { index: null });
       expect(notify).toHaveBeenCalledTimes(2);
       node.set('Grace');
       vi.runAllTimers();
@@ -5004,7 +5004,7 @@ describe('field instance onValueChange subscription debounce', () => {
       node.set('Grace');
       vi.advanceTimersByTime(100);
       expect(notify).toHaveBeenCalledTimes(2);
-      expect(notify).toHaveBeenLastCalledWith('Grace', node);
+      expect(notify).toHaveBeenLastCalledWith('Grace', node, { index: null });
     } finally {
       vi.useRealTimers();
     }
@@ -5085,4 +5085,145 @@ it('initializes field arrays by length with independent validation and reset sta
   expect(rows.invalid()).toBe(true);
   expect(rows.dirty()).toBe(false);
   expect(rows.touched()).toBe(false);
+});
+
+it('validates nested fields against their nearest array index through moves and detachment', () => {
+  const standalone = field('', ({ index }) => index === null ? null : { kind: 'unexpectedArray' });
+  expect(standalone.valid()).toBe(true);
+
+  const observed = vi.fn((index: number | null) => index === 0 ? { kind: 'firstRow' } : null);
+  const rows = array({
+    details: {
+      email: field('', ({ index }) => observed(index)),
+    },
+  }, { initialLength: 2 });
+  const first = rows[0]!.details.email;
+  const second = rows[1]!.details.email;
+  expect(first.hasError('firstRow')).toBe(true);
+  expect(second.valid()).toBe(true);
+  expect(observed.mock.calls.map(([index]) => index)).toEqual([0, 1]);
+
+  rows.move(0, 1);
+  expect(first.valid()).toBe(true);
+  expect(second.hasError('firstRow')).toBe(true);
+  expect(observed.mock.calls.map(([index]) => index)).toEqual([0, 1, 1, 0]);
+
+  const removed = rows.removeAt(1)!;
+  expect(removed.details.email).toBe(first);
+  expect(first.valid()).toBe(true);
+  expect(observed).toHaveBeenLastCalledWith(null);
+  expect(rows.invalid()).toBe(true);
+});
+
+it('cancels stale asynchronous field validation when its array index changes', async () => {
+  const runs: { node: unknown; index: number | null; abortSignal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+  const rows = array({
+    email: field('', asyncValidator(({ node, index, abortSignal }) => {
+      return new Promise<{ kind: string } | null>((resolve) => { runs.push({ node: node(), index, abortSignal, resolve }); });
+    })),
+  }, { initialLength: 2 });
+  const first = rows[0]!.email;
+  const firstRuns = () => runs.filter(({ node }) => node === first);
+  expect(first.pending()).toBe(true);
+  await vi.waitFor(() => expect(firstRuns()).toHaveLength(1));
+  expect(firstRuns()[0]!.index).toBe(0);
+
+  rows.move(0, 1);
+  await vi.waitFor(() => expect(firstRuns()).toHaveLength(2));
+  expect(firstRuns()[0]!.abortSignal.aborted).toBe(true);
+  expect(firstRuns()[1]!.index).toBe(1);
+  firstRuns()[0]!.resolve({ kind: 'stale' });
+  firstRuns()[1]!.resolve(null);
+  await vi.waitFor(() => expect(first.pending()).toBe(false));
+  expect(first.valid()).toBe(true);
+  expect(first.hasError('stale')).toBe(false);
+});
+
+it('reruns parameterized asynchronous field validation when its array index changes', async () => {
+  const runs: { node: unknown; index: number | null }[] = [];
+  const rows = array({
+    email: field('', asyncValidator({
+      params: ({ index }) => index,
+      validate: async ({ node, params, index }) => {
+        expect(index).toBe(params);
+        runs.push({ node: node(), index: params });
+        return params === 0 ? { kind: 'firstRow' } : null;
+      },
+    })),
+  }, { initialLength: 2 });
+  const first = rows[0]!.email;
+  const firstRuns = () => runs.filter(({ node }) => node === first);
+  await vi.waitFor(() => expect(first.hasError('firstRow')).toBe(true));
+  expect(firstRuns().at(-1)?.index).toBe(0);
+  const initialRuns = firstRuns().length;
+
+  rows.move(0, 1);
+  await vi.waitFor(() => expect(first.valid()).toBe(true));
+  expect(firstRuns()).toHaveLength(initialRuns + 1);
+  expect(firstRuns().at(-1)?.index).toBe(1);
+});
+
+it('tracks the nearest array index in field availability callbacks without value edits', () => {
+  const disabledIndices: Array<number | null> = [];
+  const rows = array({
+    details: {
+      disabled: field('', { disabled: ({ index }) => {
+        disabledIndices.push(index);
+        return index === 0;
+      } }),
+      readonly: field('', { readonly: ({ index }) => index === 1 }),
+      hidden: field('', { hidden: ({ index }) => index === 2 }),
+    },
+  }, { initialLength: 3 });
+  const first = rows[0]!.details;
+  const second = rows[1]!.details;
+  const third = rows[2]!.details;
+  expect(first.disabled.disabled()).toBe(true);
+  expect(second.readonly.readonly()).toBe(true);
+  expect(third.hidden.hidden()).toBe(true);
+  expect(disabledIndices).toContain(0);
+
+  rows.move(0, 2);
+  expect(first.disabled.disabled()).toBe(false);
+  expect(first.hidden.hidden()).toBe(true);
+  expect(second.disabled.disabled()).toBe(true);
+  expect(second.readonly.readonly()).toBe(false);
+  expect(third.readonly.readonly()).toBe(true);
+
+  const removed = rows.removeAt(2)!;
+  expect(removed.details).toBe(first);
+  expect(first.disabled.disabled()).toBe(false);
+  expect(first.readonly.readonly()).toBe(false);
+  expect(first.hidden.hidden()).toBe(false);
+  expect(disabledIndices.at(-1)).toBeNull();
+});
+
+it('exposes a reactive nearest array index on nested fields through moves and detachment', () => {
+  const standalone = field('');
+  expect(standalone.index()).toBeNull();
+  expect(isSignal(standalone.index)).toBe(true);
+  expect(standalone.$api.index).toBe(standalone.index);
+
+  const rows = array({ details: { email: field('') } }, { initialLength: 2 });
+  rows[0]!.details.add('extra', standalone);
+  expect(standalone.index()).toBe(0);
+  rows[0]!.details.remove('extra');
+  expect(standalone.index()).toBeNull();
+  const email = rows[0]!.details.email;
+  const currentIndex = computed(() => email.index());
+  expect(currentIndex()).toBe(0);
+  expect(email.keyInParent()).toBe('email');
+  rows.move(0, 1);
+  expect(currentIndex()).toBe(1);
+  expect(email.$api.index()).toBe(1);
+
+  rows.removeAt(1);
+  expect(currentIndex()).toBeNull();
+  expect(email.keyInParent()).toBe('email');
+});
+
+it('keeps the index signal available through the collision-safe API', () => {
+  const profile = form({ index: field(1) });
+  expect(profile.index()).toBe(1);
+  expect(profile.$api.index()).toBeNull();
 });
