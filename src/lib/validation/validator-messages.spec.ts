@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { InjectionToken, Injector, createEnvironmentInjector, inject, runInInjectionContext, signal, type Signal } from '@angular/core';
 
 import { min } from './validators/min';
+import { lessThan } from './validators/less-than';
+import { greaterThan } from './validators/greater-than';
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from './validators/required';
@@ -68,10 +70,14 @@ describe('validator messages', () => {
   it('passes structured constraint parameters to configured messages', () => {
     const restore = configureGlobalFormNodes({ validatorMessages: {
       min: ({ min, actual }) => `${actual} must be at least ${min}`,
+      greaterThan: ({ limit, actual }) => `${actual} must exceed ${limit}`,
+      lessThan: ({ limit, actual }) => `${actual} must be below ${limit}`,
     } });
     restoreConfigurations.push(restore);
     const age = field(16, [min(18)]);
 
     expect(age.getError('min')?.message).toBe('16 must be at least 18');
+    expect(field(1, [greaterThan(1)]).getError('greaterThan')?.message).toBe('1 must exceed 1');
+    expect(field(1, [lessThan(1)]).getError('lessThan')?.message).toBe('1 must be below 1');
   });
 });

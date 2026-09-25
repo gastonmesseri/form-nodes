@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Add `greaterThan(limit)` and `lessThan(limit)` for strict numeric bounds, including reactive limits, configurable messages, conditional validation, and structured errors. Equality fails; `null` and `NaN` pass. Strict bounds do not set inclusive `min()` or `max()` metadata.
+
 ## 📦 5.5.0 — 2026-09-24 {#550--2026-09-24}
 
 ### Fixed

@@ -82,7 +82,7 @@ for (const expression of [
 }
 const expectedErrors = [
   'required', 'requiredTrue', 'notNil', 'email', 'url', 'equalTo', 'uniqueItems', 'between',
-  'min', 'max', 'integer', 'minLength', 'maxLength', 'pattern', 'minDate', 'maxDate',
+  'min', 'max', 'greaterThan', 'lessThan', 'integer', 'minLength', 'maxLength', 'pattern', 'minDate', 'maxDate',
   'dateBetween', 'oneOf', 'minWords', 'maxWords', 'applicationError',
 ].sort();
 const options = { strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true };

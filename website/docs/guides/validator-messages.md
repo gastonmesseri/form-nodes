@@ -169,6 +169,8 @@ Local message functions close over their dependencies and take no parameters. Ca
 | `between` | `{ min: number; max: number; actual: number }` |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
+| `greaterThan` | `{ limit: number, actual: number }` |
+| `lessThan` | `{ limit: number, actual: number }` |
 | `integer` | `{ actual: number }` |
 | `minLength` | `{ minLength: number, actual: number }` |
 | `maxLength` | `{ maxLength: number, actual: number }` |

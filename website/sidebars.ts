@@ -118,6 +118,8 @@ const sidebars: SidebarsConfig = {
                 'reference/validators/not-nil',
                 'reference/validators/min',
                 'reference/validators/max',
+                'reference/validators/greater-than',
+                'reference/validators/less-than',
                 'reference/validators/between',
                 'reference/validators/integer',
                 'reference/validators/min-length',

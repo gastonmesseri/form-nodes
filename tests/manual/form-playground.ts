@@ -110,6 +110,22 @@ myForm.someNesting.forEachChild(child => {
   child.reset();
 })
 
+// const metricFormArrayValidator = validator((ctx) => {
+//   const form = ctx.root() as MyComponentClassTestB['form'];
+//   const weights = form.metrics().map(metric => metric.weight)
+//   return !weights.length ? null : { kind: 'weightsAllOrNone' };
+// });
+
+// class MyComponentClassTestB {
+//   form = form({
+//     metrics: array({
+//       weight: field<number>(null),
+//     }, {
+//       validators: [metricFormArrayValidator],
+//     })
+//   });
+// }
+
 const myComputed = computed(() => myForm());
 myForm.age;
 myComputed;

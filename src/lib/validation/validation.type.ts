@@ -168,6 +168,48 @@ export interface BuiltInValidationErrorMap {
      */
     readonly actual: number;
   };
+  readonly greaterThan: ValidationError & {
+    readonly kind: 'greaterThan';
+    /**
+     * Strict lower boundary required by the validator.
+     *
+     * ```ts
+     * const node = field(1, [greaterThan(1)]);
+     * node.getError('greaterThan')?.limit; // 1
+     * ```
+     */
+    readonly limit: number;
+    /**
+     * Rejected numeric value.
+     *
+     * ```ts
+     * const node = field(1, [greaterThan(1)]);
+     * node.getError('greaterThan')?.actual; // 1
+     * ```
+     */
+    readonly actual: number;
+  };
+  readonly lessThan: ValidationError & {
+    readonly kind: 'lessThan';
+    /**
+     * Strict upper boundary required by the validator.
+     *
+     * ```ts
+     * const node = field(1, [lessThan(1)]);
+     * node.getError('lessThan')?.limit; // 1
+     * ```
+     */
+    readonly limit: number;
+    /**
+     * Rejected numeric value.
+     *
+     * ```ts
+     * const node = field(1, [lessThan(1)]);
+     * node.getError('lessThan')?.actual; // 1
+     * ```
+     */
+    readonly actual: number;
+  };
   readonly integer: ValidationError & {
     readonly kind: 'integer';
     /**

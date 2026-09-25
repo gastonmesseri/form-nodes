@@ -68,7 +68,7 @@ evaluated.
 | Need | Validators |
 | --- | --- |
 | Presence | [`required`](./validators/required.md), [`requiredIf`](./validators/required-if.md) |
-| Numeric limits and shape | [`min`](./validators/min.md), [`max`](./validators/max.md), [`between`](./validators/between.md), [`integer`](./validators/integer.md) |
+| Numeric limits and shape | [`min`](./validators/min.md), [`max`](./validators/max.md), [`greaterThan`](./validators/greater-than.md), [`lessThan`](./validators/less-than.md), [`between`](./validators/between.md), [`integer`](./validators/integer.md) |
 | Text or collection size | [`minLength`](./validators/min-length.md), [`maxLength`](./validators/max-length.md), [`lengthBetween`](./validators/length-between.md) |
 | Word count | [`minWords`](./validators/min-words.md), [`maxWords`](./validators/max-words.md) |
 | Text format | [`pattern`](./validators/pattern.md), [`email`](./validators/email.md), [`url`](./validators/url.md) |
@@ -171,6 +171,24 @@ const myForm = form({
 ```
 
 `null` and `NaN` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint temporarily. A failure is `{ kind: 'max', max, actual, message }`. The resolved limit contributes to `max()` metadata.
+
+## ✅ greaterThan and lessThan {#strict-numeric-limits}
+
+Use strict bounds when equality must fail. `greaterThan(1)` accepts `1.1`, while `lessThan(1)`
+accepts `0.9`:
+
+```ts
+const myForm = form({
+  amount: field(1, [greaterThan(1)]),
+  discount: field(1, [lessThan(1)]),
+});
+```
+
+Both validators pass for `null` and `NaN`, track reactive limits, support message and `when`
+options, and accept replacement errors. Their errors contain `kind`, `limit`, `actual`, and
+`message`. They do not set `min()` or `max()` metadata because those constraints are inclusive.
+See [`greaterThan()`](./validators/greater-than.md) and
+[`lessThan()`](./validators/less-than.md).
 
 ## ✅ between {#between}
 

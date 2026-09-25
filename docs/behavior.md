@@ -1576,6 +1576,8 @@ const age = field<number>(null, {
 | `notNil` | Any value | Fails only for `null` and `undefined`; no required metadata | `{ kind: 'notNil', message }` |
 | `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
+| `greaterThan(limit)` | `number | null` | Passes for `null` and `NaN`; disables when limit is `undefined` or `NaN` | `{ kind: 'greaterThan', limit, actual, message }` |
+| `lessThan(limit)` | `number | null` | Passes for `null` and `NaN`; disables when limit is `undefined` or `NaN` | `{ kind: 'lessThan', limit, actual, message }` |
 | `between(minimum, maximum)` | `number | null` | Passes for `null` and `NaN`; disabled if either bound is absent or `NaN` | `{ kind: 'between', min, max, actual, message }` |
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
@@ -1664,6 +1666,17 @@ field(50, [between(() => allowedRange().min, () => allowedRange().max)]);
 Angular 22.1.4 Signal Forms has separate `min` and `max` schema rules but no combined `between`
 rule. This helper deliberately preserves their inclusive comparisons and optional-value behavior
 while providing a single consumer-facing error.
+
+`greaterThan(limit)` and `lessThan(limit)` use strict numeric comparisons: a value equal to the
+limit fails, while any decimal on the allowed side passes. They share the `min()`/`max()` empty-value
+and unavailable-limit behavior, synchronous reactive tracking, `when` condition, message fallback,
+and custom-error option. Their distinct error kinds carry `limit` and `actual`. They deliberately
+do not contribute to `min()` or `max()` metadata because those signals are inclusive constraints
+forwarded to native controls. The validator still determines node validity and propagates failures
+through forms. This extends Angular Signal Forms 22.2.x (`21851fc3a38258a68d62d966bf5202d6f4e23df1`),
+whose built-in `min` and `max` are inclusive. The reference files inspected were
+`packages/forms/signals/src/api/rules/validation/min.ts`, `max.ts`,
+`packages/forms/signals/test/node/api/validators/min.spec.ts`, and `max.spec.ts`.
 
 `equalTo` compares with `Object.is()` and accepts either a static expected value or a reactive
 function. Unlike optional format validators, it does not skip `null` or `undefined`: both are real

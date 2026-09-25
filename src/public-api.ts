@@ -4,6 +4,8 @@ export { field } from './lib/primitives/field';
 export { array } from './lib/primitives/array';
 export { max } from './lib/validation/validators/max';
 export { min } from './lib/validation/validators/min';
+export { greaterThan } from './lib/validation/validators/greater-than';
+export { lessThan } from './lib/validation/validators/less-than';
 export { url } from './lib/validation/validators/url';
 export { validator } from './lib/validation/validator';
 export { FormNodesModule } from './lib/form-nodes.module';

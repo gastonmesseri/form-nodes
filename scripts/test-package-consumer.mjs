@@ -87,7 +87,7 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, createFormPrimitives, field, form, group, required } from '@ngblocks/form-nodes';
+    import { array, createFormPrimitives, field, form, group, greaterThan, lessThan, required } from '@ngblocks/form-nodes';
     class Company {
       constructor(name) { this.name = name; }
     }
@@ -104,6 +104,8 @@ try {
       atomicAddress: field({ city: 'Bern' }),
     });
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
+    const strictAmount = field(1, [greaterThan(1), lessThan(2)]);
+    if (strictAmount.getError('greaterThan')?.limit !== 1 || strictAmount.getError('lessThan')) throw new Error('Strict numeric validators were not preserved in the package.');
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
     if (profile.preferences.theme() !== 'dark') throw new Error('Group values were not preserved in the package.');
     if (profile.roles.nodeType() !== 'field' || profile.roles()[0] !== 'admin') throw new Error('Array-valued field shorthand was not preserved in the package.');

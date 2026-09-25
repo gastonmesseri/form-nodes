@@ -14,11 +14,13 @@ import { notNil } from '../validation/validators/not-nil';
 import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
+import { lessThan } from '../validation/validators/less-than';
 import { setup, settle } from '../router/tests/router.fixture';
 import { asyncValidator } from '../validation/async-validator';
 import { createFormPrimitives } from './create-form-primitives';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
+import { greaterThan } from '../validation/validators/greater-than';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
@@ -29,6 +31,26 @@ import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
+
+describe('form strict numeric limits', () => {
+  it('updates nested validity and aggregate errors as limits change', () => {
+    const lowerLimit = signal(1);
+    const upperLimit = signal(2);
+    const model = form({ nested: form({ value: field(1, [greaterThan(() => lowerLimit()), lessThan(() => upperLimit())]) }) });
+    expect(model.nested.value.getError('greaterThan')?.limit).toBe(1);
+    expect(model.nested.invalid()).toBe(true);
+    expect(model.invalid()).toBe(true);
+    model.nested.value.set(1.1);
+    expect(model.valid()).toBe(true);
+    upperLimit.set(1.1);
+    expect(model.nested.value.getError('lessThan')?.actual).toBe(1.1);
+    expect(model.invalid()).toBe(true);
+    lowerLimit.set(0);
+    upperLimit.set(2);
+    expect(model.valid()).toBe(true);
+    expect(model.allErrors()).toEqual([]);
+  });
+});
 
 describe('form onValueChange emitCurrent', () => {
   it('emits a current nested snapshot through the collision-safe API without notifying other listeners', () => {

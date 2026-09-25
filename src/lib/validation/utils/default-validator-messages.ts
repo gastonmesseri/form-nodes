@@ -38,6 +38,14 @@ export const defaultMaxMessage = (maximum: number): string => {
   return `Please enter a value less than or equal to ${maximum}.`;
 };
 
+export const defaultGreaterThanMessage = (limit: number): string => {
+  return `Please enter a value greater than ${limit}.`;
+};
+
+export const defaultLessThanMessage = (limit: number): string => {
+  return `Please enter a value less than ${limit}.`;
+};
+
 export const defaultBetweenMessage = (minimum: number, maximum: number): string => {
   return `Please enter a value between ${minimum} and ${maximum}.`;
 };

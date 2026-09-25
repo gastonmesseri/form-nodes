@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { url } from '../validators/url';
 import { min } from '../validators/min';
 import { max } from '../validators/max';
+import { lessThan } from '../validators/less-than';
+import { greaterThan } from '../validators/greater-than';
 import { email } from '../validators/email';
 import { form } from '../../primitives/form';
 import { oneOf } from '../validators/one-of';
@@ -33,6 +35,8 @@ describe('built-in validator error option', () => {
       () => field('', [requiredIf(() => true, { error: customError })]),
       () => field(1, [min(2, { error: customError })]),
       () => field(3, [max(2, { error: customError })]),
+      () => field(1, [greaterThan(1, { error: customError })]),
+      () => field(1, [lessThan(1, { error: customError })]),
       () => field(3, [between(4, 5, { error: customError })]),
       () => field(1.5, [integer({ error: customError })]),
       () => field('a', [minLength(2, { error: customError })]),

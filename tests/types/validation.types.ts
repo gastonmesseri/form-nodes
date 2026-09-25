@@ -1,5 +1,5 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { array, asyncValidator, between, configureGlobalFormNodes, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideFormNodesConfig, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
+import { array, asyncValidator, between, configureGlobalFormNodes, dateBetween, email, equalTo, field, form, greaterThan, integer, lessThan, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideFormNodesConfig, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
 
@@ -25,6 +25,9 @@ field(18, [min(18, { message: 'Too young' })]);
 field(18, [min(21, 'Too young'), between(21, 65, 'Unsupported age')]);
 field(18, [between(18, 65, { message: 'Unsupported age' })]);
 field(18, [between(() => 18, () => 65)]);
+field<number>(null, [greaterThan(1), lessThan(() => 2)]);
+field(1, [greaterThan(1, 'Too small'), lessThan(2, { message: 'Too large' })]);
+field(1, [greaterThan(() => undefined, { when: ({ value }) => value() !== null })]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
 field('', [pattern(/^[a-z]+$/, 'Use letters only'), minLength(3, 'Too short'), maxLength(30, 'Too long')]);
 field('', [url, url({ message: 'Enter an absolute URL' })]);
@@ -98,9 +101,13 @@ const customErrorOptions: ValidatorOptions<number | null> = {
   error: ({ value }) => ({ kind: 'minimum', actual: value() }),
 };
 min(18, { error: ({ value }) => [{ kind: 'minimum', actual: value() }] });
+greaterThan(1, { error: ({ value }) => ({ kind: 'strictMinimum', actual: value() }) });
+lessThan(2, { error: ({ value }) => ({ kind: 'strictMaximum', actual: value() }) });
 requiredIf(() => true, { error: { kind: 'conditionallyRequired' } });
 // @ts-expect-error a custom error replaces the built-in error and cannot be combined with a message
 min(18, { error: { kind: 'minimum' }, message: 'Too small' });
+// @ts-expect-error a custom error cannot be combined with a message
+greaterThan(1, { error: { kind: 'strictMinimum' }, message: 'Too small' });
 const validatorMessages: ValidatorMessages = {
   min: ({ min: minimum, actual }) => {
     type _Minimum = Expect<Equal<typeof minimum, number>>;
@@ -108,6 +115,12 @@ const validatorMessages: ValidatorMessages = {
     return `${actual}/${minimum}`;
   },
   required: () => 'Required',
+  greaterThan: ({ limit, actual }) => {
+    type _Limit = Expect<Equal<typeof limit, number>>;
+    type _Actual = Expect<Equal<typeof actual, number>>;
+    return `${actual}/${limit}`;
+  },
+  lessThan: ({ limit }) => `${limit}`,
 };
 validatorMessages.required = 'Required';
 const restoreValidatorMessages = configureGlobalFormNodes({ validatorMessages: () => validatorMessages });
@@ -123,6 +136,11 @@ const unknownError = constrainedAge.getError('applicationSpecific');
 const _unknownMessage: string | undefined = unknownError?.message;
 const _unknownProperty: unknown = unknownError?.applicationData;
 void [_minimum, _minimumActual, _unknownMessage, _unknownProperty];
+
+const strictError = field(1, [greaterThan(1), lessThan(1)]);
+const _greaterLimit: number | undefined = strictError.getError('greaterThan')?.limit;
+const _lessLimit: number | undefined = strictError.getError('lessThan')?.limit;
+void [_greaterLimit, _lessLimit];
 
 const integerError = field(1.5, [integer]).getError('integer');
 const _integerActual: number | undefined = integerError?.actual;

@@ -1,12 +1,17 @@
 import { Component, viewChild, type Signal, type WritableSignal } from '@angular/core';
 
-import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, greaterThan, lessThan, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
 const candidate: unknown = configuredForms.field('Marco');
 if (!isFormNode(candidate) || candidate() !== 'Marco' || isFormNode({})) {
   throw new Error('The package must export a working node type guard.');
+}
+
+const strictAmount = field(1, [greaterThan(1), lessThan(2)]);
+if (strictAmount.getError('greaterThan')?.limit !== 1 || strictAmount.getError('lessThan')) {
+  throw new Error('The package must export strict numeric validators.');
 }
 
 class Company {

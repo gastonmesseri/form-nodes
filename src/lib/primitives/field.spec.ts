@@ -20,6 +20,7 @@ import { equalTo } from '../validation/validators/equal-to';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
 import { required } from '../validation/validators/required';
+import { lessThan } from '../validation/validators/less-than';
 import { setup, settle } from '../router/tests/router.fixture';
 import { asyncValidator } from '../validation/async-validator';
 import type { InternalNode, AnyNode } from '../types/node.type';
@@ -27,6 +28,7 @@ import { createFormPrimitives } from './create-form-primitives';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
+import { greaterThan } from '../validation/validators/greater-than';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
 import type { ValidatorContext } from '../validation/validation.type';
@@ -36,6 +38,26 @@ import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
+
+describe('field strict numeric limits', () => {
+  it('tracks equality, decimals, replacement errors, and resets', () => {
+    const value = field(1, [greaterThan(1), lessThan(2)]);
+    expect(value.getError('greaterThan')?.actual).toBe(1);
+    expect(value.getError('lessThan')).toBeUndefined();
+    expect(value.min()).toBeNull();
+    expect(value.max()).toBeNull();
+    value.set(1.1);
+    expect(value.valid()).toBe(true);
+    value.set(2);
+    expect(value.getError('lessThan')?.limit).toBe(2);
+    value.reset(1);
+    expect(value.getError('greaterThan')?.actual).toBe(1);
+    value.setValidators([greaterThan(0, { error: { kind: 'positive' } })]);
+    expect(value.valid()).toBe(true);
+    value.set(0);
+    expect(value.getError('positive')).toBeDefined();
+  });
+});
 
 describe('field onValueChange emitCurrent', () => {
   it('emits the current exposed value synchronously only to the new listener', () => {
