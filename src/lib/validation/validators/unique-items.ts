@@ -1,3 +1,4 @@
+import { isNil } from '../../utils/is-nil';
 import { isFieldContext } from '../utils/field-context-marker';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { defaultUniqueItemsMessage } from '../utils/default-validator-messages';
@@ -6,11 +7,12 @@ import type { DeferredCondition, BuiltInValidationErrorMap, FieldContext, Valida
 
 type UniqueItemsOptions<TItem = unknown> = ValidatorOptions<readonly TItem[] | null | undefined>;
 
-type UniqueItemsKeySelector<TItem> = keyof TItem | ((item: TItem, index: number) => unknown);
+type UniqueItemsKeySelector<TItem> = keyof NonNullable<TItem> | ((item: TItem, index: number) => unknown);
 
 const resolveKey = (item: unknown, index: number, keySelector?: PropertyKey | ((item: any, index: number) => unknown)): unknown => {
   if (keySelector === undefined) return item;
   if (typeof keySelector === 'function') return keySelector(item, index);
+  if (isNil(item)) return undefined;
   return (item as Record<PropertyKey, unknown>)[keySelector];
 };
 
@@ -216,6 +218,10 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
  * A property name is a concise key selector for object values. A key-selector function can compute any
  * comparable key and is evaluated reactively for every item. The error remains on the array and
  * reports all participating indexes in ascending order.
+ * Property selectors read null or undefined items as an undefined key, like item?.id. Those items
+ * participate in duplicate detection alongside objects with a missing or undefined property.
+ * A null property value is a distinct key. Function selectors receive each original item, including
+ * null and undefined; without a selector, null and undefined remain distinct item values.
  *
  * ```ts
  * const profile = form({
@@ -245,7 +251,7 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export function uniqueItems<TItem = unknown>(
-  keySelector: keyof TItem | ((item: TItem, index: number) => unknown),
+  keySelector: keyof NonNullable<TItem> | ((item: TItem, index: number) => unknown),
   options?: string | ({
     /**
      * Overrides the message of a failing built-in validation error. A reactive function

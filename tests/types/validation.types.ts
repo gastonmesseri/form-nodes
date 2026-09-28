@@ -270,3 +270,24 @@ maxWords(10, {
     return { kind: 'custom' };
   },
 });
+
+type NullableUniqueRow = { id?: string | null } | null | undefined;
+field<NullableUniqueRow[]>([null, undefined], [uniqueItems('id')]);
+array(field<NullableUniqueRow>(null), { validators: uniqueItems('id') });
+uniqueItems<NullableUniqueRow>('id', {
+  error: ({ value }) => {
+    type _Items = Expect<Equal<ReturnType<typeof value>, readonly NullableUniqueRow[] | null | undefined>>;
+    return { kind: 'duplicateSelection' };
+  },
+  when: ({ value }) => {
+    type _Items = Expect<Equal<ReturnType<typeof value>, readonly NullableUniqueRow[] | null | undefined>>;
+    return value() !== null;
+  },
+});
+uniqueItems<NullableUniqueRow>((item, index) => {
+  type _Item = Expect<Equal<typeof item, NullableUniqueRow>>;
+  type _Index = Expect<Equal<typeof index, number>>;
+  return item?.id;
+});
+// @ts-expect-error Property selectors must exist on the non-nullish item type.
+uniqueItems<NullableUniqueRow>('missing');

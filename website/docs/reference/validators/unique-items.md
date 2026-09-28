@@ -2,6 +2,9 @@
 title: uniqueItems()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import nullableItemsSource from '!!raw-loader!../../../examples/unique-items-nullable.example.ts';
+
 # uniqueItems() {#uniqueitems}
 
 ## 🧭 API map {#api-map}
@@ -24,8 +27,9 @@ uniqueItems(propertyKey, options?)
 uniqueItems(selectKey, options?)
 ```
 
-Property selectors read the named property. Function selectors receive each item and may read
-signals; those signal reads become reactive dependencies of the validator.
+Property selectors accept keys of the non-nullish item type (`keyof NonNullable<TItem>`) and read
+the named property. Function selectors receive each original item, including `null` and `undefined`,
+and may read signals; those signal reads become reactive dependencies of the validator.
 
 ## 📖 Usage and behavior {#usage-and-behavior}
 
@@ -67,6 +71,30 @@ const myForm = form({
 Calling `uniqueItems()` without arguments is equivalent to direct `[uniqueItems]`. Without a key selector, comparison uses SameValueZero like `Set`: `NaN` matches `NaN`, `0` matches `-0`, and objects compare by reference. Property and function key selectors compare their derived keys; key-selector functions may read signals reactively.
 
 `null` and `undefined` pass as empty arrays. Empty and one-item arrays pass. A failure is `{ kind: 'uniqueItems', duplicateIndexes, message }`. It belongs to the array node and reports every participating index in ascending order while deliberately omitting duplicate values.
+
+### Nullable items {#nullable-items}
+
+With a property selector such as `uniqueItems('id')`, a `null` or `undefined` item has the key
+`undefined`, like `item?.id`. These items participate in duplicate detection; objects with a missing
+or undefined `id` share that key. An object with `id: null` has the distinct key `null`.
+
+| Values | Result with `uniqueItems('id')` |
+| --- | --- |
+| `[{ id: 'a' }, null]` | Valid |
+| `[null, undefined]` | Invalid; duplicate indexes `[0, 1]` |
+| `[null, {}]` | Invalid; duplicate indexes `[0, 1]` |
+| `[{ id: null }, null]` | Valid |
+
+Duplicates produce a normal validation error without throwing or logging a warning. Validation
+preserves the supplied values. Use a separate rule if every item must have an ID. Nullable rows
+can be represented by a field template or by an array value stored in a field; object-form row
+templates still require object values.
+
+<CodeBlock language="ts" title="unique-items-nullable.example.ts">{nullableItemsSource}</CodeBlock>
+
+Without a selector, `uniqueItems()` compares the items themselves: `null` and `undefined` are
+distinct, so `[null, undefined]` passes. A selector callback receives the original values and must
+handle nullable items itself; for example, `item => item?.id` uses the property-selector policy.
 
 ## 💬 Message configuration {#message-configuration}
 

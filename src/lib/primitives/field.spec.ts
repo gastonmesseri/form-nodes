@@ -30,6 +30,7 @@ import { createFormPrimitives } from './create-form-primitives';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
+import { uniqueItems } from '../validation/validators/unique-items';
 import { greaterThan } from '../validation/validators/greater-than';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
@@ -5461,4 +5462,29 @@ it('updates duplicate field rows independently and discards their pending input'
   expect(second!.hasError('required')).toBe(true);
   expect(rows.pristine()).toBe(true);
   expect(rows.untouched()).toBe(true);
+});
+
+it.each([false, true])('validates nullable item keys on field writes and reset with deferred=%s', (deferred) => {
+  type Row = { id?: string | null } | null | undefined;
+  const rule = uniqueItems<Row>('id');
+  const node = field<Row[] | null | undefined>(null, { validators: deferred ? () => rule : rule });
+  expect(node.valid()).toBe(true);
+  node.markAsDirty();
+  node.markAsTouched();
+  node.set([null, undefined]);
+  expect(node()).toEqual([null, undefined]);
+  expect(node.getError('uniqueItems')).toMatchObject({ duplicateIndexes: [0, 1], targetNode: node });
+  expect(node.validationStatus()).toBe('invalid');
+  expect(node.pending()).toBe(false);
+  expect(node.dirty()).toBe(true);
+  expect(node.touched()).toBe(true);
+  node.set([{ id: null }, undefined]);
+  expect(node.valid()).toBe(true);
+  node.set([null, {}]);
+  expect(node.invalid()).toBe(true);
+  node.reset(undefined);
+  expect(node()).toBeUndefined();
+  expect(node.errors()).toEqual([]);
+  expect(node.pristine()).toBe(true);
+  expect(node.untouched()).toBe(true);
 });

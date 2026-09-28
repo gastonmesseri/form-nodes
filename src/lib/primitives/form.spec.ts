@@ -8204,3 +8204,37 @@ it('propagates occurrence-matched row values, validation and reset through neste
   expect(profile.untouched()).toBe(true);
   expect(changed).toHaveBeenCalledTimes(2);
 });
+
+it('propagates nullable item uniqueness through nested forms and updates duplicate indexes after removal', () => {
+  type Row = { id?: string | null } | null | undefined;
+  const profile = form({ details: form({ rows: array(field<Row>(null), {
+    initialValue: [{ id: 'a' }, null], validators: uniqueItems('id'),
+  }) }) });
+  const rows = profile.details.rows;
+  expect(profile.valid()).toBe(true);
+  rows[1]!.markAsDirty();
+  rows[1]!.markAsTouched();
+  profile.patch({ details: { rows: [null, { id: 'a' }, undefined] } });
+  expect(rows.getError('uniqueItems')?.duplicateIndexes).toEqual([0, 2]);
+  expect(profile.allErrors()).toMatchObject([{ kind: 'uniqueItems', targetNode: rows }]);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.pending()).toBe(false);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  expect(rows[0]!.valid()).toBe(true);
+  expect(rows[2]!.valid()).toBe(true);
+  rows.removeAt(1);
+  expect(rows.getError('uniqueItems')?.duplicateIndexes).toEqual([0, 1]);
+  rows[1]!.set({ id: null });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  profile.reset({ details: { rows: [undefined, {}] } });
+  expect(rows.getError('uniqueItems')?.duplicateIndexes).toEqual([0, 1]);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  profile.resetToInitial();
+  expect(profile()).toEqual({ details: { rows: [{ id: 'a' }, null] } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+});

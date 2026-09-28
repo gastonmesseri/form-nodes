@@ -1791,8 +1791,25 @@ Selector functions participate in reactive dependency tracking. The error report
 participating in a duplicate group, in ascending order, but deliberately omits the duplicated keys
 and values. This provides enough information for array UIs to identify affected rows without
 placing potentially sensitive data in aggregate errors. Structural changes and item value changes
-recompute the indexes. Angular 22.1.4 Signal Forms has no equivalent built-in validator; aggregate
-validator errors likewise belong to the validated aggregate node.
+recompute the indexes.
+
+Property selectors accept nullable item types and read a null or undefined item as an undefined
+key, like `item?.id`. Nullish items participate in uniqueness checks alongside objects whose selected
+property is missing or undefined: `[null, undefined]` and `[null, {}]` fail with duplicate indexes
+`[0, 1]`, while `[{ id: 'a' }, null]` passes. A null property value remains a distinct key, so
+`[{ id: null }, null]` passes. Failures are normal `uniqueItems` validation errors, without exceptions
+or console warnings. Whole nullish collections still pass as empty arrays. Without a selector,
+null and undefined remain distinct values; function selectors receive the original item and index,
+including nullish items, and must implement their own key policy. Validation does not modify item
+values or interaction state. Existing conditional rules, custom errors/messages, reset behavior,
+and ancestor validity aggregation continue to apply.
+
+Angular reference: **v22.2.0**, commit **fc187d4aec254b52a0cff7a16a390a4b0c3e57d8**.
+Inspected `packages/forms/signals/src/api/rules/validation/validate.ts` and
+`packages/forms/signals/test/node/validation_status.spec.ts` (single-field validity and propagation).
+Angular has no equivalent built-in uniqueness validator; the nullable-key policy is specific to
+Form Nodes. As in Angular, an aggregate validator's error belongs to that node and propagates
+invalidity to ancestors without making each child invalid.
 
 `integer` uses `Number.isSafeInteger()`. It rejects decimals, `NaN`, positive and negative
 infinity, and integers outside `Number.MIN_SAFE_INTEGER` through `Number.MAX_SAFE_INTEGER`, where

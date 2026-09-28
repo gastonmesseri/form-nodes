@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Handle null and undefined items safely in property-based `uniqueItems()` validation. Nullable item types now support property selectors; absent items and missing or undefined properties share an undefined key and produce normal duplicate-index validation errors when repeated. Null property values remain distinct, and callback selectors still receive the original items.
 - Accept `undefined` as an absent field value in `minDate`, `maxDate`, `dateBetween`, `minWords`, and `maxWords`, preventing validation crashes with deferred validators or external data. Their public types and callback contexts now include `undefined`; combine with `required` to reject absent values.
 - Use template/factory defaults for whole nullish object rows received at runtime by array `set()`, `patch()`, and `update()`. Reused rows retain identity and dirty/touched state while replacing values and discarding overwritten pending input; new rows use their construction defaults. Nullable field rows retain their supplied values, and TypeScript still requires complete object rows.
 - Treat runtime `null` and `undefined` arguments to form and group `reset()` like an omitted value: preserve current values, discard pending control input, and clear interaction state and form submission history throughout the subtree. Nested object branches follow the same rule; TypeScript still requires complete objects for explicit reset values.
