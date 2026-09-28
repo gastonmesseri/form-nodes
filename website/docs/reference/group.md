@@ -1375,6 +1375,14 @@ Unknown runtime keys are ignored with a warning in development mode.
 Recursively cancels pending control input and clears touched and dirty state. Without an argument it
 keeps all current values; with a value it assigns the complete value first.
 
+If `null` or `undefined` reaches a form or group at runtime, it behaves like `reset()` without an
+argument: current committed values are preserved, pending control input is discarded, dirty and
+touched state is cleared throughout the subtree, and nested form submission history is cleared.
+This applies through `$api.reset()` and to nullish object branches inside a complete reset value;
+other supplied branches still receive their values. TypeScript continues to require complete
+objects for explicit reset values. Fields still assign allowed nullish values, and explicitly
+nullish array values clear the collection.
+
 ```ts
 const address = group({
   city: field('Zurich'),

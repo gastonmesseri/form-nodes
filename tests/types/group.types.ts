@@ -35,6 +35,16 @@ address.set({ city: 'Bern', location: null });
 // @ts-expect-error nested object branches reject undefined in complete writes
 address.set({ city: 'Bern', location: undefined });
 address.patch({ location: { latitude: 47 } });
+// @ts-expect-error explicit reset values must be complete objects
+address.reset(null);
+// @ts-expect-error explicit undefined is not a complete reset value
+address.reset(undefined);
+// @ts-expect-error the API facade keeps reset values strict
+address.$api.reset(null);
+// @ts-expect-error nested reset objects reject null
+address.reset({ city: 'Bern', location: null });
+// @ts-expect-error nested reset objects reject undefined
+address.reset({ city: 'Bern', location: undefined });
 address.patch(undefined);
 address.$api.patch(null);
 address.patch({ location: undefined });

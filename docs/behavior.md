@@ -877,6 +877,29 @@ undefined-valued children. Actual writes retain the existing value and validatio
 
 Calling reset on a nested form only resets that subtree. State belonging to siblings is preserved.
 
+Forms and groups treat runtime `reset(null)` and `reset(undefined)` as `reset()` with no arguments.
+The public types still require complete object values when an argument is supplied. This applies
+through `$api.reset()` and recursively to nullish object branches supplied by a parent reset.
+The receiving subtree keeps its current committed values and array items, including dynamic
+children, discards pending control input, clears dirty/touched state and form submission history,
+and runs the ordinary control reset hooks. Other supplied branches receive their values normally.
+Fields still assign explicitly supplied nullish values when allowed, and explicitly nullish array
+collections still clear. This does not add validation for other malformed input shapes.
+
+A reset that preserves values emits no value-change notification. Value-driven validators retain
+their existing errors and pending work when their dependencies are unchanged; validators depending
+on interaction state can reevaluate as usual. Pending control debounce work is aborted and stale
+completion cannot overwrite the preserved committed values. Resetting a subtree preserves sibling
+state and interaction flags owned by ancestors.
+
+Reset reference: Angular `v22.2.0`, commit `fc187d4aec254b52a0cff7a16a390a4b0c3e57d8`,
+`packages/forms/signals/src/field/node.ts` (`reset` / `_reset`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (`resetting`). Angular preserves model values
+for an undefined reset argument, aborts pending control synchronization, restores control values,
+and clears interaction state recursively. It assigns a supplied null to the model. Treating null
+as an omitted value for declared forms and groups is an intentional Form Nodes policy; nullable
+leaf values retain their existing assignment semantics.
+
 ### Dynamic object children
 
 `form()` and `group()` accept named children after creation through `add(key, definition)` or an

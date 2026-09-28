@@ -182,6 +182,12 @@ profileForm.reset({
 });
 ```
 
+For forms and groups, runtime `null` or `undefined` reset arguments act like an omitted argument:
+keep committed values, discard pending control input, and clear dirty/touched state and form
+submission history throughout that subtree. Nested nullish object branches follow the same rule.
+TypeScript still requires complete objects for explicit reset values. Fields assign allowed
+nullish values; an explicitly nullish array reset clears its collection.
+
 Resetting a nested node affects only that subtree. Validators remain configured and immediately evaluate the reset value.
 
 ## ⏱️ Control values and debounce {#control-values-and-debounce}

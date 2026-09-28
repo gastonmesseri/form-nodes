@@ -130,6 +130,16 @@ profile.set({ name: 'Daniel', age: 43, address: null });
 // @ts-expect-error nested object branches reject undefined in complete writes
 profile.set({ name: 'Daniel', age: 43, address: undefined });
 profile.patch({ address: { city: 'Geneva' } });
+// @ts-expect-error explicit reset values must be complete objects
+profile.reset(null);
+// @ts-expect-error explicit undefined is not a complete reset value
+profile.reset(undefined);
+// @ts-expect-error the API facade keeps reset values strict
+profile.$api.reset(null);
+// @ts-expect-error nested reset objects reject null
+profile.reset({ name: 'Daniel', age: 43, address: null });
+// @ts-expect-error nested reset objects reject undefined
+profile.reset({ name: 'Daniel', age: 43, address: undefined });
 profile.patch(undefined);
 profile.$api.patch(null);
 profile.patch({ address: undefined });

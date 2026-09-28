@@ -139,7 +139,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `set` | Assigns a complete form value immediately without marking the form or its descendants dirty. |
 | `update` | Computes and sets the complete form value from its current value without marking nodes dirty. |
 | `patch` | Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. Passing null or undefined to a form or group leaves its values, state, and pending work unchanged. |
-| `reset` | Recursively clears touched and dirty state and cancels pending control input. Passing a complete value also assigns it; omitting the value preserves all current committed values. |
+| `reset` | Recursively clears touched and dirty state and cancels pending control input. Passing a complete value also assigns it; omitting the value preserves all current committed values. Runtime null or undefined on a form or group behaves like an omitted value, including nested object branches. Submission history is cleared throughout the subtree. Types still require complete objects when a value is supplied; fields and arrays retain their own reset contracts. |
 | `resetToInitial` | Restores the initial values of the current form/group subtree and resets interaction state. |
 | `validators` | Current normalized validators assigned directly to this form, in declaration order. |
 | `setValidators` | Replaces validators owned by this form and immediately validates its current aggregate value. |

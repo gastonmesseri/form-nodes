@@ -4872,6 +4872,153 @@ describe('form', () => {
     expect(formGroup.$api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid', country: 'ES' } });
   });
 
+  it.each([null, undefined])('resets state throughout a form for runtime %s while preserving current values', async (value) => {
+    const profile = form({
+      name: field('Ada', [required]),
+      address: group({ details: form({ city: field('Zurich') }) }),
+      rows: array({ label: field('') }, [{ label: 'first' }]),
+    });
+    const extra = profile.add('extra', field('original'));
+    extra.set('current');
+    profile.name.set('');
+    profile.address.details.city.set('Bern');
+    await profile.submit();
+    await profile.address.details.submit();
+    profile.markAsDirty();
+    profile.markAsTouched();
+    profile.rows[0]!.label.markAsDirty();
+    extra.markAsDirty();
+    const previous = profile();
+    const errors = profile.allErrors();
+    const row = profile.rows[0];
+    const notify = vi.fn();
+    profile.onValueChange(notify);
+    expect(profile.submitted()).toBe(true);
+    expect(profile.address.details.submitted()).toBe(true);
+
+    profile.reset(value as never);
+
+    expect(profile()).toBe(previous);
+    expect(profile.allErrors()).toBe(errors);
+    expect(profile.name.hasError('required')).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.submitted()).toBe(false);
+    expect(profile.address.details.submitted()).toBe(false);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile.rows[0]).toBe(row);
+    expect(profile.rows[0]!.label.pristine()).toBe(true);
+    expect(profile.rows[0]!.label.untouched()).toBe(true);
+    expect(extra()).toBe('current');
+    expect(extra.pristine()).toBe(true);
+    expect(extra.untouched()).toBe(true);
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it.each([null, undefined])('resets a group for runtime %s without resetting siblings or ancestor flags', async (value) => {
+    const profile = form({
+      name: field('Ada'),
+      address: group({ details: form({ city: field('Zurich') }) }),
+    });
+    await profile.submit();
+    await profile.address.details.submit();
+    profile.markAsDirty();
+    profile.markAsTouched();
+    profile.name.markAsDirty();
+    profile.address.details.city.markAsDirty();
+    const previous = profile();
+
+    profile.address.$api.reset(value as never);
+
+    expect(profile()).toBe(previous);
+    expect(profile.address.pristine()).toBe(true);
+    expect(profile.address.untouched()).toBe(true);
+    expect(profile.address.details.submitted()).toBe(false);
+    expect(profile.name.dirty()).toBe(true);
+    expect(profile.name.touched()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(profile.submitted()).toBe(true);
+  });
+
+  it.each([null, undefined])('preserves nullish object branches while resetting supplied sibling values for %s', (value) => {
+    const profile = form({
+      name: field<string | null | undefined>('Ada'),
+      address: { city: field('Zurich') },
+      workflow: form({ step: field(2) }),
+      tags: array(field(''), ['first']),
+    });
+    profile.markAsTouched();
+    profile.address.city.markAsDirty();
+    profile.workflow.step.markAsDirty();
+
+    profile.$api.reset({ name: value, address: value as never, workflow: value as never, tags: value });
+
+    expect(profile()).toEqual({ name: value, address: { city: 'Zurich' }, workflow: { step: 2 }, tags: [] });
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile.address.city.pristine()).toBe(true);
+    expect(profile.workflow.step.pristine()).toBe(true);
+  });
+
+  it.each([null, undefined])('discards form, group, and field drafts on runtime reset with %s', async (value) => {
+    const runs: { signal: AbortSignal; finish(): void }[] = [];
+    const debounce = vi.fn((signal: AbortSignal) => {
+      return new Promise<void>((finish) => { runs.push({ signal, finish }); });
+    });
+    const profile = form({ address: group({ city: field('Zurich') }) }, { debounce });
+    profile.markAsTouched();
+    profile.value.control.set({ address: { city: 'root draft' } });
+    profile.address.value.control.set({ city: 'group draft' });
+    profile.address.city.value.control.set('field draft');
+    expect(debounce).toHaveBeenCalledTimes(3);
+    expect(profile.debouncing()).toBe(true);
+    expect(runs.every(run => !run.signal.aborted)).toBe(true);
+
+    profile.reset(value as never);
+
+    expect(profile()).toEqual({ address: { city: 'Zurich' } });
+    expect(profile.value.control()).toEqual(profile());
+    expect(profile.address.value.control()).toEqual({ city: 'Zurich' });
+    expect(profile.address.city.value.control()).toBe('Zurich');
+    expect(profile.debouncing()).toBe(false);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(runs.every(run => run.signal.aborted)).toBe(true);
+    runs.forEach(run => run.finish());
+    await Promise.resolve();
+    profile.flush();
+    expect(profile.address.city()).toBe('Zurich');
+    expect(debounce).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([null, undefined])('preserves value-driven pending validation on runtime reset with %s', async (value) => {
+    const runs: { abortSignal: AbortSignal; finish(result: null): void }[] = [];
+    const validate = vi.fn((context: Context<unknown> & { abortSignal: AbortSignal }) => {
+      context.value();
+      return new Promise<null>((finish) => { runs.push({ abortSignal: context.abortSignal, finish }); });
+    });
+    const profile = form({ details: group({ name: field('Ada', asyncValidator(validate)) }) }, {
+      validators: asyncValidator(validate),
+    });
+    profile.markAsDirty();
+    profile.markAsTouched();
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+
+    profile.reset(value as never);
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(runs.every(run => !run.abortSignal.aborted)).toBe(true);
+    expect(profile.pending()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    runs.forEach(run => run.finish(null));
+    await vi.waitFor(() => expect(profile.pending()).toBe(false));
+    expect(profile.valid()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+  });
+
   it('clears dirty and touched on every descendant', () => {
     const formGroup = form({
       name: field('David'),

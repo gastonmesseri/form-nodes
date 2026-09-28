@@ -1092,6 +1092,9 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /**
    * Recursively clears touched and dirty state and cancels pending control input. Passing a complete
    * value also assigns it; omitting the value preserves all current committed values.
+   * Runtime null or undefined on a form or group behaves like an omitted value, including nested
+   * object branches. Submission history is cleared throughout the subtree. Types still require
+   * complete objects when a value is supplied; fields and arrays retain their own reset contracts.
    *
    * ```ts
    * const node = form({

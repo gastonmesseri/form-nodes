@@ -429,7 +429,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     this.selfDirty.set(false);
     this.submitted.set(false);
     notifyExternalValidationReset(this.node);
-    if (args.length === 0) {
+    if (args.length === 0 || isNil(args[0])) {
       this.getChildKeys().forEach(key => this.children[key]!.$api.reset());
       this.controlBindings.forEach(binding => binding.reset?.());
       return;

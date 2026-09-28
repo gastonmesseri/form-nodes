@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Treat runtime `null` and `undefined` arguments to form and group `reset()` like an omitted value: preserve current values, discard pending control input, and clear interaction state and form submission history throughout the subtree. Nested object branches follow the same rule; TypeScript still requires complete objects for explicit reset values.
 - Ignore runtime `null` and `undefined` inputs to form and group `set()`, including nested object branches, preserving their values, interaction state, and pending work while other supplied branches update. TypeScript still requires complete objects. The same guard applies to `update()` results and `value.committed.set()` writes.
 - Make property-name `trackBy` handle nullish array items as an `undefined` key, preserving node identity and rejecting duplicate keys before applying item values. Empty or nullish collection updates now detach all items without evaluating tracking keys, including when existing keys are duplicated.
 

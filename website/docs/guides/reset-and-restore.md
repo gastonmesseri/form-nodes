@@ -23,6 +23,13 @@ applies to the selected subtree. It takes no arguments.
 | `reset(value)` | Replaced with the supplied value | Cleared in the subtree | Discarded |
 | `resetToInitial()` | Restored from captured initial values | Cleared in the subtree | Discarded |
 
+For forms and groups, a runtime `null` or `undefined` argument to `reset()` follows the first row
+of the table: preserve committed values and reset state, including form submission history. This
+also applies to nested object branches and dynamically added children. TypeScript still requires a
+complete object when passing a reset value. Fields retain their nullable value contracts, and
+explicitly nullish array resets clear the collection. An array beneath a form or group reset
+without a replacement object retains its current items and values.
+
 All three reset operations synchronize controls with the committed model and clear control parsing
 state through the normal reset hooks. `resetToInitial()` does not replace `reset()` or change its
 existing meaning. Calling it on a child affects that branch; sibling values and interaction state
