@@ -94,6 +94,42 @@ describe('createReactiveWatch', () => {
 });
 
 describe('createTrackedRunner', () => {
+  it('executes explicit callbacks with unchanged or absent dependencies without notifying its owner', () => {
+    const value = signal('Ada');
+    const target = { callback: null as (() => unknown) | null, notify: vi.fn() };
+    const runner = createTrackedRunner(target);
+    const read = vi.fn(() => value());
+
+    expect(runner.run(read)).toBe('Ada');
+    expect(runner.run(read)).toBe('Ada');
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(target.notify).not.toHaveBeenCalled();
+    expect(runner.hasChanges()).toBe(false);
+
+    expect(runner.run(() => 'constant')).toBe('constant');
+    value.set('Grace');
+    expect(target.notify).not.toHaveBeenCalled();
+    expect(runner.run(() => 'next')).toBe('next');
+    runner.destroy();
+  });
+
+  it('releases a throwing callback and can retry with unchanged dependencies', () => {
+    const value = signal('Ada');
+    const target = { callback: null as (() => unknown) | null, notify: vi.fn() };
+    const runner = createTrackedRunner(target);
+    const failure = new Error('Unavailable');
+    expect(() => {
+      return runner.run(() => {
+        value();
+        throw failure;
+      });
+    }).toThrow(failure);
+    expect(target.callback).toBeNull();
+    expect(runner.run(value)).toBe('Ada');
+    expect(target.notify).not.toHaveBeenCalled();
+    runner.destroy();
+  });
+
   it('filters unchanged computed dependencies without losing later notifications', () => {
     const source = signal('Marco');
     const selected = computed(source, { equal: (a, b) => a.toLowerCase() === b.toLowerCase() });

@@ -113,7 +113,8 @@ export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: As
       return;
     }
     const baseContext = createValidatorContext(context, getTargetNode());
-    if (validators.some(validator => getAsyncValidatorOptions(validator).params === undefined)) context.value();
+    const tracksValue = validators.some(validator => getAsyncValidatorOptions(validator).params === undefined);
+    const validationValue = tracksValue ? context.value() : undefined;
     const activeValidators = validators.flatMap((validator) => {
       const options = getAsyncValidatorOptions(validator);
       if (options.when?.(baseContext) === false) {
@@ -164,6 +165,12 @@ export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: As
       if (!discoversDependencies && debounce > 0) await wait(debounce, controller.signal);
       else if (deferCallbacks) await Promise.resolve();
       if (controller.signal.aborted || currentExecution !== execution) {
+        controllers.delete(controller);
+        return;
+      }
+      // Let the queued value update start validation before invoking a stale startup callback.
+      if (deferCallbacks && tracksValue && !Object.is(context.value(), validationValue)) {
+        controller.abort();
         controllers.delete(controller);
         return;
       }

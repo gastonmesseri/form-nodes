@@ -1,3 +1,4 @@
+import { Injector } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { array } from '../array';
@@ -111,49 +112,61 @@ describe('array keyed reconciliation invariants', () => {
     }
   });
 
-  it('cancels pending validation and ignores late errors from a node removed by keyed set', async () => {
+  it('cancels inherited validation ownership and ignores late errors from a node removed by keyed set', async () => {
+    const injector = Injector.create({ providers: [] });
     let resolveAlex!: (result: { kind: string }) => void;
+    let alexSignal!: AbortSignal;
     let createdIndex = 0;
     const people = array(() => {
       const isAlex = createdIndex++ === 0;
       return {
         id: field.strict(''),
         name: field.strict('', [
-          asyncValidator(() => {
-            return isAlex
-              ? new Promise<{ kind: string }>((resolve) => { resolveAlex = resolve; })
-              : new Promise<null>(() => { });
+          asyncValidator(({ abortSignal }) => {
+            if (isAlex) {
+              alexSignal = abortSignal;
+              return new Promise<{ kind: string }>((resolve) => { resolveAlex = resolve; });
+            }
+            return new Promise<null>(() => { });
           }),
         ]),
       };
     }, [
       { id: 'alex', name: 'Alex' },
       { id: 'kirill', name: 'Kirill' },
-    ], { trackBy: person => person.id });
-    const alex = people[0]!;
-    const kirill = people[1]!;
-    await Promise.resolve();
-    expect(alex.name.pending()).toBe(true);
+    ], { injector, trackBy: person => person.id });
+    try {
+      const alex = people[0]!;
+      const kirill = people[1]!;
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(alex.name.pending()).toBe(true);
+      expect(alexSignal.aborted).toBe(false);
 
-    people.set([{ id: 'kirill', name: 'Kirill' }]);
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+      people.set([{ id: 'kirill', name: 'Kirill' }]);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
 
-    expect(people[0]).toBe(kirill);
-    expect(alex.parent()).toBeNull();
-    expect(alex.pending()).toBe(false);
+      expect(people[0]).toBe(kirill);
+      expect(alex.parent()).toBeNull();
+      expect(alexSignal.aborted).toBe(true);
+      expect(alex.pending()).toBe(false);
+      expect(kirill.pending()).toBe(true);
 
-    resolveAlex({ kind: 'detachedRemote' });
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+      resolveAlex({ kind: 'detachedRemote' });
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
 
-    expect(alex.name.getError('detachedRemote')).toBeUndefined();
-    expect(alex.valid()).toBe(true);
-    expect(people.allErrors()).toEqual([]);
+      expect(alex.name.getError('detachedRemote')).toBeUndefined();
+      expect(alex.valid()).toBe(true);
+      expect(people.allErrors()).toEqual([]);
+    } finally {
+      injector.destroy();
+    }
   });
 
   it('keeps duplicate incoming rows independent when a retained row is edited or removed', () => {

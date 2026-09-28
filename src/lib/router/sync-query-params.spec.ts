@@ -1134,3 +1134,43 @@ it('leaves callback exceptions outside the parse fallback path', () => {
   expect(onError).not.toHaveBeenCalled();
   injector.destroy();
 });
+
+it('keeps initial JSON hydration validation active until its result and cancels obsolete URL work', async () => {
+  const url = (name: string) => `/search?profile=${encodeURIComponent(JSON.stringify({ name }))}`;
+  const { router, injector } = setup(url('Grace'));
+  const runs: { value: unknown; signal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+  const profile = form({ nested: form({ name: field('Ada', { validators: asyncValidator(({ value, abortSignal }) => {
+    const current = value();
+    return new Promise<{ kind: string } | null>((resolve) => {
+      runs.push({ value: current, signal: abortSignal, resolve });
+    });
+  }) }) }) });
+  try {
+    syncQueryParams({ profile: { source: profile.nested, serializer: 'json' } }, { injector });
+    await settle();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.value).toBe('Grace');
+    expect(runs[0]!.signal.aborted).toBe(false);
+    expect(profile.pending()).toBe(true);
+    expect(profile.valid()).toBe(false);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+
+    router.external(url('Lin'));
+    await settle();
+    expect(runs).toHaveLength(2);
+    expect(runs[0]!.signal.aborted).toBe(true);
+    expect(runs[1]!.value).toBe('Lin');
+    runs[0]!.resolve({ kind: 'stale' });
+    await settle();
+    expect(profile.pending()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+    runs[1]!.resolve({ kind: 'unavailable' });
+    await settle();
+    expect(profile.pending()).toBe(false);
+    expect(profile.nested.name.hasError('unavailable')).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  } finally {
+    injector.destroy();
+  }
+});

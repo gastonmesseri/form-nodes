@@ -1,4 +1,4 @@
-import { DestroyRef, Injector, assertInInjectionContext, inject } from '@angular/core';
+import { DestroyRef, Injector, assertInInjectionContext, inject, signal, untracked } from '@angular/core';
 import { SIGNAL, createWatch, consumerPollProducersForChange, type Watch } from '@angular/core/primitives/signals';
 
 export type ReactiveWatchTarget = {
@@ -106,9 +106,16 @@ export const createReactiveWatch = (
 
 export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner => {
   const targetRef = new WeakRef(target);
+  const revision = signal(0);
+  let advancing = false;
   const watch = createWatch(
-    () => targetRef.deref()?.callback?.(),
-    () => targetRef.deref()?.notify(),
+    () => {
+      revision();
+      targetRef.deref()?.callback?.();
+    },
+    () => {
+      if (!advancing) targetRef.deref()?.notify();
+    },
     true,
   );
   finalizationRegistry.register(target, watch, watch);
@@ -124,8 +131,15 @@ export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner 
       if (!currentTarget) return callback();
       let result!: T;
       currentTarget.callback = () => { result = callback(); };
-      watch.run();
-      currentTarget.callback = null;
+      // Explicit executions must run even when the previous dependencies are unchanged.
+      advancing = true;
+      untracked(() => revision.update(value => value + 1));
+      advancing = false;
+      try {
+        watch.run();
+      } finally {
+        currentTarget.callback = null;
+      }
       return result;
     },
     destroy: () => {

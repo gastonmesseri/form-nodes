@@ -34,6 +34,13 @@ While current asynchronous work is running, `pending()` is true. With no complet
 
 Each execution receives its own `AbortSignal`. A newer execution aborts the previous signal, unsubscribes from a previous observable, and ignores stale results even when the underlying work cannot be cancelled.
 
+For callback validators without explicit `params`, a value written immediately after construction
+is validated even if the first callback has not started yet. Consecutive synchronous startup writes
+use the latest value without starting a duplicate request for it. This also applies to nested form
+writes and initial values imported by `syncQueryParams()`. The node and its ancestors stay pending
+until the current validation settles. Later value changes restart the callback even when it reads
+no signals itself.
+
 The validator's `debounce` delays validation work. This is independent from a field's control-value debounce.
 
 ## 🚨 Conditions and failures {#conditions-and-failures}

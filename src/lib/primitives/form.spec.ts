@@ -8561,3 +8561,41 @@ it('runs async validation for the complete URL fallback and ignores stale result
   expect(profile.allErrors()).toMatchObject([{ kind: 'remote' }]);
   injector.destroy();
 });
+
+it.each(['child', 'form'] as const)('keeps nested %s validation pending after an immediate aggregate write', async (target) => {
+  const runs: { value: unknown; signal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+  const validate = asyncValidator(({ value, abortSignal }) => {
+    const current = value();
+    return new Promise<{ kind: string } | null>((resolve) => {
+      runs.push({ value: current, signal: abortSignal, resolve });
+    });
+  });
+  const profile = form({ nested: form({
+    name: field('Ada', { validators: target === 'child' ? validate : [] }),
+  }, { validators: target === 'form' ? validate : [] }) });
+  profile.set({ nested: { name: 'Grace' } });
+  await settle();
+  expect(runs).toHaveLength(1);
+  expect(runs[0]!.value).toEqual(target === 'child' ? 'Grace' : { name: 'Grace' });
+  expect(runs[0]!.signal.aborted).toBe(false);
+  expect(profile.nested.pending()).toBe(true);
+  expect(profile.pending()).toBe(true);
+  expect(profile.valid()).toBe(false);
+  expect(profile.dirty()).toBe(false);
+  expect(profile.touched()).toBe(false);
+
+  profile.patch({ nested: { name: 'Lin' } });
+  await settle();
+  expect(runs).toHaveLength(2);
+  expect(runs[0]!.signal.aborted).toBe(true);
+  runs[0]!.resolve({ kind: 'stale' });
+  await settle();
+  expect(profile.pending()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  runs[1]!.resolve({ kind: 'unavailable' });
+  await settle();
+  expect(profile.pending()).toBe(false);
+  expect(profile.nested.pending()).toBe(false);
+  expect(profile.allErrors()).toMatchObject([{ kind: 'unavailable' }]);
+  expect(profile.invalid()).toBe(true);
+});

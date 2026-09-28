@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Keep asynchronous validation active when values change immediately after node construction, including nested form writes and initial query hydration. Callback validators validate the latest startup value without duplicate requests, restart on later value changes even without signal reads, and keep pending state until the current result settles while ignoring cancelled results.
 - Treat runtime null or undefined `syncQueryParams()` binding maps as empty maps, returning a closed connection without observations or navigation while keeping the map required in TypeScript. Shared options now accept null in TypeScript and use the same defaults as omitted options, including the current injection context.
 - Omit `pattern()` and `oneOf()` rules when a null constraint arrives at runtime, including reactive source results, matching their existing undefined handling. Absent patterns contribute no constraint metadata; restored constraints resume validation. Public types remain strict, and an empty `oneOf([])` list still rejects non-empty values.
 - Make empty `add({})` calls on forms and groups preserve value identity and emit no change notifications. Runtime null or undefined bulk additions now return `{}` with the same behavior, preserving children, interaction state, drafts, errors, and pending validation. Public types still require an object; named additions continue to accept nullish field values.

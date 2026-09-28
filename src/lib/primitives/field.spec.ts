@@ -5690,3 +5690,89 @@ it('uses a serializer to validate an object field before applying its captured f
   expect(sync.closed()).toBe(false);
   injector.destroy();
 });
+
+describe.each([false, true])('asynchronous validation restarts with injection=%s', (inContext) => {
+  it.each([false, true])('validates the latest startup value once and restarts with value tracking=%s', async (readsValue) => {
+    const injector = Injector.create({ providers: [] });
+    const runs: { value: unknown; signal: AbortSignal; resolve(result: { kind: string } | null): void }[] = [];
+    const create = () => {
+      return field('Ada', { validators: asyncValidator(({ value, abortSignal }) => {
+        const current = readsValue ? value() : 'constant';
+        return new Promise<{ kind: string } | null>((resolve) => {
+          runs.push({ value: current, signal: abortSignal, resolve });
+        });
+      }) });
+    };
+    const name = inContext ? runInInjectionContext(injector, create) : create();
+    try {
+      expect(name.pending()).toBe(true);
+      name.set('Grace');
+      name.set('Lin');
+      await settle();
+      expect(runs).toHaveLength(1);
+      expect(runs[0]!.value).toBe(readsValue ? 'Lin' : 'constant');
+      expect(runs[0]!.signal.aborted).toBe(false);
+      expect(name.pending()).toBe(true);
+      expect(name.valid()).toBe(false);
+      expect(name.errors()).toEqual([]);
+      expect(name.dirty()).toBe(false);
+      expect(name.touched()).toBe(false);
+
+      name.set('Edsger');
+      await settle();
+      expect(runs).toHaveLength(2);
+      expect(runs[0]!.signal.aborted).toBe(true);
+      expect(runs[1]!.signal.aborted).toBe(false);
+      expect(runs[1]!.value).toBe(readsValue ? 'Edsger' : 'constant');
+      runs[0]!.resolve({ kind: 'stale' });
+      await settle();
+      expect(name.pending()).toBe(true);
+      expect(name.errors()).toEqual([]);
+      runs[1]!.resolve({ kind: 'unavailable' });
+      await settle();
+      expect(name.pending()).toBe(false);
+      expect(name.hasError('unavailable')).toBe(true);
+      expect(name.invalid()).toBe(true);
+
+      name.set('Barbara');
+      await settle();
+      expect(runs).toHaveLength(3);
+      expect(name.pending()).toBe(true);
+      expect(name.errors()).toEqual([]);
+      runs[2]!.resolve(null);
+      await settle();
+      expect(name.pending()).toBe(false);
+      expect(name.valid()).toBe(true);
+    } finally {
+      injector.destroy();
+    }
+  });
+});
+
+it('replaces startup validation before invoking its callback and keeps the new debounce active', async () => {
+  vi.useFakeTimers();
+  try {
+    const runs: { value: unknown; signal: AbortSignal }[] = [];
+    const name = field('Ada', { validators: asyncValidator(({ value, abortSignal }) => {
+      runs.push({ value: value(), signal: abortSignal });
+      return Promise.resolve({ kind: 'unavailable' });
+    }, { debounce: 100 }) });
+    name.set('Grace');
+    await settle();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.value).toBe('Grace');
+    expect(runs[0]!.signal.aborted).toBe(false);
+    expect(vi.getTimerCount()).toBe(1);
+    expect(name.pending()).toBe(true);
+    expect(name.errors()).toEqual([]);
+    await vi.advanceTimersByTimeAsync(99);
+    expect(name.pending()).toBe(true);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(name.pending()).toBe(false);
+    expect(name.hasError('unavailable')).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {
+    vi.useRealTimers();
+  }
+});

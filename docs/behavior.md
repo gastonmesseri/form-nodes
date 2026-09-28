@@ -1407,6 +1407,24 @@ Asynchronous validation behavior follows Angular 22 Signal Forms where applicabl
 
 Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. The initial callback invocation is scheduled in the next microtask, after the expression that created its field or form has completed. This makes it safe for a validator declared in a class property initializer to read another property through its owning form. The node becomes pending synchronously, before that callback starts. Signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation, including sibling fields or external signals captured by the validator.
 
+For validators without explicit `params`, synchronous writes before the initial callback starts
+supersede the scheduled value. The superseded startup skips its callback and releases its debounce
+timer; the queued value update validates the latest value once. This applies to standalone fields,
+aggregate validators, nested children, and initial query hydration through ordinary node writes.
+The current operation keeps the node and its ancestors pending until it settles, and cancelled
+results cannot publish errors or clear that pending state. These writes do not mark nodes dirty
+or touched. A validation restart executes the callback even when its previously discovered signals
+are unchanged or it reads no signals; dependency notifications still filter unchanged computed
+values, and explicit params retain their shallow comparison policy.
+
+Checked against Angular `v22.2.0`, commit `fc187d4aec254b52a0cff7a16a390a4b0c3e57d8`:
+`packages/core/primitives/signals/src/watch.ts` skips `run()` when producer versions are unchanged;
+`packages/forms/signals/src/api/rules/validation/validate_async.ts` maps loading resources to pending;
+`packages/forms/signals/src/field/validation.ts` aggregates child pending state; and
+`packages/forms/signals/test/node/validation_status.spec.ts` covers pending through async completion
+and child-to-parent propagation. Form Nodes uses abortable callbacks instead of Angular resources
+and supports validation without an injection context; callback startup scheduling is its own contract.
+
 The watcher does not require dependency injection. A node first uses its explicit or currently
 captured injector. Without one, it temporarily adopts the injector of a directly bound
 `[formNode]`, then uses the nearest ancestor injector by default, so descendants
