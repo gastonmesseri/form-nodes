@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.6.2 — 2026-09-28 {#562--2026-09-28}
+
 ### Fixed
 
 - Keep asynchronous validation active when values change immediately after node construction, including nested form writes and initial query hydration. Callback validators validate the latest startup value without duplicate requests, restart on later value changes even without signal reads, and keep pending state until the current result settles while ignoring cancelled results.
