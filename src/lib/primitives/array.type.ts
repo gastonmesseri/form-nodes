@@ -368,11 +368,13 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * Selects stable item identity during `set()`, `patch()`, `update()`, and value-reset reconciliation.
    * Matching keys retain and move existing nodes; new keys create nodes and removed keys detach them.
    * Retained nodes keep their identity and interaction state while their values and paths update.
-   * Incoming keys must be unique; duplicates throw before item values or membership change.
-   * If current keys are duplicated, the first item in current array order is reused and the other
-   * matching items are detached during successful reconciliation. Reset operations clear reused state.
+   * Duplicate keys match by occurrence order within each key: reuse each current node at most once,
+   * create nodes for extra incoming occurrences, and detach unmatched current nodes.
+   * Reused state follows occurrence order for equal keys. Reset operations clear reused state.
+   * A reconciliation with duplicate current or incoming keys warns once in Angular development mode.
+   * Use unique keys to preserve identity across reordering; production uses the same matching without warnings.
    * Property names read null or undefined items as an undefined key, like item?.id.
-   * This key can occur only once in incoming values, including objects whose selected property is undefined.
+   * Objects whose selected property is undefined share that key and match by occurrence order too.
    * A null property value is a distinct key. Functions receive the original item value.
    * Empty incoming collections detach all items without reading keys or invoking trackBy.
    *

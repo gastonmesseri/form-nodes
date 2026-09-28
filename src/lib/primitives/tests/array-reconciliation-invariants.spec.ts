@@ -156,28 +156,27 @@ describe('array keyed reconciliation invariants', () => {
     expect(people.allErrors()).toEqual([]);
   });
 
-  it('rejects duplicate incoming keys atomically without changing value, identity, or state', () => {
+  it('keeps duplicate incoming rows independent when a retained row is edited or removed', () => {
     const people = createPeople();
-    const beforeValue = people();
-    const beforeItems = [...people];
-    beforeItems[0]!.name.markAsDirty();
-    beforeItems[0]!.name.markAsTouched();
-
-    expect(() => {
-      return people.set([
-        { id: 'same', name: 'One' },
-        { id: 'same', name: 'Two' },
-      ]);
-    }).toThrow('array: duplicate trackBy key same in incoming values');
-
-    expect(people()).toEqual(beforeValue);
-    expect([...people]).toEqual(beforeItems);
-    expect(beforeItems[0]!.name.dirty()).toBe(true);
-    expect(beforeItems[0]!.name.touched()).toBe(true);
-    beforeItems.forEach((item, index) => {
-      expect(item.parent()).toBe(people);
-      expect(item.path()).toEqual([String(index)]);
-    });
+    const first = people[0]!;
+    first.name.markAsDirty();
+    first.name.markAsTouched();
+    people.set([{ id: 'alex', name: 'One' }, { id: 'alex', name: 'Two' }]);
+    const second = people[1]!;
+    expect(people[0]).toBe(first);
+    expect(second).not.toBe(first);
+    first.name.set('Edited');
+    expect(people()).toEqual([{ id: 'alex', name: 'Edited' }, { id: 'alex', name: 'Two' }]);
+    expect(first.dirty()).toBe(true);
+    expect(first.touched()).toBe(true);
+    expect(second.pristine()).toBe(true);
+    expect(second.untouched()).toBe(true);
+    people.removeAt(0);
+    expect(people[0]).toBe(second);
+    expect(first.parent()).toBeNull();
+    expect(second.parent()).toBe(people);
+    expect(second.path()).toEqual(['0']);
+    expect(people()).toEqual([{ id: 'alex', name: 'Two' }]);
   });
 
   it('keeps the first current duplicate and detaches the later node', () => {

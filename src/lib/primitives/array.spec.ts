@@ -1,5 +1,5 @@
 import { FormControl } from '@angular/forms';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector, computed, isSignal, signal, type WritableSignal } from '@angular/core';
 
 import { form } from './form';
@@ -1216,25 +1216,19 @@ describe('array', () => {
     expect(sons.untouched()).toBe(true);
   });
 
-  it('rejects duplicate trackBy keys without changing the array', () => {
+  it('creates distinct nodes for new duplicate keys and detaches replaced rows', () => {
     const sons = array(
       { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
-    const first = sons[0];
-    const second = sons[1];
-
-    expect(() => {
-      return sons.set([
-        { id: 'same', name: 'One' },
-        { id: 'same', name: 'Two' },
-      ]);
-    }).toThrow('duplicate trackBy key same in incoming values');
-
-    expect(sons()).toEqual([{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }]);
-    expect(sons[0]).toBe(first);
-    expect(sons[1]).toBe(second);
+    const original = [...sons];
+    sons.set([{ id: 'same', name: 'One' }, { id: 'same', name: 'Two' }]);
+    expect(sons()).toEqual([{ id: 'same', name: 'One' }, { id: 'same', name: 'Two' }]);
+    expect(sons[0]).not.toBe(sons[1]);
+    original.forEach(item => expect(item.parent()).toBeNull());
+    expect(sons[0]!.pristine()).toBe(true);
+    expect(sons[1]!.untouched()).toBe(true);
   });
 
   it('creates new nodes and propagates their structure when set grows the array', () => {
@@ -1990,18 +1984,8 @@ describe('array', () => {
     first.markAsDirty();
     first.markAsTouched();
     expect(rows.invalid()).toBe(true);
-    const previous = rows();
     const changed = vi.fn();
     rows.onValueChange(changed);
-    expect(() => {
-      return rows[operation === 'update' ? 'set' : operation]([
-        { id: 'one', name: 'Rejected' }, { id: 'one', name: 'Duplicate' },
-      ]);
-    }).toThrow('duplicate trackBy key one in incoming values');
-    expect(rows()).toBe(previous);
-    expect(rows[0]).toBe(first);
-    expect(rows[1]).toBe(duplicate);
-    expect(changed).not.toHaveBeenCalled();
     const next = [{ id: 'one', name: 'Grace' }];
     if (operation === 'update') rows.update(() => next);
     else rows[operation](next);
@@ -2318,10 +2302,13 @@ describe('array patch replacement', () => {
     expect(people[1]!.pristine()).toBe(true);
     expect(people.allErrors()).toMatchObject([{ kind: 'required', targetNode: people[1]!.name }]);
     expect(changed).toHaveBeenCalledExactlyOnceWith(people(), people, { index: null });
-    const before = people.items();
-    expect(() => people.patch([{ id: 'b', name: 'One', age: 1 }, { id: 'b', name: 'Two', age: 2 }])).toThrow();
-    expect(people.items()).toBe(before);
-    expect(changed).toHaveBeenCalledTimes(1);
+    const removed = people[1]!;
+    people.patch([{ id: 'b', name: 'One', age: 1 }, { id: 'b', name: 'Two', age: 2 }]);
+    expect(people()).toEqual([{ id: 'b', name: 'One', age: 1 }, { id: 'b', name: 'Two', age: 2 }]);
+    expect(people[0]).toBe(grace);
+    expect(people[1]).not.toBe(grace);
+    expect(removed.parent()).toBeNull();
+    expect(changed).toHaveBeenCalledTimes(2);
     people.patch([{ id: 'b', name: 'Grace', age: 29 }]);
     expect(people.valid()).toBe(true);
     people.resetToInitial();
@@ -2427,8 +2414,12 @@ describe('array replacement defaults for untyped data', () => {
     expect(rows()).toEqual([{ id: undefined, name: 'Template' }]);
     expect(first.dirty()).toBe(true);
     expect(first.touched()).toBe(true);
-    expect(() => rows.set([value, value] as never)).toThrow('duplicate trackBy key undefined');
+    rows.set([value, value] as never);
     expect(rows[0]).toBe(first);
+    expect(rows[1]).not.toBe(first);
+    expect(rows()).toEqual([{ id: undefined, name: 'Template' }, { id: undefined, name: 'Template' }]);
+    expect(rows[1]!.pristine()).toBe(true);
+    expect(rows[1]!.untouched()).toBe(true);
   });
 
   it.each(['set', 'patch'] as const)('restores declaration defaults with %s on new and reused rows', (operation) => {
@@ -2899,16 +2890,17 @@ describe('nullish keyed array items', () => {
     [null, undefined],
     [null, {}],
     [{ id: undefined }, undefined],
-  ] as Row[][])('rejects colliding undefined keys in %j and %j before applying values', (first, second) => {
+  ] as Row[][])('matches colliding undefined keys in %j and %j by occurrence', (first, second) => {
     const rows = array(field<Row>(null), { initialValue: [{ id: 'a', name: 'Ada' }, null], trackBy: 'id' });
     const original = [...rows];
     const changed = vi.fn();
     rows.onValueChange(changed);
-    expect(() => rows.set([{ id: 'a', name: 'Rejected' }, first, second]))
-      .toThrow('array: duplicate trackBy key undefined in incoming values');
-    expect(rows()).toEqual([{ id: 'a', name: 'Ada' }, null]);
-    expect([...rows]).toEqual(original);
-    expect(changed).not.toHaveBeenCalled();
+    rows.set([{ id: 'a', name: 'Updated' }, first, second]);
+    expect(rows()).toEqual([{ id: 'a', name: 'Updated' }, first, second]);
+    expect(rows[0]).toBe(original[0]);
+    expect(rows[1]).toBe(original[1]);
+    expect(rows[2]).not.toBe(rows[1]);
+    expect(changed).toHaveBeenCalledOnce();
   });
 
   it('reuses the first duplicate nullish key and detaches every row when the key disappears', () => {
@@ -2956,5 +2948,124 @@ describe('nullish keyed array items', () => {
     expect(rows.untouched()).toBe(true);
     expect(item.parent()).toBeNull();
     expect(trackBy).not.toHaveBeenCalled();
+  });
+});
+
+describe('duplicate tracking key reconciliation', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it.each(['set', 'patch', 'update', 'reset'] as const)('matches every occurrence once through %s while moving, growing and shrinking', (operation) => {
+    const trackBy = vi.fn((value: { id: string }) => value.id);
+    const rows = array({ id: field.strict(''), name: field('', required) }, {
+      initialValue: [
+        { id: 'a', name: 'Ada' }, { id: 'b', name: 'Bee' },
+        { id: 'a', name: '' }, { id: 'a', name: 'Extra' },
+      ],
+      trackBy,
+    });
+    const [first, other, second, extra] = [...rows];
+    first!.name.markAsDirty();
+    second!.name.markAsTouched();
+    const next = [
+      { id: 'b', name: 'Moved' }, { id: 'a', name: 'First' },
+      { id: 'a', name: 'Second' }, { id: 'b', name: 'New' },
+    ];
+    expect(rows.invalid()).toBe(true);
+    const changed = vi.fn();
+    rows.onValueChange(changed);
+    if (operation === 'update') rows.update(() => next);
+    else rows[operation](next);
+    expect(rows()).toEqual(next);
+    expect(rows[0]).toBe(other);
+    expect(rows[1]).toBe(first);
+    expect(rows[2]).toBe(second);
+    expect(new Set([...rows]).size).toBe(4);
+    expect(rows[3]).not.toBe(extra);
+    expect(rows[3]!.pristine()).toBe(true);
+    expect(rows[3]!.untouched()).toBe(true);
+    expect(first!.dirty()).toBe(operation !== 'reset');
+    expect(first!.untouched()).toBe(true);
+    expect(second!.pristine()).toBe(true);
+    expect(second!.touched()).toBe(operation !== 'reset');
+    expect(extra!.parent()).toBeNull();
+    expect(extra!.index()).toBeNull();
+    expect(rows.valid()).toBe(true);
+    expect(rows.allErrors()).toEqual([]);
+    expect(rows.pending()).toBe(false);
+    expect(changed).toHaveBeenCalledExactlyOnceWith(next, rows, { index: null });
+    [...rows].forEach((item, index) => {
+      expect(item.parent()).toBe(rows);
+      expect(item.index()).toBe(index);
+      expect(item.path()).toEqual([String(index)]);
+    });
+    expect(trackBy).toHaveBeenCalledTimes(8);
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+      'array: duplicate trackBy keys detected. Rows with the same key are matched by occurrence order. Use unique keys to preserve identity when reordering.',
+    );
+    extra!.name.set('Detached');
+    expect(changed).toHaveBeenCalledOnce();
+  });
+
+  it('restores duplicate initial keys by occurrence and clears retained state', () => {
+    const rows = array({ id: field(''), name: field('') }, {
+      initialValue: [{ id: 'a', name: 'Ada' }, { id: 'a', name: 'Grace' }], trackBy: 'id',
+    });
+    const [first, second] = [...rows];
+    rows.move(1, 0);
+    rows.markAsDirty();
+    rows.markAsTouched();
+    rows.resetToInitial();
+    expect(rows[0]).toBe(second);
+    expect(rows[1]).toBe(first);
+    expect(rows()).toEqual([{ id: 'a', name: 'Ada' }, { id: 'a', name: 'Grace' }]);
+    expect(rows.pristine()).toBe(true);
+    expect(rows.untouched()).toBe(true);
+    expect(console.warn).toHaveBeenCalledOnce();
+  });
+
+  it.each([NaN, null, undefined, Symbol('key'), {}])('supports duplicate Map keys without converting them to strings: %s', (key) => {
+    const rows = array(field(''), { initialValue: ['Ada', 'Grace'], trackBy: () => key });
+    const previous = [...rows];
+    rows.set(['First', 'Second', 'Third']);
+    expect(rows[0]).toBe(previous[0]);
+    expect(rows[1]).toBe(previous[1]);
+    expect(new Set([...rows]).size).toBe(3);
+    expect(rows()).toEqual(['First', 'Second', 'Third']);
+    expect(console.warn).toHaveBeenCalledOnce();
+  });
+
+  it('warns for each reconciliation with current or incoming duplicates and stays silent for unique keys and clearing', () => {
+    const rows = array(field(''), { trackBy: value => value });
+    rows.set(['a', 'b']);
+    expect(console.warn).not.toHaveBeenCalled();
+    rows.set(['a', 'a']);
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    rows.set(['a']);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    rows.set(['a', 'b']);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    rows.push('a');
+    rows.set([]);
+    expect(rows()).toEqual([]);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the same occurrence matching without warnings in production', () => {
+    vi.stubGlobal('ngDevMode', false);
+    const rows = array(field(''), { initialValue: ['Ada', 'Grace'], trackBy: () => 'same' });
+    const previous = [...rows];
+    rows.set(['First', 'Second', 'Third']);
+    expect(rows()).toEqual(['First', 'Second', 'Third']);
+    expect(rows[0]).toBe(previous[0]);
+    expect(rows[1]).toBe(previous[1]);
+    expect(new Set([...rows]).size).toBe(3);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

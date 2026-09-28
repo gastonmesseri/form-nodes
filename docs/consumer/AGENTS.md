@@ -52,7 +52,9 @@ instructions when applying these library usage rules.
 - To edit selected properties of one existing object row, call `rows.at(index)?.patch(...)`.
   Do not send a one-element array patch expecting it to update only the first row.
 - Use `push()`, `removeAt()`, and other array operations for structural edits. Without `trackBy`,
-  replacement reuses rows by index. With `trackBy`, provide stable unique keys; duplicate keys fail.
+  replacement reuses rows by index. With `trackBy`, use stable unique keys to preserve record identity
+  across reordering. Duplicate keys match by occurrence order within each key and warn once per
+  reconciliation in Angular development mode; each incoming entry has its own node.
 - `null`, `undefined`, and `[]` clear an array on `set()` or `patch()`. They are not no-op patches.
   Validate external data instead of bypassing complete-value types with `any` or casts.
 - `reset()` clears interaction state and pending input while retaining committed values.

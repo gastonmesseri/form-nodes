@@ -8,6 +8,7 @@ import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from './utils/node-marker';
 import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
+import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { computedFunction } from '../utils/computed-function';
 import { cloneInitialValue } from './utils/clone-initial-value';
 import { getClosestArrayIndex } from '../utils/node-array-index';
@@ -591,10 +592,14 @@ export class ArrayNode<TItem extends AnyNode> {
     };
     const current = this.items();
     const currentItemsByKey = this.indexItemsByKey(getTrackingKey);
-    const incomingKeys = this.getIncomingKeys(values, getTrackingKey);
+    const incomingKeys = values.map((value, index) => getTrackingKey(value as NodeValue<TItem>, index));
+    if (currentItemsByKey.size < current.length || new Set(incomingKeys).size < incomingKeys.length) {
+      warnInDevMode('array: duplicate trackBy keys detected. Rows with the same key are matched by occurrence order. Use unique keys to preserve identity when reordering.');
+    }
     const next = values.map((value, index) => {
       const key = incomingKeys[index]!;
-      const existing = currentItemsByKey.get(key);
+      const matches = currentItemsByKey.get(key);
+      const existing = matches?.items[matches.nextIndex++];
       const item = existing ?? this.createItem(value);
       if (existing) {
         if (mode === 'initial') (item as unknown as InternalNode).$api._resetToInitial(value);
@@ -613,23 +618,14 @@ export class ArrayNode<TItem extends AnyNode> {
 
   indexItemsByKey(getTrackingKey: (value: NodeValue<TItem>, index: number) => unknown) {
     const current = [...this.items()];
-    const currentByKey = new Map<unknown, TItem>();
+    const currentByKey = new Map<unknown, { items: TItem[]; nextIndex: number }>();
     current.forEach((item, index) => {
       const key = getTrackingKey((item as unknown as InternalNode).$api._value() as NodeValue<TItem>, index);
-      if (currentByKey.has(key)) return;
-      currentByKey.set(key, item);
+      const matches = currentByKey.get(key);
+      if (matches) matches.items.push(item);
+      else currentByKey.set(key, { items: [item], nextIndex: 0 });
     });
     return currentByKey;
-  }
-
-  getIncomingKeys(values: ArraySet<TItem>, getTrackingKey: (value: NodeValue<TItem>, index: number) => unknown) {
-    const incomingKeys = new Set<unknown>();
-    return values.map((value, index) => {
-      const key = getTrackingKey(value as NodeValue<TItem>, index);
-      if (incomingKeys.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in incoming values`);
-      incomingKeys.add(key);
-      return key;
-    });
   }
 
   normalizeArrayValue(value: ArraySet<TItem> | null | undefined): ArraySet<TItem> {

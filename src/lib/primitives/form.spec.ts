@@ -8171,3 +8171,36 @@ it.each([null, undefined])('repairs template-created duplicate keys on the next 
   expect(profile.allErrors()).toEqual([]);
   expect(changed).toHaveBeenCalledOnce();
 });
+
+it('propagates occurrence-matched row values, validation and reset through nested forms', () => {
+  const profile = form({ details: form({ rows: array({
+    id: field(''), name: field('', required),
+  }, {
+    initialValue: [{ id: 'a', name: 'Ada' }, { id: 'a', name: '' }], trackBy: 'id',
+  }) }) });
+  const [first, second] = [...profile.details.rows];
+  first!.name.markAsDirty();
+  second!.name.markAsTouched();
+  expect(profile.invalid()).toBe(true);
+  const changed = vi.fn();
+  profile.onValueChange(changed);
+  profile.patch({ details: { rows: [{ id: 'a', name: 'Grace' }, { id: 'a', name: 'Lin' }] } });
+  expect(profile.details.rows[0]).toBe(first);
+  expect(profile.details.rows[1]).toBe(second);
+  expect(profile()).toEqual({ details: { rows: [{ id: 'a', name: 'Grace' }, { id: 'a', name: 'Lin' }] } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  expect(second!.name.path()).toEqual(['details', 'rows', '1', 'name']);
+  expect(changed).toHaveBeenCalledOnce();
+  profile.reset({ details: { rows: [{ id: 'a', name: '' }, { id: 'a', name: 'Reset' }] } });
+  expect(profile.details.rows[0]).toBe(first);
+  expect(profile.details.rows[1]).toBe(second);
+  expect(profile.invalid()).toBe(true);
+  expect(first!.name.hasError('required')).toBe(true);
+  expect(second!.name.valid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  expect(changed).toHaveBeenCalledTimes(2);
+});

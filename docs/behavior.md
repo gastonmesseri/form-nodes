@@ -2551,42 +2551,55 @@ const people = array(personTemplate, initialPeople, {
 });
 ```
 
-`trackBy` is evaluated for the current item values and the incoming values before reconciliation mutates any node. Matching keys reuse and move the existing node, preserving interaction state, pending validation ownership, and node identity while updating its value and path. Missing keys create fresh nodes, and current keys absent from the incoming values detach their nodes. Duplicate incoming keys are rejected before item values or membership change. If current keys are duplicated, the first node in current array order is selected; all other nodes with that key are detached during successful reconciliation. Reordering current nodes changes which duplicate wins.
+`trackBy` is evaluated for the current item values and the incoming values before reconciliation
+mutates any node. Matching keys reuse and move existing nodes while updating their values and paths.
+Each incoming occurrence of a key consumes the next current node with that key, in current array
+order. Extra incoming occurrences create fresh, distinct nodes; unmatched current nodes detach.
+No node is reused for more than one incoming entry. Moving current nodes changes their matching order.
+
+Retained nodes keep their identity and dirty/touched state through set/patch/update; reset and
+resetToInitial clear that state. Value writes use the normal control-buffer cancellation and
+validation rules of each reused node. Detached rows stop contributing state, errors, and
+notifications to ancestors. Equal keys cannot distinguish domain identities: if incoming rows
+with the same key exchange positions, their node state follows occurrence order within that key.
+Use stable, unique keys when state must follow individual records across reordering.
+
+A nonempty reconciliation that detects duplicate current or incoming keys emits one diagnostic
+through `warnInDevMode()`, regardless of how many keys or occurrences are duplicated. Production
+uses identical matching without logging. This diagnostic does not require an injection context.
+The warning inspects the keys already extracted for matching; it does not invoke tracking callbacks
+again or change key equality. Keys use Map equality, including object identity and matching NaN keys.
 
 Property-name tracking uses optional property access semantics: `trackBy: 'id'` derives `undefined`
 from a null or undefined item, just as `item?.id` does. The missing-item key is the same key as an
-object whose selected property is absent or undefined. It can occur only once among incoming items;
-incoming collisions retain the descriptive duplicate-key error. Existing collisions follow the
-same first-current-node rule, including null and undefined field rows.
-An object with `id: null` has the distinct key null. Moving between null and undefined retains the
-same field node because the key stays undefined. Callback tracking receives the original value and
-can choose a different identity policy. These rules do not make null a valid object-form row.
+object whose selected property is absent or undefined. Repeated occurrences of that key follow the
+same matching and diagnostic rules. An object with `id: null` has the distinct key null.
+Moving between null and undefined retains the matched field node because the key stays undefined.
+Callback tracking receives the original value and can choose a different identity policy.
+These rules do not make null a valid object-form row in TypeScript.
 
-Empty incoming collections bypass all key extraction and duplicate-key checks, detach every item,
+Empty incoming collections bypass all key extraction and duplicate diagnostics, detach every item,
 and follow the invoking operation's normal interaction-state and control-buffer rules. This applies
 to `set([])`, nullish `set`, `patch`, `update`, and value `reset`, and restoring an empty initial value.
 A tracking callback is never invoked for a clear, even when existing items have invalid or duplicate
-keys. Nonempty reconciliation reads current and incoming keys before writing item values and
-rejects duplicate incoming keys. A rejected incoming collection leaves existing duplicate nodes
-attached with their current values.
+keys. Nonempty reconciliation reads current and incoming keys before writing item values. A tracking
+callback error leaves item values and membership unchanged.
 
 Existing duplicates may come from direct ID edits, initial data, inserted rows, or template defaults
-applied after tracking an untyped nullish object row. The next set/patch/update or reset with unique
-incoming keys can recover without a current-duplicate error. Retained nodes preserve dirty/touched
-state on set/patch/update; reset operations clear it. Detached duplicates stop contributing state,
-errors, and notifications to ancestors. Matching still uses incoming keys before template fallback;
-this recovery policy does not prevent defaults from producing duplicate output keys in a prior
-operation, and it does not fall back to positional matching for an absent key.
+applied after tracking an untyped nullish object row. Matching still uses incoming keys before template
+fallback. Defaults can therefore produce duplicate output keys without a warning in that operation;
+the next nonempty reconciliation detects those current duplicates. An absent key does not fall back
+to positional matching. With one incoming occurrence, only the first current match is retained.
 
 Angular reference: **v22.2.0**, commit **fc187d4aec254b52a0cff7a16a390a4b0c3e57d8**,
 `packages/forms/signals/src/field/structure.ts` (`computeChildrenMap`) and
-`packages/forms/signals/test/node/field_node.spec.ts` (array tracking tests). Angular preserves
-object identities through synthetic keys and tracks primitive values by index; undefined-valued
-children disappear from its structure. Form Nodes intentionally retains nullable field items and
-uses the consumer's explicit tracking policy, preserving field state when that key stays stable.
-Also inspected `packages/forms/signals/test/node/dynamic.spec.ts` (identity after moving a row).
-Selecting the first existing duplicate is a Form Nodes reconciliation policy; Angular's synthetic
-object identity does not define how duplicate consumer-supplied keys should be resolved.
+`packages/forms/signals/test/node/dynamic.spec.ts` (identity after moving a row).
+Angular preserves object identities through synthetic keys and tracks primitive values by index;
+undefined-valued children disappear from its structure. Form Nodes intentionally retains nullable
+field items and uses the consumer's explicit tracking policy. Occurrence matching and diagnostics
+for duplicate consumer-supplied keys are Form Nodes policies; Angular's synthetic object identity
+does not define them. Also inspected `packages/forms/signals/src/field/node.ts` (`_reset`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (resetting tests) for interaction-state reset.
 
 This is intentionally explicit rather than storing a hidden identity symbol on value objects. It also works with entirely new objects received from a server, provided their domain keys remain stable. Primitive arrays and arrays without a stable domain identifier should normally keep the default index reconciliation. `move()` remains the direct structural operation when the caller already knows the source and destination indexes.
 
@@ -4801,8 +4814,8 @@ remain unchanged; explicit undefined still writes undefined to fields that suppo
 
 Incoming length/order determines the collection. Existing index/trackBy reconciliation reuses
 matching nodes, creates new nodes, detaches missing ones, updates paths/ownership, and preserves
-interaction state for reused nodes. Duplicate trackBy keys fail before reconciliation mutates
-nodes. Nullish/empty arrays remove all items. Sparse holes no longer skip positions; input uses
+interaction state for reused nodes. Duplicate trackBy keys match by occurrence order within each
+key and emit one development warning per reconciliation. Nullish/empty arrays remove all items. Sparse holes no longer skip positions; input uses
 set() semantics and should be a dense sequence of complete values. Completeness is a public type
 contract, not new runtime validation of unsafe casts. Partial object-row edits use the row's patch().
 
@@ -4844,7 +4857,7 @@ collection still clears the array. Types continue to reject nullish object row v
 Direct row.set(null/undefined) still follows the form/group no-op contract. Array reset of an
 existing nullish object row still preserves its committed values and clears interaction state.
 Construction defaults are distinct from the row's resetToInitial() baseline, which can include
-incoming initial row data. With trackBy, matching and duplicate checks use the incoming keys
+incoming initial row data. With trackBy, matching and duplicate diagnostics use the incoming keys
 before fallback; a nullish item has an undefined property-name key. Defaults do not supply an
 identity for matching, so a default row with a defined key can be recreated on the next nullish
 keyed replacement. Callback tracking receives the original input.

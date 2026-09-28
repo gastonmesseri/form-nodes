@@ -5434,3 +5434,31 @@ it('keeps the first field row state while recovering from duplicate current trac
   expect(first.pristine()).toBe(true);
   expect(first.untouched()).toBe(true);
 });
+
+it('updates duplicate field rows independently and discards their pending input', () => {
+  const rows = array(field('', { validators: required, debounce: 'blur' }), {
+    initialValue: ['Ada', 'Grace'], trackBy: () => 'same',
+  });
+  const [first, second] = [...rows];
+  first!.markAsDirty();
+  second!.markAsTouched();
+  first!.value.control.set('Draft');
+  expect(first!.debouncing()).toBe(true);
+  rows.set(['', 'Lin', 'New']);
+  expect(rows[0]).toBe(first);
+  expect(rows[1]).toBe(second);
+  expect(first!.value.control()).toBe('');
+  expect(first!.debouncing()).toBe(false);
+  expect(first!.hasError('required')).toBe(true);
+  expect(second!.valid()).toBe(true);
+  expect(first!.dirty()).toBe(true);
+  expect(second!.touched()).toBe(true);
+  expect(rows.allErrors()).toHaveLength(1);
+  rows.reset(['Valid', '']);
+  expect(rows[0]).toBe(first);
+  expect(rows[1]).toBe(second);
+  expect(first!.valid()).toBe(true);
+  expect(second!.hasError('required')).toBe(true);
+  expect(rows.pristine()).toBe(true);
+  expect(rows.untouched()).toBe(true);
+});

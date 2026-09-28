@@ -81,7 +81,8 @@ produced by the factory when they are reconstructed.
 
 <CodeBlock language="ts" title="contact-forms.ts">{arraysSource}</CodeBlock>
 
-Use stable tracking keys. Reconciliation still applies its normal duplicate-key checks, and object
+Use stable, unique tracking keys. Duplicate keys match by occurrence order within each key and
+produce one development warning per reconciliation; reset clears reused interaction state. Object
 keys compared by reference may not match after supported data containers have been copied.
 
 Restoring an individual row leaves the array's other rows and length unchanged. A row added later

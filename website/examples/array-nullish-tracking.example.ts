@@ -20,14 +20,19 @@ if (profile.selections[0] !== emptySelection || profile.selections[0]?.() !== un
   throw new Error('Null and undefined should reuse the item with an undefined tracking key.');
 }
 
-let duplicateRejected = false;
-try {
-  profile.selections.set([null, null]);
-} catch (error) {
-  duplicateRejected = error instanceof Error && error.message.includes('duplicate trackBy key undefined');
+profile.selections.set([null, null]);
+// Output: one duplicate-key warning in Angular development mode.
+const secondEmptySelection = profile.selections[1];
+if (profile.selections[0] !== emptySelection || secondEmptySelection === emptySelection) {
+  throw new Error('Duplicate keys must reuse each node at most once.');
 }
-if (!duplicateRejected || profile.selections[0] !== emptySelection || profile.selections[1]?.()?.id !== 'ada') {
-  throw new Error('Duplicate keys must be rejected before applying the incoming values.');
+if (profile.selections[0]?.() !== null || secondEmptySelection?.() !== null) {
+  throw new Error('Every incoming occurrence must have its own value.');
+}
+
+profile.selections.set([undefined, null]);
+if (profile.selections[0] !== emptySelection || profile.selections[1] !== secondEmptySelection) {
+  throw new Error('Repeated keys must match existing nodes by occurrence order.');
 }
 
 profile.selections.set(null);
@@ -45,7 +50,7 @@ profile.selections.set([{ id: 'ada' }]);
 profile.selections.length(); // 1
 
 if (profile.selections[0] !== first || duplicate.parent() !== null) {
-  throw new Error('Reconciliation must reuse the first current match and detach duplicate rows.');
+  throw new Error('Reconciliation must reuse the first current match and detach unmatched rows.');
 }
 if (!first.dirty() || !first.touched()) {
   throw new Error('A reused row must preserve its interaction state through set().');

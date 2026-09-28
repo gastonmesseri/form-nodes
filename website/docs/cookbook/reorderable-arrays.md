@@ -51,6 +51,9 @@ When a new server snapshot arrives, `set()` uses `trackBy` to reconcile the same
 this.myForm.questions.set(serverQuestions);
 ```
 
-Duplicate keys throw before changing the array.
+Use stable, unique keys so state follows each record across reordering. Duplicate keys are accepted
+and matched by occurrence order within each key: each incoming entry gets a distinct node, and extra
+current rows detach. A reconciliation with duplicate current or incoming keys warns once in Angular
+development mode. Production uses the same matching without logging.
 
 See [Dynamic arrays](../guides/dynamic-arrays.md).

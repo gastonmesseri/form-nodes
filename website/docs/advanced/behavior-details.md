@@ -220,7 +220,10 @@ untyped data bypass those checks, unknown form keys are ignored with a
 console warning in development mode rather than becoming new nodes.
 
 Array movement and insertion indexes must identify valid positions and throw `RangeError` when they
-do not. Duplicate `trackBy` keys are detected before reconciliation mutates the array. A factory
+do not. Duplicate `trackBy` keys are matched by occurrence order within each key, reusing each current
+node at most once. A reconciliation with duplicate current or incoming keys warns once in Angular
+development mode; production uses the same matching without logging. Use unique keys when state
+must follow individual records across reordering. A factory
 that returns the same live node more than once also throws, preventing shared parentage and state.
 
 ## 🔌 Current structural boundaries {#current-structural-boundaries}

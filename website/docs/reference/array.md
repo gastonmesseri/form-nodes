@@ -454,12 +454,16 @@ Selects stable item identity during complete reconciliation. Matching keys prese
 needed, move existing nodes with their interaction and validation state. Without this option,
 nodes are reused by index.
 
-Incoming replacement keys must be unique. When current rows already share a key, reconciliation
-reuses the first row in current array order and detaches the others. This permits recovery after
-ID edits or template defaults have created duplicate keys. A moved duplicate can become the first
-match. The retained row keeps dirty/touched state through `set()`, `patch()`, and `update()`;
-reset operations clear that state. Duplicate incoming keys still reject the replacement before
-item values or membership change.
+Duplicate keys are accepted and matched by occurrence order within each key. The first incoming
+occurrence reuses the first current match, the second reuses the second, and so on. Extra incoming
+occurrences create distinct nodes; unmatched current rows detach. Moving current rows changes their
+matching order. Retained rows keep dirty/touched state through `set()`, `patch()`, and `update()`;
+reset operations clear that state.
+
+Use stable, unique keys when state must follow individual records across reordering. With equal
+keys, state follows occurrence order within that key. Each nonempty reconciliation with duplicate
+current or incoming keys emits one `console.warn` in Angular development mode. Production uses the
+same matching without logging. Clearing skips tracking and diagnostics.
 
 ```ts
 const users = array({
@@ -475,8 +479,8 @@ const users = array({
 ```
 
 With a property name, a `null` or `undefined` item has the key `undefined`, just like `item?.id`.
-That key must be unique in an incoming replacement: `[null, null]`, `[null, undefined]`, and `[null, { id: undefined }]`
-conflict. An object with `id: null` has the distinct key `null`. Nullable items must use a field
+Repeated keys in `[null, null]`, `[null, undefined]`, and `[null, { id: undefined }]` are matched by
+occurrence order too. An object with `id: null` has the distinct key `null`. Nullable items must use a field
 template whose value type allows them; object-form row templates still require objects.
 
 Matching `undefined` keys preserve the same field node when its value changes between `null` and
@@ -804,9 +808,10 @@ const people = array({
 });
 ```
 
-Matching keys retain nodes and their state while paths update. New keys create nodes, absent keys
-detach nodes, and duplicate incoming keys throw before item values or membership change.
-If current rows share a key, the first row in current array order is reused and the others detach.
+Matching keys retain nodes and their state while paths update. Duplicate keys match by occurrence
+order within each key, with each current node reused at most once. Extra incoming occurrences create
+nodes; unmatched current nodes detach. Duplicate current or incoming keys produce one development
+warning per reconciliation. Use unique keys to preserve record identity across reordering.
 
 ## ✅ Validation properties and methods {#validation-properties-and-methods}
 

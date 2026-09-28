@@ -186,10 +186,11 @@ people.set([
 
 Use a stable property or callback when values can be reordered or replaced from a server:
 
-:::warning Identity must be stable and unique
+:::warning Use stable, unique identity
 
 Choose `trackBy` from immutable domain identity, not the current index or another editable value.
-Duplicate incoming keys are rejected before item values or membership change.
+Duplicate keys are accepted with a development warning. Their node state follows occurrence order
+within each key, so use unique keys when state must follow individual records across reordering.
 
 :::
 
@@ -206,13 +207,17 @@ const myForm = form({
 });
 ```
 
-Matching keys reuse and move existing nodes. Incoming keys must be unique; incoming duplicates
-throw before applying item values. If existing rows share a key, the first in current array order
-is reused and the others are detached on a successful reconciliation. Reused rows retain
-dirty/touched state through set/patch/update; reset operations clear it. Property-name tracking treats a null or undefined item
-as the key `undefined`. An object with a missing or undefined selected property shares that key, so
-only one such item is allowed in an incoming replacement. A null property value remains a separate key.
-Callback tracking receives the original value. See the [nullable tracking example](../reference/array.md#trackby-option).
+Matching keys reuse and move existing nodes. Duplicate keys match by occurrence order: the first
+incoming occurrence reuses the first current match, the second reuses the second, and so on.
+Extra incoming occurrences create distinct nodes; unmatched current nodes detach. Reused rows retain
+dirty/touched state through set/patch/update; reset operations clear it. Each nonempty reconciliation
+with duplicate current or incoming keys warns once in Angular development mode; production uses the
+same matching without logging.
+
+Property-name tracking treats a null or undefined item as the key `undefined`. An object with a missing
+or undefined selected property shares that key, and repeated occurrences follow the same matching
+rules. A null property value remains a separate key. Callback tracking receives the original value.
+See the [nullable tracking example](../reference/array.md#trackby-option).
 
 Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying it to `reset(value)` clears the collection. The observable array value itself remains `[]`, never nullish.
 Empty collections skip all tracking-key reads and callback calls, including when the existing keys
