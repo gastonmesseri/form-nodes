@@ -21,3 +21,21 @@ for (const primitives of [createFormPrimitives(), createFormPrimitives({ nullabl
   void value;
 }
 void [item, name];
+
+// @ts-expect-error Explicit form definitions must be an object; omit the argument for an empty form.
+form(null);
+// @ts-expect-error Explicit undefined definitions remain outside the public form overloads.
+form(undefined);
+// @ts-expect-error Explicit group definitions must be an object; omit the argument for an empty group.
+group(null);
+// @ts-expect-error Explicit undefined definitions remain outside the public group overloads.
+group(undefined);
+const configured = createFormPrimitives();
+// @ts-expect-error Configured factories require object definitions when supplied.
+configured.form(null);
+// @ts-expect-error Configured factories require object definitions when supplied.
+configured.form(undefined);
+// @ts-expect-error Configured factories require object definitions when supplied.
+configured.group(null);
+// @ts-expect-error Configured factories require object definitions when supplied.
+configured.group(undefined);

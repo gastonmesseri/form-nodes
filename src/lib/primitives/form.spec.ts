@@ -8285,3 +8285,42 @@ it.each([null, undefined])('creates usable default factories with runtime %s opt
   expect(configured.field.strict('Strict')()).toBe('Strict');
   expect(configured.field.nullable()()).toBeNull();
 });
+
+describe.each([false, true])('nullish form definitions with configured=%s', (configured) => {
+  it.each([null, undefined])('creates a usable independent empty form for runtime %s', async (definitions) => {
+    const create = configured ? createFormPrimitives().form : form;
+    const submitted = vi.fn();
+    const profile = create<{}>(definitions as never, { onSubmit: submitted });
+    const other = create<{}>(definitions as never);
+    expect(profile()).toEqual({});
+    expect(profile.valid()).toBe(true);
+    expect(profile.pending()).toBe(false);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    const name = profile.add('name', field('', required));
+    expect(name.parent()).toBe(profile);
+    expect(name.path()).toEqual(['name']);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'required', targetNode: name }]);
+    expect(other()).toEqual({});
+    name.set('Ada');
+    name.markAsDirty();
+    name.markAsTouched();
+    expect(profile.valid()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(await profile.submit()).toBe(true);
+    expect(submitted).toHaveBeenCalledOnce();
+    expect(profile.submitted()).toBe(true);
+    profile.resetToInitial();
+    expect(name()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile.submitted()).toBe(false);
+    profile.remove('name');
+    expect(name.parent()).toBeNull();
+    expect(profile()).toEqual({});
+    expect(profile.valid()).toBe(true);
+  });
+});

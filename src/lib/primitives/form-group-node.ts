@@ -49,7 +49,7 @@ export function createFormGroupNode<TDefinitions extends ObjectNodeDefinitions>(
   nodeType: 'form' | 'group',
   normalizeDefinition: (definition: unknown) => AnyNode = normalizeObjectDefinition,
 ): AnyNode {
-  return new FormGroupNode<NormalizedNodes<TDefinitions>>(definitions, validatorSource, options, nodeType, normalizeDefinition).getNode();
+  return new FormGroupNode<NormalizedNodes<TDefinitions>>(definitions ?? {}, validatorSource, options, nodeType, normalizeDefinition).getNode();
 }
 
 /**

@@ -2261,6 +2261,25 @@ When the node becomes interactive again:
 
 An empty form has value `{}` and is valid, enabled, writable, visible, untouched, and pristine by default, provided it has no failing form validator.
 
+Whole null or undefined definitions passed to `form()` or `group()` at runtime are normalized to
+an empty object before child-definition validation and construction. The configured factories from
+`createFormPrimitives()` use the same behavior. Each call creates an independent node with value
+`{}`; supplied validators, options, configured defaults, and form submission callbacks remain active.
+No warning is emitted. Dynamic `add()`/`remove()`, ancestor state and error propagation, and reset
+continue to work normally. A nullish value assigned to a child definition remains a field value,
+for example `form({ name: null })`; only the whole definition gets the empty-object fallback.
+Public types still reject explicit null and undefined definitions. Use `form()`/`group()` or an
+explicit `{}` in typed code, supplying `{}` when validators or options are needed.
+
+Angular reference: **v22.2.0**, commit **fc187d4aec254b52a0cff7a16a390a4b0c3e57d8**.
+Inspected `packages/forms/signals/src/field/structure.ts` (`computeChildrenMap`),
+`packages/forms/signals/test/node/dynamic.spec.ts` (undefined child values), and
+`packages/forms/signals/test/node/field_node.spec.ts` (empty error summaries and child dirty-state
+propagation). Angular builds from a model signal and omits children for non-object values; it does
+not define this declaration-object API. Converting a whole nullish definition to `{}` is a Form
+Nodes creation policy, preserving the normal empty-node state and propagation rules.
+
+
 ## Dynamic arrays
 
 `array()` creates a dynamic node whose items all have the same node shape. Its first argument is a shorthand node template or factory. With no further arguments, its initial value is an empty array:

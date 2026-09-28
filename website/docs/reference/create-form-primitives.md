@@ -13,6 +13,11 @@ import createFormPrimitivesSource from '!!raw-loader!../../examples/create-form-
 with shared defaults. Use it to establish field nullability, translated validator messages, and
 injector inheritance policies once for an application or feature.
 
+The returned `form` and `group` factories also create empty nodes if untyped data passes a whole
+null or undefined definition at runtime. Their validators, options, and shared defaults remain
+active. Public types still require object definitions when supplied; use an omitted argument or
+`{}` in typed code.
+
 The package-level factories infer nullability. Creating a configured set does not change
 them or any other configured set.
 

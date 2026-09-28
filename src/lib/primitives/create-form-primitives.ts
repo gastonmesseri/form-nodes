@@ -19,6 +19,8 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * The default also applies to field shorthands, dynamic children, and nodes created from array
  * templates or factories. Use `field.strict()` or `field.nullable()` for a local override.
  * Existing nodes keep the policy of the factory that created them.
+ * Configured form/group factories treat runtime null or undefined definitions as empty objects;
+ * TypeScript still requires object definitions when supplied.
  *
  * ```ts
  * const { form, field } = createFormPrimitives(

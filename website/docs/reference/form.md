@@ -18,6 +18,11 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # form() {#form}
 
+If untyped data passes `null` or `undefined` as the whole definition, `form()` creates an empty
+node with value `{}`, without throwing or warning. Supplied validators and options remain active,
+and children can be added normally. TypeScript still rejects explicit nullish definitions: use
+`form()` or `form({})` in typed code. Nullish child values inside an object remain field values.
+
 For the exported [`FormNode`](./types/form-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#form-node).
 

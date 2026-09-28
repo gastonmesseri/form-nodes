@@ -42,7 +42,7 @@ export function form(): FormNode<{}>;
  * });
  * ```
  *
- * @param definitions Initially declared child-node definitions.
+ * @param definitions Initially declared child-node definitions. Runtime null or undefined creates an empty node; TypeScript requires an object when this argument is supplied.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function form<TDefinitions extends ObjectNodeDefinitions>(

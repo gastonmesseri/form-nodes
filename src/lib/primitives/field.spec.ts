@@ -5535,3 +5535,15 @@ it.each([null, undefined])('keeps conditional required validation reactive with 
   expect(node.valid()).toBe(true);
   expect(node.required()).toBe(false);
 });
+
+it.each([null, undefined])('preserves nullish child field values beside an empty form created from %s', (definitions) => {
+  const profile = form({ absent: definitions, nested: form<{}>(definitions as never) });
+  expect(profile.absent.$api.nodeType()).toBe('field');
+  expect(profile.absent()).toBe(definitions);
+  expect(profile.nested()).toEqual({});
+  const name = profile.nested.add('name', field('', required));
+  expect(profile.allErrors()).toMatchObject([{ kind: 'required', targetNode: name }]);
+  name.set('Ada');
+  expect(profile.valid()).toBe(true);
+  expect(profile.absent()).toBe(definitions);
+});

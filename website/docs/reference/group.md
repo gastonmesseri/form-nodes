@@ -17,6 +17,11 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # group() {#group}
 
+If untyped data passes `null` or `undefined` as the whole definition, `group()` creates an empty
+node with value `{}`, without throwing or warning. Supplied validators and options remain active,
+and children can be added normally. TypeScript still rejects explicit nullish definitions: use
+`group()` or `group({})` in typed code. Nullish child values inside an object remain field values.
+
 For the exported [`GroupNode`](./types/group-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#group-node).
 

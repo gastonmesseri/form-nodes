@@ -551,3 +551,37 @@ it('includes nested errors through the descendants option while retaining own er
   details.city.set('Zurich');
   expect(details.errors({ descendants: true })).toEqual([]);
 });
+
+describe.each([false, true])('nullish group definitions with configured=%s', (configured) => {
+  it.each([null, undefined])('retains options and parent propagation for runtime %s', (definitions) => {
+    const create = configured ? createFormPrimitives().group : group;
+    const details = create<{}>(definitions as never, {
+      validators: ({ value }) => Object.keys(value()).length === 0 ? { kind: 'emptyGroup' } : null,
+    });
+    const profile = form({ nested: form({ details }) });
+    expect(details()).toEqual({});
+    expect(details.hasError('emptyGroup')).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'emptyGroup', targetNode: details }]);
+    const name = details.add('name', field('', required));
+    expect(details.hasError('emptyGroup')).toBe(false);
+    expect(name.path()).toEqual(['nested', 'details', 'name']);
+    expect(name.form()).toBe(profile.nested);
+    expect(profile.invalid()).toBe(true);
+    name.set('Ada');
+    name.markAsDirty();
+    name.markAsTouched();
+    expect(profile.valid()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    profile.resetToInitial();
+    expect(name()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    details.remove('name');
+    expect(name.parent()).toBeNull();
+    expect(details()).toEqual({});
+    expect(profile.allErrors()).toMatchObject([{ kind: 'emptyGroup', targetNode: details }]);
+    expect(profile.pending()).toBe(false);
+  });
+});
