@@ -906,7 +906,9 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, FormNode<TNodes, TParent>>;
   /**
    * Adds several child definitions atomically and returns an exact keyed map of their attached
-   * live nodes.
+   * live nodes. An empty object returns `{}` without changing values, state, pending work, or
+   * emitting value-change notifications. Runtime null or undefined definitions behave the same;
+   * TypeScript still requires an object. Named additions may still supply nullish field values.
    *
    * ```ts
    * const profile = form({ name: field('Ada') });

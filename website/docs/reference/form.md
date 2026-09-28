@@ -1214,6 +1214,12 @@ Each entry includes its consumer-facing signature, behavior, and return value.
 **Signatures:** `add(key: string, definition): AddedNode` ·
 `add(definitions): AddedNodes`
 
+`add({})` returns `{}` without modifying children, value identity, interaction state, errors,
+pending validation, or buffered input. It emits no value-change notifications on this node or
+its ancestors. Whole `null` or `undefined` definitions received at runtime have the same behavior,
+without a warning; TypeScript still requires an object for this signature. Named additions such
+as `add('name', null)` and `add({ name: null })` still create fields with their supplied values.
+
 Attaches one child or several children at runtime. A single definition returns its exact attached
 node; an object returns an exact keyed map. Plain nested objects become `group()` nodes.
 Concise values, including arrays, use the same `field()` shorthand as the initial declaration.

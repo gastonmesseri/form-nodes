@@ -8324,3 +8324,69 @@ describe.each([false, true])('nullish form definitions with configured=%s', (con
     expect(profile.valid()).toBe(true);
   });
 });
+
+describe.each(['form', 'group', 'configured form', 'configured group'] as const)('empty additions on %s', (kind) => {
+  it.each([{}, null, undefined])('preserves pending validation, drafts, identity and notifications for %j', async (definitions) => {
+    const runs: { abortSignal: AbortSignal; finish(result: { kind: string } | null): void }[] = [];
+    const check = vi.fn(({ value, abortSignal }: { value: () => unknown; abortSignal: AbortSignal }) => {
+      value();
+      return new Promise<{ kind: string } | null>((finish) => { runs.push({ abortSignal, finish }); });
+    });
+    const primitives = createFormPrimitives();
+    const children = { name: field.strict('Ada', { debounce: 'blur' }) };
+    const options = { validators: asyncValidator(check) };
+    const target = kind === 'form' ? form(children, options)
+      : kind === 'group' ? group(children, options)
+        : kind === 'configured form' ? primitives.form(children, options) : primitives.group(children, options);
+    const profile = form({ nested: form({ target }) });
+    target.name.markAsDirty();
+    target.name.markAsTouched();
+    target.name.value.control.set('Draft');
+    const previousTarget = target();
+    const previousRoot = profile();
+    const previousChild = target.name;
+    const changed = vi.fn();
+    const rootChanged = vi.fn();
+    target.onValueChange(changed);
+    profile.onValueChange(rootChanged);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(check).toHaveBeenCalledOnce();
+    expect(profile.pending()).toBe(true);
+    const addEmpty: (definitions: never) => unknown = target.add;
+    expect(addEmpty(definitions as never)).toEqual({});
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(target()).toBe(previousTarget);
+    expect(profile()).toBe(previousRoot);
+    expect(target.name).toBe(previousChild);
+    expect(target.name.parent()).toBe(target);
+    expect(target.name.path()).toEqual(['nested', 'target', 'name']);
+    expect(target.name()).toBe('Ada');
+    expect(target.name.value.control()).toBe('Draft');
+    expect(target.name.debouncing()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(profile.pending()).toBe(true);
+    expect(check).toHaveBeenCalledOnce();
+    expect(runs[0]!.abortSignal.aborted).toBe(false);
+    expect(changed).not.toHaveBeenCalled();
+    expect(rootChanged).not.toHaveBeenCalled();
+    runs[0]!.finish({ kind: 'remote' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(profile.pending()).toBe(false);
+    expect(profile.invalid()).toBe(true);
+    expect(target.hasError('remote')).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'remote', targetNode: target }]);
+    expect(changed).not.toHaveBeenCalled();
+    expect(rootChanged).not.toHaveBeenCalled();
+  });
+});
+
+it('validates unsupported symbol definitions even when an addition has no string keys', () => {
+  const profile = form({ name: field('Ada') });
+  const before = profile();
+  expect(() => profile.add({ [Symbol('child')]: field('') } as never)).toThrow('symbol child key');
+  expect(profile()).toBe(before);
+});

@@ -347,6 +347,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       const added = this.addDynamicChildren(definitions, [[keyOrDefinitions, definition]]);
       return added[keyOrDefinitions];
     }
+    if (isNil(keyOrDefinitions)) return {};
     return this.addDynamicChildren(keyOrDefinitions, Object.entries(keyOrDefinitions));
   }
 
@@ -366,6 +367,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   addDynamicChildren(definitions: ObjectNodeDefinitions, entries: readonly (readonly [string, unknown])[]) {
     entries.forEach(([key]) => this.assertAvailableDynamicKey(key));
     assertValidObjectDefinition(definitions, this.nodeType);
+    if (entries.length === 0) return {};
     entries.forEach(([, definition]) => this.assertDetachedDefinition(definition));
     const normalizeDefinition = this.normalizeDefinition;
     const nodes = entries.map(([key, definition]) => [key, normalizeDefinition(definition)] as const);

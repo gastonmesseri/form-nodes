@@ -220,3 +220,9 @@ type _ExactAddedNode = Expect<Equal<ReturnType<typeof dynamicAge>, number>>;
 profile.dynamicAge;
 // @ts-expect-error undeclared child names must not compile
 profile.mistypedPropertyName;
+
+// @ts-expect-error Whole add definitions must remain an object in typed code.
+profile.add(null);
+// @ts-expect-error Whole add definitions must remain an object in typed code.
+profile.add(undefined);
+profile.add({});

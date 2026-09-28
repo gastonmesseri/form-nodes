@@ -585,3 +585,37 @@ describe.each([false, true])('nullish group definitions with configured=%s', (co
     expect(profile.pending()).toBe(false);
   });
 });
+
+it.each([{}, null, undefined])('preserves group errors and direct pending input for an empty addition: %j', (definitions) => {
+  const validate = vi.fn(() => ({ kind: 'groupError' }));
+  const details = group({ city: field('Zurich') }, { validators: validate, debounce: 'blur' });
+  const profile = form({ details });
+  details.markAsDirty();
+  details.markAsTouched();
+  details.value.control.set({ city: 'Bern' });
+  const before = details();
+  const draft = details.value.control();
+  const errors = profile.allErrors();
+  const changed = vi.fn();
+  profile.onValueChange(changed);
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    expect(details.add(definitions as never)).toEqual({});
+    expect(details()).toBe(before);
+    expect(details.value.control()).toBe(draft);
+    expect(details.debouncing()).toBe(true);
+    expect(profile.allErrors()).toBe(errors);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(changed).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+    details.flush();
+    expect(details()).toEqual({ city: 'Bern' });
+    expect(details.debouncing()).toBe(false);
+    expect(changed).toHaveBeenCalledOnce();
+  } finally {
+    warn.mockRestore();
+  }
+});

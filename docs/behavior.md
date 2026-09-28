@@ -944,8 +944,23 @@ updated; omitted dynamic keys retain their values. Reset operations still clear 
 state.
 
 The overloads preserve input cardinality intentionally: `add(key, definition)` returns the exact
-attached node, while `add(definitions)` returns an exact keyed map of attached nodes. Structural
-mutation, parentage, and aggregate-state changes remain explicit through `add()` and `remove()`.
+attached node, while `add(definitions)` returns an exact keyed map of attached nodes. An empty
+`add({})` returns `{}` without changing structure, value identity, interaction state, errors, pending
+validation, or buffered control values, and without emitting value-change notifications on the
+receiver or its ancestors. Runtime `add(null)` and `add(undefined)` use the same empty operation,
+without warnings; public types continue to require an object for the bulk signature. These rules
+also apply to groups and configured factories. Named `add('name', null/undefined)` and object
+`add({ name: null/undefined })` still create nullable fields. Empty definitions still undergo the
+normal declaration checks, so unsupported enumerable symbol keys remain errors.
+
+Angular reference for state preservation: **v22.2.0**, commit
+**fc187d4aec254b52a0cff7a16a390a4b0c3e57d8**, inspected
+`packages/forms/signals/src/field/structure.ts` (`computeChildrenMap`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (dirty-state propagation).
+Angular derives children from model data and has no equivalent `add()` operation; treating an
+empty addition as no change is a Form Nodes API decision.
+
+Structural mutation, parentage, and aggregate-state changes remain explicit through `add()` and `remove()`.
 
 This intentionally differs from Angular Signal Forms `v22.1.5` at commit
 `468b65b74566537456c192ac4281795c5a1e1a5e`. Angular derives changing child structure from its

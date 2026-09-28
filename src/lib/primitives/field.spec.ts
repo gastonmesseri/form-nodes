@@ -5547,3 +5547,25 @@ it.each([null, undefined])('preserves nullish child field values beside an empty
   expect(profile.valid()).toBe(true);
   expect(profile.absent()).toBe(definitions);
 });
+
+it.each([null, undefined])('adds a nullable field through both named and object additions with %s', (value) => {
+  const profile = form({ name: field('', { validators: required, debounce: 'blur' }) });
+  profile.name.markAsDirty();
+  profile.name.markAsTouched();
+  profile.name.value.control.set('Draft');
+  expect(profile.add(value as never)).toEqual({});
+  expect(profile.name()).toBe('');
+  expect(profile.name.value.control()).toBe('Draft');
+  expect(profile.name.debouncing()).toBe(true);
+  expect(profile.name.hasError('required')).toBe(true);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  const named = profile.add('named', value);
+  const added = profile.add({ missing: value });
+  expect(named()).toBe(value);
+  expect(added.missing()).toBe(value);
+  expect(named.parent()).toBe(profile);
+  expect(added.missing.parent()).toBe(profile);
+  expect(named.$api.nodeType()).toBe('field');
+  expect(added.missing.$api.nodeType()).toBe('field');
+});

@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Make empty `add({})` calls on forms and groups preserve value identity and emit no change notifications. Runtime null or undefined bulk additions now return `{}` with the same behavior, preserving children, interaction state, drafts, errors, and pending validation. Public types still require an object; named additions continue to accept nullish field values.
 - Create empty forms and groups when whole null or undefined definitions arrive at runtime, including factories returned by `createFormPrimitives()`. Supplied validators and options remain active, and the nodes support normal dynamic children, validation, and reset. TypeScript still requires object definitions when the argument is supplied.
 - Treat runtime null optional options as omitted in `minDate`, `maxDate`, `dateBetween`, `requiredIf`, `createFormPrimitives`, and array construction. Default parsing, validation, and factory behavior remain active without throwing; TypeScript continues to reject null options.
 - Handle null and undefined items safely in property-based `uniqueItems()` validation. Nullable item types now support property selectors; absent items and missing or undefined properties share an undefined key and produce normal duplicate-index validation errors when repeated. Null property values remain distinct, and callback selectors still receive the original items.

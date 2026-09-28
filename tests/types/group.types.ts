@@ -97,3 +97,9 @@ address.mistypedPropertyName;
 group({ name: field('') }, { onSubmitBlocked: () => undefined });
 // @ts-expect-error only forms configure submission validation gates
 group({ name: field('') }, { submitWhen: 'valid' });
+
+// @ts-expect-error Whole add definitions must remain an object in typed code.
+address.add(null);
+// @ts-expect-error Whole add definitions must remain an object in typed code.
+address.add(undefined);
+address.add({});
