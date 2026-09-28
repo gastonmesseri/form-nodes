@@ -79,21 +79,23 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  * in an injection context, and component destruction cleans up the connection.
  *
  * @param bindings Query keys mapped to nodes, writable signals, or configured source bindings.
- * @param options Shared injector, history policy, URL synchronization hooks, and error handler.
+ * @param options Shared injector, history policy, URL synchronization hooks, and error handler; null uses defaults.
  */
 export function syncQueryParams<T extends Record<string, Signal<any>> = Record<never, never>>(
   bindings: { [K in keyof T]: (T[K] & QueryParamBinding<ReturnType<T[K]>>['source']) | (QueryParamBinding<ReturnType<T[K]>> & { source: T[K] }) },
-  options: SyncQueryParamsOptions<NoInfer<{ [K in keyof T]: ReturnType<T[K]> }>> = {},
+  options: SyncQueryParamsOptions<NoInfer<{ [K in keyof T]: ReturnType<T[K]> }>> | null = {},
 ): QueryParamsSync<Extract<keyof T, string>> {
   return untracked(() => {
-    const injector = options.injector ?? inject(Injector);
+    const resolvedBindings = bindings ?? {};
+    const resolvedOptions = options ?? {};
+    const injector = resolvedOptions.injector ?? inject(Injector);
     const router = injector.get(Router);
     const report = (error: QueryParamSyncError) => {
-      if (options.onError) options.onError(error);
+      if (resolvedOptions.onError) resolvedOptions.onError(error);
       else injector.get(ErrorHandler).handleError(error);
     };
     // Resolve all configuration before changing any source or reserving URL keys.
-    const definitions = Object.entries(bindings).map(([key, input]) => {
+    const definitions = Object.entries(resolvedBindings).map(([key, input]) => {
       const config = (typeof input === 'function' ? { source: input } : input) as QueryParamBinding<any>;
       const source = createQueryParamSource(config?.source, key);
       const fallback = Object.hasOwn(config, 'defaultValue') ? config.defaultValue : source.read();
@@ -112,7 +114,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
     });
     const initialNavigation = router.currentNavigation();
     const initialUrl = initialNavigation?.finalUrl ?? router.parseUrl(router.url);
-    const state = createQueryParamState(Object.keys(bindings) as Extract<keyof T, string>[], initialUrl.queryParamMap);
+    const state = createQueryParamState(Object.keys(resolvedBindings) as Extract<keyof T, string>[], initialUrl.queryParamMap);
     if (!definitions.length) return state.result(() => {});
     const coordinator = getCoordinator(router, isPlatformBrowser(injector.get(PLATFORM_ID)));
     for (const { key } of definitions) {
@@ -125,7 +127,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
     const prepareNotification = createQueryParamNotification(
       () => Object.fromEntries(definitions.map(({ key, source }) => [key, source.read()])) as { [K in keyof T]: ReturnType<T[K]> },
       () => stopped,
-      options,
+      resolvedOptions,
       injector,
     );
     const prepareNavigationNotification = () => prepareNotification('navigation');
@@ -146,7 +148,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
         const entry: QueryEntry = {
           key,
           active: true,
-          history: config.history ?? options.history ?? 'replace',
+          history: config.history ?? resolvedOptions.history ?? 'replace',
           report,
           accept: state.accept,
           prepareNotification: prepareNavigationNotification,

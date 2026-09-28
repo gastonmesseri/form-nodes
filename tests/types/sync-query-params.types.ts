@@ -177,3 +177,19 @@ syncQueryParams({
     void [reason, page, initial];
   },
 });
+
+// The bindings map is required even though nullish values are tolerated at runtime.
+// @ts-expect-error A bindings argument is required.
+syncQueryParams();
+// @ts-expect-error Null is not a bindings map.
+syncQueryParams(null);
+// @ts-expect-error Undefined is not a bindings map.
+syncQueryParams(undefined);
+const nullOptionsSync = syncQueryParams({ q: filters.q, page: filters.page }, null);
+const nullOptionsTyped: QueryParamsSync<'q' | 'page'> = nullOptionsSync;
+const nullOptionsRaw: Signal<string | null> = nullOptionsSync.params.q;
+void [nullOptionsTyped, nullOptionsRaw];
+// @ts-expect-error Null options do not widen the configured parameter keys.
+nullOptionsSync.params.missing;
+syncQueryParams({}, null);
+syncQueryParams({ q: filters.q }, undefined);

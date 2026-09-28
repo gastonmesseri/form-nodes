@@ -8431,3 +8431,35 @@ describe('form nullish pattern and membership constraints', () => {
     expect(customError).toHaveBeenCalledTimes(2);
   });
 });
+
+it.each([null, undefined, {}])('synchronizes a nested form with default query options %s', async (options) => {
+  const { router, injector, handleError } = setup(`/search?profile=${encodeURIComponent(JSON.stringify({ name: 'Ada' }))}`);
+  const profile = form({ nested: form({ name: field('', [required]) }) });
+  profile.nested.name.markAsDirty();
+  profile.nested.name.markAsTouched();
+  const sync = runInInjectionContext(injector, () => syncQueryParams({ profile: { source: profile.nested, serializer: 'json' } }, options));
+  expect(profile()).toEqual({ nested: { name: 'Ada' } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  profile.nested.name.set('Grace');
+  await settle();
+  expect(router.requested).toHaveLength(1);
+  expect(router.requested[0]!.replace).toBe(true);
+  expect(JSON.parse(sync.params.profile()!)).toEqual({ name: 'Grace' });
+  router.external(`/search?profile=${encodeURIComponent(JSON.stringify({ name: '' }))}`);
+  expect(profile.nested.name.getError('required')).toBeDefined();
+  expect(profile.nested.invalid()).toBe(true);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.allErrors()).toMatchObject([{ kind: 'required' }]);
+  expect(handleError).not.toHaveBeenCalled();
+  sync.unsubscribe();
+  sync.unsubscribe();
+  expect(sync.closed()).toBe(true);
+  expect(sync.pending()).toBe(false);
+  profile.nested.name.set('Lin');
+  await settle();
+  expect(router.requested).toHaveLength(1);
+  injector.destroy();
+});

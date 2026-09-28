@@ -4,7 +4,7 @@ title: SyncQueryParamsOptions
 
 # SyncQueryParamsOptions
 
-Shared options for a synchronized query parameter map.
+Shared options for a synchronized query parameter map. Passing null as the whole options argument to `syncQueryParams()` uses the defaults.
 
 ## Import
 

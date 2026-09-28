@@ -4994,6 +4994,20 @@ history?, injector? }` entries. Shared options supply the Router/owner injector,
 `onInitialUrlSync`, `onUrlSync`, and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
 without Router or an injection context; only the integration needs a Router-providing injector.
 
+The bindings argument remains required and non-nullish in TypeScript. Runtime missing, null, or
+undefined binding maps follow the existing empty-map path: empty `params`, `closed() === true`,
+`pending() === false`, idempotent unsubscribe, and no subscriptions, navigation, key reservations,
+or synchronization/error hooks. Shared options explicitly accept null in the public signature;
+omission, undefined, and null use the same defaults. Empty bindings still require a Router-providing
+explicit or ambient injector; null options select the ambient injection context.
+
+Angular reference for injector selection: **v22.2.0**,
+`packages/forms/signals/src/api/structure.ts` and
+`packages/forms/signals/test/node/form.spec.ts` (injection context tests).
+Angular gives an explicit injector precedence over the ambient context. The query-binding map and
+its nullish normalization are library-specific integration contracts with no Signal Forms counterpart;
+normal form-node state propagation and URL synchronization semantics remain unchanged.
+
 - `params` exposes readonly `Signal<string | null>` properties for precisely the configured keys.
   Values are URL-decoded, before serializer parsing, with null for absence and the first value for repeated
   parameters. Read the bound array source for all parsed values; use Angular Router directly for

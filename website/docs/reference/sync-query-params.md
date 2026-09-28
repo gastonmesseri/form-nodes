@@ -64,16 +64,17 @@ The component's injector automatically disconnects the helper when the component
 ```ts
 syncQueryParams(bindings);
 syncQueryParams(bindings, options);
+syncQueryParams(bindings, null);
 ```
 
-Both call forms use the same generic function. Each map entry accepts either a source directly or
+All call forms use the same generic function. Each map entry accepts either a source directly or
 `{ source, ...bindingOptions }`; direct and configured entries can coexist in the same map.
 The second argument supplies shared options, not another source.
 
 | Argument | Contract |
 | --- | --- |
 | `bindings` | A map of query names to existing nodes, writable signals, or [`QueryParamBinding<T>`](./types/query-param-binding.md) objects. Each source retains its own value type. |
-| `options` | Optional [`SyncQueryParamsOptions`](./types/sync-query-params-options.md): shared `injector`, `history`, `onInitialUrlSync`, `onUrlSync`, and `onError`. |
+| `options` | Optional [`SyncQueryParamsOptions`](./types/sync-query-params-options.md) or `null` (same defaults as omission): shared `injector`, `history`, `onInitialUrlSync`, `onUrlSync`, and `onError`. |
 | Return | [`QueryParamsSync<K>`](./types/query-params-sync.md): readonly raw parameter signals, connection state, and `unsubscribe()`. |
 
 In the first example, `querySync` is inferred as `QueryParamsSync<'q' | 'page'>`.
@@ -82,9 +83,16 @@ keys are available under `params`; unrelated URL parameters are preserved withou
 of the connection.
 
 The map and options are read when the helper is called. They are not reactive configuration.
-An empty map returns an already closed connection with an empty `params` object. For a different
-set of query keys, unsubscribe and create a new connection. Duplicate active bindings for one
-query key on the same Router are rejected, including bindings in separate helper calls.
+An empty map returns an already closed connection with an empty `params` object and
+`pending() === false`, without subscriptions, URL writes, or synchronization hooks. The map is
+required in TypeScript; a missing, `null`, or `undefined` map arriving at runtime behaves as `{}`.
+
+Omitted, `undefined`, and `null` options all use defaults, including the current injection context
+and replace history. A Router-providing injector is still required, including for empty maps:
+supply `options.injector` or call inside an Angular injection context.
+
+For a different set of query keys, unsubscribe and create a new connection. Duplicate active
+bindings for one query key on the same Router are rejected, including bindings in separate helper calls.
 
 ## Supported sources {#sources}
 

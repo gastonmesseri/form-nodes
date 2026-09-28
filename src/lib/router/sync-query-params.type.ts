@@ -190,7 +190,10 @@ export type QueryParamUrlSyncEvent<TValues extends Record<string, unknown> = Rec
   readonly values: Readonly<TValues>;
 };
 
-/** Shared options for a synchronized query parameter map. */
+/**
+ * Shared options for a synchronized query parameter map.
+ * Passing null as the whole options argument to `syncQueryParams()` uses the defaults.
+ */
 export type SyncQueryParamsOptions<TValues extends Record<string, unknown> = Record<string, unknown>> = {
   /**
    * Router and lifetime owner.

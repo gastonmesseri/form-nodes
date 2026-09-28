@@ -1034,3 +1034,50 @@ it('observes committed aggregate values behind child and parent equality and rel
   injector.destroy();
   expect(sync.closed()).toBe(true);
 });
+
+it.each([{}, null, undefined])('treats a runtime %s bindings map as an empty connection', async (bindings) => {
+  const { router, injector, handleError } = setup('/search?q=Ada');
+  const onInitialUrlSync = vi.fn();
+  const onUrlSync = vi.fn();
+  const onError = vi.fn();
+  const sync = syncQueryParams(bindings as never, { injector, onInitialUrlSync, onUrlSync, onError });
+  expect(sync.params).toEqual({});
+  expect(sync.closed()).toBe(true);
+  expect(sync.pending()).toBe(false);
+  expect(router.events.observed).toBe(false);
+  router.external('/search?q=Grace');
+  await settle();
+  expect(sync.params).toEqual({});
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  expect(onInitialUrlSync).not.toHaveBeenCalled();
+  expect(onUrlSync).not.toHaveBeenCalled();
+  expect(onError).not.toHaveBeenCalled();
+  expect(handleError).not.toHaveBeenCalled();
+  sync.unsubscribe();
+  sync.unsubscribe();
+  const live = syncQueryParams({ q: field('') }, { injector });
+  expect(live.params.q()).toBe('Grace');
+  expect(live.closed()).toBe(false);
+  injector.destroy();
+  expect(live.closed()).toBe(true);
+  expect(router.events.observed).toBe(false);
+});
+
+it.each([null, undefined])('uses ambient injection for nullish bindings with %s options', (options) => {
+  const { router, injector } = setup();
+  const sync = runInInjectionContext(injector, () => syncQueryParams(null as never, options));
+  expect(sync.closed()).toBe(true);
+  const missing = runInInjectionContext(injector, () => Reflect.apply(syncQueryParams, undefined, []));
+  expect(missing.params).toEqual({});
+  expect(missing.closed()).toBe(true);
+  expect(missing.pending()).toBe(false);
+  expect(router.events.observed).toBe(false);
+  injector.destroy();
+});
+
+it('still requires a Router-providing injector for empty maps and null options', () => {
+  expect(() => syncQueryParams({}, null)).toThrow(/injection context/);
+  const injector = Injector.create({ providers: [] });
+  expect(() => runInInjectionContext(injector, () => syncQueryParams({}, null))).toThrow(/Router/);
+  injector.destroy();
+});

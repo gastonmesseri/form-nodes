@@ -5630,3 +5630,36 @@ describe('field nullish pattern and membership constraints', () => {
     expect(value.untouched()).toBe(true);
   });
 });
+
+it.each([null, undefined, {}])('synchronizes a field with default query options %s', async (options) => {
+  const { router, injector, handleError } = setup('/search?q=Ada&keep=yes');
+  const name = field('', [required], { debounce: 'blur' });
+  name.markAsDirty();
+  name.markAsTouched();
+  name.value.control.set('Draft');
+  const sync = runInInjectionContext(injector, () => syncQueryParams({ q: name }, options));
+  expect(name()).toBe('Ada');
+  expect(name.value.control()).toBe('Ada');
+  expect(name.debouncing()).toBe(false);
+  expect(name.valid()).toBe(true);
+  expect(name.dirty()).toBe(true);
+  expect(name.touched()).toBe(true);
+  expect(sync.params.q()).toBe('Ada');
+  expect(sync.closed()).toBe(false);
+  expect(sync.pending()).toBe(false);
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  name.set('Grace');
+  await settle();
+  expect(router.requested).toHaveLength(1);
+  expect(router.requested[0]!.replace).toBe(true);
+  expect(router.url).toBe('/search?q=Grace&keep=yes');
+  router.external('/search?q=&keep=yes');
+  expect(name.getError('required')).toBeDefined();
+  expect(sync.params.q()).toBe('');
+  expect(handleError).not.toHaveBeenCalled();
+  injector.destroy();
+  expect(sync.closed()).toBe(true);
+  name.set('Lin');
+  await settle();
+  expect(router.requested).toHaveLength(1);
+});
