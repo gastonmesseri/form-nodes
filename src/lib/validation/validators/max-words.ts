@@ -1,3 +1,4 @@
+import { isNil } from '../../utils/is-nil';
 import { countWords } from '../../utils/count-words';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { defaultMaxWordsMessage } from '../utils/default-validator-messages';
@@ -8,7 +9,7 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  * Requires a non-empty string to contain no more than the configured number of words.
  *
  * A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens.
- * Empty strings and `null` pass so this validator can be composed with `required`. A source
+ * Empty strings, `null`, and `undefined` pass so this validator can be composed with `required`. A source
  * function is evaluated reactively and may return `undefined` to disable the constraint. A
  * failure produces `{ kind: 'maxWords', maxWords, actual, message }`, where `actual` is the
  * observed word count.
@@ -129,7 +130,7 @@ export const maxWords = (
      * });
      * ```
      */
-    error?: ValidationResult | ((context: ValidatorContext<string | null>) => ValidationResult);
+    error?: ValidationResult | ((context: ValidatorContext<string | null | undefined>) => ValidationResult);
   }) & {
     /**
      * Enables the validator and its constraint metadata only while the condition is true.
@@ -152,13 +153,13 @@ export const maxWords = (
      * });
      * ```
      */
-    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null>) => boolean)>;
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null | undefined>) => boolean)>;
   },
-): Validator<string | null> => {
+): Validator<string | null | undefined> => {
   const message = resolveValidatorMessageOption(options);
-  const validator: Validator<string | null> = ({ value }) => {
+  const validator: Validator<string | null | undefined> = ({ value }) => {
     const currentValue = value();
-    if (currentValue === null || currentValue === '') return null;
+    if (isNil(currentValue) || currentValue === '') return null;
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     const actual = countWords(currentValue);

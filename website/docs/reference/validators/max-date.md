@@ -46,7 +46,10 @@ const myForm = form({
 });
 ```
 
-It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
+It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null`, `undefined`, and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
+
+These absent values are accepted by the public types and remain unchanged in the field. Add
+`required` when a value must be present; see [optional values](../../guides/validation.md#optional-values).
 
 ## 💬 Message configuration {#message-configuration}
 

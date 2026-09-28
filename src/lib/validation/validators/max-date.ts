@@ -1,3 +1,4 @@
+import { isNil } from '../../utils/is-nil';
 import { MAX_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { defaultMaxDateMessage } from '../utils/default-validator-messages';
@@ -9,7 +10,7 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
 /**
  * Requires a valid, non-empty date to be on or before a maximum date.
  *
- * `null` and invalid current dates pass so this validator can be composed with `required`. The
+ * `null`, `undefined`, and invalid current dates pass so this validator can be composed with `required`. The
  * maximum may be a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), a relative shortcut
  * (`'today'`), or returned by a reactively tracked function.
  * Strings and shortcuts are parsed as UTC by default; set `parseAs` to `'local'` to use local
@@ -152,7 +153,7 @@ export const maxDate = (
      * });
      * ```
      */
-    error?: ValidationResult | ((context: ValidatorContext<Date | null>) => ValidationResult);
+    error?: ValidationResult | ((context: ValidatorContext<Date | null | undefined>) => ValidationResult);
   }) & {
     /**
      * Enables the validator and its constraint metadata only while the condition is true.
@@ -177,7 +178,7 @@ export const maxDate = (
      * });
      * ```
      */
-    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<Date | null>) => boolean)>;
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<Date | null | undefined>) => boolean)>;
     /**
      * Interprets calendar-date strings and the `today` shortcut at UTC or local midnight.
      * Existing Date objects retain their timestamps.
@@ -201,14 +202,14 @@ export const maxDate = (
      */
     parseAs?: 'utc' | 'local';
   },
-): Validator<Date | null> => {
+): Validator<Date | null | undefined> => {
   const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
   const message = resolveValidatorMessageOption(options);
   const normalizedMaximum = normalizeDateConstraintSource(maximum as DateConstraintSource, parseAs);
 
-  const validator: Validator<Date | null> = markValidatorMetadata(({ value }) => {
+  const validator: Validator<Date | null | undefined> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
-    if (currentValue === null || Number.isNaN(currentValue.getTime())) return null;
+    if (isNil(currentValue) || Number.isNaN(currentValue.getTime())) return null;
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum

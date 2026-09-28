@@ -224,3 +224,49 @@ validator<string>((_context) => 'Choose another value');
 
 // @ts-expect-error a non-nullable validator cannot observe an explicitly nullable field
 field.nullable(1, [positive]);
+
+const optionalDate = field<Date>(undefined, [minDate('2026-01-01'), maxDate('2026-12-31'), dateBetween('2026-01-01', '2026-12-31')]);
+const optionalText = field<string>(undefined, [minWords(2), maxWords(10)]);
+type _OptionalDateValue = Expect<Equal<ReturnType<typeof optionalDate>, Date | undefined>>;
+type _OptionalTextValue = Expect<Equal<ReturnType<typeof optionalText>, string | undefined>>;
+optionalDate.reset(undefined);
+optionalText.set(undefined);
+field<Date | null | undefined>(undefined, [minDate('2026-01-01'), maxDate('2026-12-31'), dateBetween('2026-01-01', '2026-12-31')]);
+field<string | null | undefined>(undefined, [minWords(2), maxWords(10)]);
+field<Date>(undefined, { validators: () => minDate('2026-01-01') });
+field<string>(undefined, { validators: () => minWords(2) });
+minDate('2026-01-01', {
+  when: (context: ValidatorContext<Date | null | undefined>) => context.value() !== undefined,
+  error: (context) => {
+    type _Value = Expect<Equal<ReturnType<typeof context.value>, Date | null | undefined>>;
+    return { kind: 'custom' };
+  },
+});
+maxDate('2026-12-31', {
+  when: (context: ValidatorContext<Date | null | undefined>) => context.value() !== undefined,
+  error: (context) => {
+    type _Value = Expect<Equal<ReturnType<typeof context.value>, Date | null | undefined>>;
+    return { kind: 'custom' };
+  },
+});
+dateBetween('2026-01-01', '2026-12-31', {
+  when: (context: ValidatorContext<Date | null | undefined>) => context.value() !== undefined,
+  error: (context) => {
+    type _Value = Expect<Equal<ReturnType<typeof context.value>, Date | null | undefined>>;
+    return { kind: 'custom' };
+  },
+});
+minWords(2, {
+  when: (context: ValidatorContext<string | null | undefined>) => context.value() !== undefined,
+  error: (context) => {
+    type _Value = Expect<Equal<ReturnType<typeof context.value>, string | null | undefined>>;
+    return { kind: 'custom' };
+  },
+});
+maxWords(10, {
+  when: (context: ValidatorContext<string | null | undefined>) => context.value() !== undefined,
+  error: (context) => {
+    type _Value = Expect<Equal<ReturnType<typeof context.value>, string | null | undefined>>;
+    return { kind: 'custom' };
+  },
+});

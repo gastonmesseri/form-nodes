@@ -49,7 +49,10 @@ const myForm = form({
 });
 ```
 
-The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
+The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null`, `undefined`, and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
+
+These absent values are accepted by the public types and remain unchanged in the field. Add
+`required` when a value must be present; see [optional values](../../guides/validation.md#optional-values).
 
 ## 💬 Message configuration {#message-configuration}
 

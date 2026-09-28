@@ -13,8 +13,12 @@ import { oneOf } from '../validation/validators/one-of';
 import { notNil } from '../validation/validators/not-nil';
 import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
+import { minDate } from '../validation/validators/min-date';
+import { maxDate } from '../validation/validators/max-date';
 import { required } from '../validation/validators/required';
 import { lessThan } from '../validation/validators/less-than';
+import { minWords } from '../validation/validators/min-words';
+import { maxWords } from '../validation/validators/max-words';
 import { setup, settle } from '../router/tests/router.fixture';
 import { asyncValidator } from '../validation/async-validator';
 import { createFormPrimitives } from './create-form-primitives';
@@ -8095,4 +8099,48 @@ it('propagates nullable keyed row moves, validation, clearing and reset through 
   expect(profile.valid()).toBe(true);
   expect(profile.pristine()).toBe(true);
   expect(profile.untouched()).toBe(true);
+});
+
+it.each([false, true])('aggregates optional date and word validation through nested forms with deferred=%s', (deferred) => {
+  const minimumDate = minDate('2026-01-01');
+  const maximumDate = maxDate('2026-12-31');
+  const dateRange = dateBetween('2026-01-01', '2026-12-31');
+  const minimumWords = minWords(2);
+  const maximumWords = maxWords(2);
+  const profile = form({ details: form({
+    start: field<Date>(undefined, { validators: deferred ? () => minimumDate : minimumDate }),
+    end: field<Date>(undefined, { validators: deferred ? () => maximumDate : maximumDate }),
+    appointment: field<Date>(undefined, { validators: deferred ? () => dateRange : dateRange }),
+    summary: field<string>(undefined, { validators: deferred ? () => minimumWords : minimumWords }),
+    title: field<string>(undefined, { validators: deferred ? () => maximumWords : maximumWords }),
+  }) });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  profile.details.set({
+    start: new Date('2025-01-01'), end: new Date('2027-01-01'), appointment: new Date('2025-01-01'),
+    summary: 'one', title: 'one two three',
+  });
+  expect(profile.invalid()).toBe(true);
+  expect(profile.allErrors().map(error => error.kind)).toEqual(['minDate', 'maxDate', 'dateBetween', 'minWords', 'maxWords']);
+  profile.markAsDirty();
+  profile.markAsTouched();
+  profile.reset({ details: { start: undefined, end: undefined, appointment: undefined, summary: undefined, title: undefined } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  profile.details.start.setValidators([required, minimumDate]);
+  profile.details.end.setValidators([required, maximumDate]);
+  profile.details.appointment.setValidators([required, dateRange]);
+  profile.details.summary.setValidators([required, minimumWords]);
+  profile.details.title.setValidators([required, maximumWords]);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.allErrors().map(error => error.kind)).toEqual(Array(5).fill('required'));
+  expect(profile.pending()).toBe(false);
+  profile.details.set({
+    start: new Date('2026-06-01'), end: new Date('2026-06-01'), appointment: new Date('2026-06-01'),
+    summary: 'one two', title: 'one two',
+  });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
 });

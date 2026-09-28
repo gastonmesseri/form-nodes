@@ -14,6 +14,7 @@ import invalidValidationResultsSource from '!!raw-loader!../../examples/invalid-
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
 import selfReferencingHelpersSource from '!!raw-loader!../../examples/self-referencing-validation-helpers.typecheck.ts';
 import selfReferencingValidationSource from '!!raw-loader!../../examples/self-referencing-validation.example.ts';
+import optionalValuesSource from '!!raw-loader!../../examples/optional-date-and-word-validation.example.ts';
 
 The [executable validation example](../examples/executable-examples.mdx#validation-ownership) checks
 field and form error ownership through both failing and valid states.
@@ -48,6 +49,16 @@ all `asyncValidator()` callbacks. It returns the same readonly node view and tra
 attachment and detachment. Standalone nodes return themselves; nested forms resolve the outermost root.
 
 <CodeBlock language="ts" title="validator-root.example.ts">{validatorRootSource}</CodeBlock>
+
+## Optional values {#optional-values}
+
+`minDate`, `maxDate`, and `dateBetween` accept `Date | null | undefined`; `minWords` and `maxWords`
+accept `string | null | undefined`. Nullish field values pass these optional constraints and stay
+unchanged. Word-count rules also allow empty strings, and date bounds allow invalid Date objects.
+Add `required` when the field must contain a value. Direct registration and deferred validator
+sources use the same rules.
+
+<CodeBlock language="ts" title="optional-date-and-word-validation.example.ts">{optionalValuesSource}</CodeBlock>
 
 ## Validator arguments and return values {#validator-results}
 

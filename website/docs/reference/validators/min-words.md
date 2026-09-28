@@ -37,7 +37,10 @@ const myForm = form({
 });
 ```
 
-`null` and `''` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint. A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens, so `L'été` and `well-known` each count as one word. A failure is `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the observed word count.
+`null`, `undefined`, and `''` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint. A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens, so `L'été` and `well-known` each count as one word. A failure is `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the observed word count.
+
+These absent values are accepted by the public types and remain unchanged in the field. Add
+`required` when a value must be present; see [optional values](../../guides/validation.md#optional-values).
 
 ## 💬 Message configuration {#message-configuration}
 

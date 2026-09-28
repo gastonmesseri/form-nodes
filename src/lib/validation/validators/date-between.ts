@@ -1,3 +1,4 @@
+import { isNil } from '../../utils/is-nil';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
@@ -18,7 +19,7 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
 /**
  * Requires a valid, non-empty date to be within an inclusive date range.
  *
- * `null` and invalid current dates pass so this validator can be composed with `required`. Both
+ * `null`, `undefined`, and invalid current dates pass so this validator can be composed with `required`. Both
  * limits accept a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), a relative shortcut
  * (`'today'`), or a reactively tracked function returning one of
  * those representations. Strings and shortcuts use UTC midnight by default; set `parseAs` to
@@ -168,7 +169,7 @@ export const dateBetween = (
      * });
      * ```
      */
-    error?: ValidationResult | ((context: ValidatorContext<Date | null>) => ValidationResult);
+    error?: ValidationResult | ((context: ValidatorContext<Date | null | undefined>) => ValidationResult);
   }) & {
     /**
      * Enables the validator and its constraint metadata only while the condition is true.
@@ -193,7 +194,7 @@ export const dateBetween = (
      * });
      * ```
      */
-    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<Date | null>) => boolean)>;
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<Date | null | undefined>) => boolean)>;
     /**
      * Interprets calendar-date strings and the `today` shortcut at UTC or local midnight.
      * Existing Date objects retain their timestamps.
@@ -217,7 +218,7 @@ export const dateBetween = (
      */
     parseAs?: 'utc' | 'local';
   },
-): Validator<Date | null> => {
+): Validator<Date | null | undefined> => {
   const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
   const message = resolveValidatorMessageOption(options);
   const normalizedMinimum = normalizeDateConstraintSource(minimum as DateConstraintSource, parseAs);
@@ -233,9 +234,9 @@ export const dateBetween = (
     ) return undefined;
     return { minimum: resolvedMinimum, maximum: resolvedMaximum };
   };
-  const validator: Validator<Date | null> = ({ value }) => {
+  const validator: Validator<Date | null | undefined> = ({ value }) => {
     const currentValue = value();
-    if (currentValue === null || Number.isNaN(currentValue.getTime())) return null;
+    if (isNil(currentValue) || Number.isNaN(currentValue.getTime())) return null;
     const bounds = resolveBounds();
     if (bounds === undefined) return null;
     if (currentValue >= bounds.minimum && currentValue <= bounds.maximum) return null;

@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Accept `undefined` as an absent field value in `minDate`, `maxDate`, `dateBetween`, `minWords`, and `maxWords`, preventing validation crashes with deferred validators or external data. Their public types and callback contexts now include `undefined`; combine with `required` to reject absent values.
 - Use template/factory defaults for whole nullish object rows received at runtime by array `set()`, `patch()`, and `update()`. Reused rows retain identity and dirty/touched state while replacing values and discarding overwritten pending input; new rows use their construction defaults. Nullable field rows retain their supplied values, and TypeScript still requires complete object rows.
 - Treat runtime `null` and `undefined` arguments to form and group `reset()` like an omitted value: preserve current values, discard pending control input, and clear interaction state and form submission history throughout the subtree. Nested object branches follow the same rule; TypeScript still requires complete objects for explicit reset values.
 - Ignore runtime `null` and `undefined` inputs to form and group `set()`, including nested object branches, preserving their values, interaction state, and pending work while other supplied branches update. TypeScript still requires complete objects. The same guard applies to `update()` results and `value.committed.set()` writes.

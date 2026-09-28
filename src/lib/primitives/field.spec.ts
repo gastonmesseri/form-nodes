@@ -21,6 +21,8 @@ import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
 import { required } from '../validation/validators/required';
 import { lessThan } from '../validation/validators/less-than';
+import { minWords } from '../validation/validators/min-words';
+import { maxWords } from '../validation/validators/max-words';
 import { setup, settle } from '../router/tests/router.fixture';
 import { asyncValidator } from '../validation/async-validator';
 import type { InternalNode, AnyNode } from '../types/node.type';
@@ -5341,4 +5343,71 @@ it.each([null, undefined])('keeps explicit nullable field row values when replac
   expect(first.touched()).toBe(true);
   expect(rows[1]!.pristine()).toBe(true);
   expect(rows[1]!.untouched()).toBe(true);
+});
+
+describe.each([false, true])('optional date and word validators with deferred=%s', (deferred) => {
+  it.each([
+    { kind: 'minDate', rule: minDate('2026-01-01'), invalid: new Date('2025-01-01') },
+    { kind: 'maxDate', rule: maxDate('2026-12-31'), invalid: new Date('2027-01-01') },
+    { kind: 'dateBetween', rule: dateBetween('2026-01-01', '2026-12-31'), invalid: new Date('2025-01-01') },
+  ])('treats nullish dates as absent with $kind', ({ kind, rule, invalid }) => {
+    const node = field<Date | null | undefined>(undefined, { validators: deferred ? () => rule : rule });
+    expect(node()).toBeUndefined();
+    expect(node.valid()).toBe(true);
+    expect(node.errors()).toEqual([]);
+    node.markAsDirty();
+    node.markAsTouched();
+    node.set(invalid);
+    expect(node.getError(kind)).toMatchObject({ kind, actual: invalid });
+    node.set(undefined);
+    expect(node.valid()).toBe(true);
+    expect(node.dirty()).toBe(true);
+    expect(node.touched()).toBe(true);
+    node.set(null);
+    expect(node.errors()).toEqual([]);
+    node.set(new Date('2026-06-01'));
+    expect(node.valid()).toBe(true);
+    node.reset(undefined);
+    expect(node()).toBeUndefined();
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+    node.setValidators([required, rule]);
+    expect(node.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(node.pending()).toBe(false);
+    node.set(new Date('2026-06-01'));
+    expect(node.valid()).toBe(true);
+  });
+
+  it.each([
+    { kind: 'minWords', rule: minWords(2), invalid: 'one' },
+    { kind: 'maxWords', rule: maxWords(2), invalid: 'one two three' },
+  ])('treats nullish strings as absent with $kind', ({ kind, rule, invalid }) => {
+    const node = field<string | null | undefined>(undefined, { validators: deferred ? () => rule : rule });
+    expect(node()).toBeUndefined();
+    expect(node.valid()).toBe(true);
+    expect(node.errors()).toEqual([]);
+    node.markAsDirty();
+    node.markAsTouched();
+    node.set(invalid);
+    expect(node.getError(kind)).toMatchObject({ kind });
+    node.set(undefined);
+    expect(node.valid()).toBe(true);
+    expect(node.dirty()).toBe(true);
+    expect(node.touched()).toBe(true);
+    node.set(null);
+    expect(node.errors()).toEqual([]);
+    node.set('');
+    expect(node.errors()).toEqual([]);
+    node.set('one two');
+    expect(node.valid()).toBe(true);
+    node.reset(undefined);
+    expect(node()).toBeUndefined();
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+    node.setValidators([required, rule]);
+    expect(node.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(node.pending()).toBe(false);
+    node.set('one two');
+    expect(node.valid()).toBe(true);
+  });
 });

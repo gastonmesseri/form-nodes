@@ -293,7 +293,7 @@ const myForm = form({
 });
 ```
 
-`null` and `''` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint. A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens, so `L'été` and `well-known` each count as one word. A failure is `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the observed word count.
+`null`, `undefined`, and `''` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint. A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens, so `L'été` and `well-known` each count as one word. A failure is `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the observed word count.
 
 ## ✅ maxWords {#maxwords}
 
@@ -307,7 +307,7 @@ const myForm = form({
 });
 ```
 
-`null` and `''` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint. It uses the same Unicode word definition as `minWords`. A failure is `{ kind: 'maxWords', maxWords, actual, message }`.
+`null`, `undefined`, and `''` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint. It uses the same Unicode word definition as `minWords`. A failure is `{ kind: 'maxWords', maxWords, actual, message }`.
 
 ## ✅ pattern {#pattern}
 
@@ -377,7 +377,7 @@ const myForm = form({
 });
 ```
 
-The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
+The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null`, `undefined`, and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
 
 ## ✅ maxDate {#maxdate}
 
@@ -400,7 +400,7 @@ const myForm = form({
 });
 ```
 
-It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
+It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null`, `undefined`, and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
 
 ## ✅ dateBetween {#datebetween}
 
@@ -431,7 +431,7 @@ const myForm = form({
 });
 ```
 
-Both boundaries accept a `Date`, `YYYY-MM-DD`, `'today'`, or a reactive source. `parseAs` applies to both string limits and the shortcut. `null` and invalid current dates pass. If either limit is absent or invalid, the range and both metadata constraints are disabled together. A failure is `{ kind: 'dateBetween', minDate, maxDate, actual, message }`. The normalized boundaries contribute to `min()` and `max()` metadata.
+Both boundaries accept a `Date`, `YYYY-MM-DD`, `'today'`, or a reactive source. `parseAs` applies to both string limits and the shortcut. `null`, `undefined`, and invalid current dates pass. If either limit is absent or invalid, the range and both metadata constraints are disabled together. A failure is `{ kind: 'dateBetween', minDate, maxDate, actual, message }`. The normalized boundaries contribute to `min()` and `max()` metadata.
 
 ## ✅ oneOf {#oneof}
 

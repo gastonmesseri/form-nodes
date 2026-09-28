@@ -37,7 +37,10 @@ const myForm = form({
 });
 ```
 
-`null` and `''` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint. It uses the same Unicode word definition as `minWords`. A failure is `{ kind: 'maxWords', maxWords, actual, message }`.
+`null`, `undefined`, and `''` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint. It uses the same Unicode word definition as `minWords`. A failure is `{ kind: 'maxWords', maxWords, actual, message }`.
+
+These absent values are accepted by the public types and remain unchanged in the field. Add
+`required` when a value must be present; see [optional values](../../guides/validation.md#optional-values).
 
 ## 💬 Message configuration {#message-configuration}
 

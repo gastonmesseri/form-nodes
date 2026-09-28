@@ -1641,11 +1641,28 @@ const age = field<number>(null, {
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
 | `url` | `string | null` | Passes for `null` and `''` | `{ kind: 'url', message }` |
 | `oneOf(values)` | The allowed value type, `null`, or `undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'oneOf', options, actual, message }` |
-| `minWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'minWords', minWords, actual, message }` |
-| `maxWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
-| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, actual, message }` |
-| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
-| `dateBetween(minimum, maximum)` | `Date | null` | Passes for `null` and invalid dates; disabled if either limit is absent or invalid | `{ kind: 'dateBetween', minDate, maxDate, actual, message }` |
+| `minWords(limit)` | `string | null | undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'minWords', minWords, actual, message }` |
+| `maxWords(limit)` | `string | null | undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
+| `minDate(limit)` | `Date | null | undefined` | Passes for `null`, `undefined`, and invalid dates | `{ kind: 'minDate', minDate, actual, message }` |
+| `maxDate(limit)` | `Date | null | undefined` | Passes for `null`, `undefined`, and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
+| `dateBetween(minimum, maximum)` | `Date | null | undefined` | Passes for `null`, `undefined`, and invalid dates; disabled if either limit is absent or invalid | `{ kind: 'dateBetween', minDate, maxDate, actual, message }` |
+
+The date validators (`minDate`, `maxDate`, `dateBetween`) and word-count validators (`minWords`,
+`maxWords`) accept undefined field values in both their public types and runtime checks. Null and
+undefined pass these optional constraints without coercing the field value. Empty strings still
+pass word-count rules, and invalid Date objects still pass date bounds. Use `required` or `notNil`
+for presence. Both direct registration and deferred validator sources follow this policy; `set`
+and `reset` to undefined remove these constraint errors and update ancestor validity normally.
+Value changes keep their existing dirty/touched rules, and configured limits remain available as
+metadata on optional empty date fields. Conditions and error callbacks expose the widened value
+union in their contexts; conditions can receive undefined even though the value guard skips the
+constraint comparison.
+
+Reference inspected: Angular `v22.2.0`, commit `fc187d4aec254b52a0cff7a16a390a4b0c3e57d8`,
+`packages/forms/signals/src/api/rules/validation/min_date.ts`, `max_date.ts`, and their tests in
+`packages/forms/signals/test/node/api/validators/min_date.spec.ts` and `max_date.spec.ts`.
+Angular restricts date field values to Date or null and skips null/invalid dates. Accepting undefined
+field values is an intentional Form Nodes extension. Word-count rules are library-specific.
 
 Date limits accept a `Date`, an ISO calendar-date string in `YYYY-MM-DD` format, the relative-day
 shortcut `'today'`, or a reactive function returning any of those
