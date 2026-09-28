@@ -61,7 +61,7 @@ describe('native pattern constraints', () => {
     expect(submit).toHaveBeenCalledTimes(1);
   });
 
-  it.each(['remove', 'disable'] as const)('clears the last native pattern restriction on %s', async (operation) => {
+  it.each(['remove', 'disable', 'null'] as const)('clears the last native pattern restriction on %s', async (operation) => {
     const { fixture, profile, input } = setup();
     const expression = signal<RegExp | undefined>(/^[0-9]+$/);
     profile.name.set('Ada');
@@ -72,7 +72,7 @@ describe('native pattern constraints', () => {
     expect(profile.name.getError('pattern')).toBeDefined();
     expect(profile.invalid()).toBe(true);
     if (operation === 'remove') profile.name.setValidators([required]);
-    else expression.set(undefined);
+    else expression.set(operation === 'null' ? null as never : undefined);
     fixture.detectChanges();
     await fixture.whenStable();
     expect(input.hasAttribute('pattern')).toBe(false);

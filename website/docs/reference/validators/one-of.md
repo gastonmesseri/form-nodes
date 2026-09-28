@@ -45,6 +45,10 @@ const myForm = form({
 
 `null`, `undefined`, and `''` pass. A reactive source returning `undefined` disables the constraint. Membership uses `Array.prototype.includes`: `NaN` matches `NaN`, while objects compare by reference. A failure is `{ kind: 'oneOf', options, actual, message }`.
 
+At runtime, a `null` or `undefined` constraint argument, or a source returning either value, omits the rule without throwing. TypeScript still requires a concrete constraint or a function returning it (optionally `undefined`); `null` and direct `undefined` arguments remain rejected. Other validators, such as `required`, remain active.
+
+An empty allowed-values list (`[]`) remains an active constraint: it rejects every non-empty value. Restoring a reactive list restores membership validation.
+
 ## 💬 Message configuration {#message-configuration}
 
 Every failure has a default English message. Where supported, pass a string as the final argument

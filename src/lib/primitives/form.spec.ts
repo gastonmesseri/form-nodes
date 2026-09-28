@@ -11,6 +11,7 @@ import { validator } from '../validation/validator';
 import { syncQueryParams } from '../router/public-api';
 import { oneOf } from '../validation/validators/one-of';
 import { notNil } from '../validation/validators/not-nil';
+import { pattern } from '../validation/validators/pattern';
 import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { minDate } from '../validation/validators/min-date';
@@ -8389,4 +8390,44 @@ it('validates unsupported symbol definitions even when an addition has no string
   const before = profile();
   expect(() => profile.add({ [Symbol('child')]: field('') } as never)).toThrow('symbol child key');
   expect(profile()).toBe(before);
+});
+
+describe('form nullish pattern and membership constraints', () => {
+  it.each(['pattern', 'oneOf'] as const)('propagates reactive %s removal and restoration through nested forms', (kind) => {
+    const constraint = kind === 'pattern' ? /^[0-9]+$/ : ['Grace'];
+    const source = signal<RegExp | string[] | null | undefined>(constraint);
+    const customError = vi.fn(() => ({ kind: 'custom', message: 'Choose another value' }));
+    const rule = kind === 'pattern'
+      ? pattern(source as never, { error: customError })
+      : oneOf<string>(source as never, { error: customError });
+    const model = form({ nested: form({ name: field('Ada', [required, rule]) }) });
+    const originalValue = model();
+    model.nested.name.markAsDirty();
+    model.nested.name.markAsTouched();
+    expect(model.invalid()).toBe(true);
+    expect(model.nested.invalid()).toBe(true);
+    expect(model.allErrors()).toMatchObject([{ kind: 'custom' }]);
+    expect(customError).toHaveBeenCalledTimes(1);
+    for (const absent of [null, undefined]) {
+      source.set(absent);
+      expect(model.valid()).toBe(true);
+      expect(model.nested.valid()).toBe(true);
+      expect(model.nested.name.valid()).toBe(true);
+      expect(model.allErrors()).toEqual([]);
+      expect(model.pending()).toBe(false);
+      expect(model()).toBe(originalValue);
+      expect(model.dirty()).toBe(true);
+      expect(model.touched()).toBe(true);
+      expect(customError).toHaveBeenCalledTimes(1);
+    }
+    source.set(constraint);
+    expect(model.invalid()).toBe(true);
+    expect(model.nested.invalid()).toBe(true);
+    expect(model.allErrors()).toMatchObject([{ kind: 'custom' }]);
+    expect(customError).toHaveBeenCalledTimes(2);
+    source.set(null);
+    model.nested.name.set('');
+    expect(model.allErrors()).toMatchObject([{ kind: 'required' }]);
+    expect(customError).toHaveBeenCalledTimes(2);
+  });
 });

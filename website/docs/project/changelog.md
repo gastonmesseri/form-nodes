@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Omit `pattern()` and `oneOf()` rules when a null constraint arrives at runtime, including reactive source results, matching their existing undefined handling. Absent patterns contribute no constraint metadata; restored constraints resume validation. Public types remain strict, and an empty `oneOf([])` list still rejects non-empty values.
 - Make empty `add({})` calls on forms and groups preserve value identity and emit no change notifications. Runtime null or undefined bulk additions now return `{}` with the same behavior, preserving children, interaction state, drafts, errors, and pending validation. Public types still require an object; named additions continue to accept nullish field values.
 - Create empty forms and groups when whole null or undefined definitions arrive at runtime, including factories returned by `createFormPrimitives()`. Supplied validators and options remain active, and the nodes support normal dynamic children, validation, and reset. TypeScript still requires object definitions when the argument is supplied.
 - Treat runtime null optional options as omitted in `minDate`, `maxDate`, `dateBetween`, `requiredIf`, `createFormPrimitives`, and array construction. Default parsing, validation, and factory behavior remain active without throwing; TypeScript continues to reject null options.

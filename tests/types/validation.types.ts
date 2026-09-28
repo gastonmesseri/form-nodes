@@ -300,3 +300,19 @@ maxDate('2026-12-31', null);
 dateBetween('2026-01-01', '2026-12-31', null);
 // @ts-expect-error Conditional required options require an object or message when supplied.
 requiredIf(() => true, null);
+
+// Runtime tolerance does not widen constraint argument contracts.
+// @ts-expect-error Constraint arguments remain strict.
+pattern(null);
+// @ts-expect-error Constraint arguments remain strict.
+pattern(undefined);
+// @ts-expect-error Constraint arguments remain strict.
+pattern(() => null);
+pattern(() => undefined);
+// @ts-expect-error Constraint arguments remain strict.
+oneOf(null);
+// @ts-expect-error Constraint arguments remain strict.
+oneOf(undefined);
+// @ts-expect-error Constraint arguments remain strict.
+oneOf(() => null);
+oneOf(() => undefined);

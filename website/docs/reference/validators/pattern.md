@@ -39,6 +39,10 @@ const myForm = form({
 
 `null` and `''` pass. A reactive expression returning `undefined` disables the constraint. The expression's `lastIndex` is reset before every check, so global and sticky regular expressions do not reuse stale match state. A failure is `{ kind: 'pattern', pattern, actual, message }`. Every active expression appears in `pattern()` metadata.
 
+At runtime, a `null` or `undefined` constraint argument, or a source returning either value, omits the rule without throwing. TypeScript still requires a concrete constraint or a function returning it (optionally `undefined`); `null` and direct `undefined` arguments remain rejected. Other validators, such as `required`, remain active.
+
+An absent expression contributes no `pattern()` metadata. Restoring a reactive expression restores validation and metadata.
+
 ## 💬 Message configuration {#message-configuration}
 
 Every failure has a default English message. Where supported, pass a string as the final argument

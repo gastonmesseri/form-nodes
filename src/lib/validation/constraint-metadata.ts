@@ -1,3 +1,4 @@
+import { isNil } from '../utils/is-nil';
 import { createMetadataKey } from '../metadata/metadata';
 
 export type ConstraintSource<TValue> = TValue | (() => TValue | undefined);
@@ -47,6 +48,6 @@ export const PATTERN_METADATA = createMetadataKey<ConstraintSource<RegExp>, read
   getInitial: () => [],
   reduce: (current, source) => {
     const next = resolveConstraint(source);
-    return next === undefined || current.includes(next) ? current : [...current, next];
+    return isNil(next) || current.includes(next) ? current : [...current, next];
   },
 });

@@ -10,7 +10,9 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  * `null`, `undefined`, and the empty string are accepted so this validator can be composed with
  * `required`. Values use `Array.prototype.includes` equality, including reference equality for
  * objects. A source function is evaluated reactively and may return `undefined` to disable the
- * constraint temporarily. A failure produces
+ * constraint temporarily. Runtime nullish lists, including source results, also skip the rule;
+ * TypeScript still rejects null and direct undefined arguments. An empty list rejects every
+ * non-empty value. A failure produces
  * `{ kind: 'oneOf', options, actual, message }`, where `options` contains the resolved allowed
  * values and `actual` contains the rejected value.
  *
@@ -429,7 +431,7 @@ export function oneOf<TValue>(
     const currentValue = value();
     if (isNil(currentValue) || currentValue === '') return null;
     const resolvedAllowedValues = typeof allowedValues === 'function' ? allowedValues() : allowedValues;
-    if (resolvedAllowedValues === undefined || resolvedAllowedValues.includes(currentValue)) return null;
+    if (isNil(resolvedAllowedValues) || resolvedAllowedValues.includes(currentValue)) return null;
     return {
       kind: 'oneOf',
       options: resolvedAllowedValues,

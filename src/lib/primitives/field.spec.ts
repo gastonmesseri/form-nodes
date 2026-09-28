@@ -12,6 +12,7 @@ import { url } from '../validation/validators/url';
 import { validator } from '../validation/validator';
 import { syncQueryParams } from '../router/public-api';
 import { email } from '../validation/validators/email';
+import { oneOf } from '../validation/validators/one-of';
 import { notNil } from '../validation/validators/not-nil';
 import { pattern } from '../validation/validators/pattern';
 import { integer } from '../validation/validators/integer';
@@ -5568,4 +5569,64 @@ it.each([null, undefined])('adds a nullable field through both named and object 
   expect(added.missing.parent()).toBe(profile);
   expect(named.$api.nodeType()).toBe('field');
   expect(added.missing.$api.nodeType()).toBe('field');
+});
+
+describe('field nullish pattern and membership constraints', () => {
+  it.each(['pattern', 'oneOf'] as const)('omits static nullish %s constraints and keeps required active', (kind) => {
+    for (const constraint of [null, undefined]) {
+      const message = vi.fn(() => 'Constraint failed');
+      const rule = kind === 'pattern'
+        ? pattern(constraint as never, { message })
+        : oneOf<string>(constraint as never, { message });
+      const value = field('Ada', [required, rule]);
+      expect(value.errors()).toEqual([]);
+      expect(value.pattern()).toEqual([]);
+      expect(message).not.toHaveBeenCalled();
+      value.set('');
+      expect(value.errors()).toMatchObject([{ kind: 'required' }]);
+      expect(message).not.toHaveBeenCalled();
+    }
+  });
+
+  it.each(['pattern', 'oneOf'] as const)('reactivates %s after a nullish source result without changing interaction state', (kind) => {
+    const constraint = kind === 'pattern' ? /^[0-9]+$/ : ['Grace'];
+    const source = signal<RegExp | string[] | null | undefined>(constraint);
+    const message = vi.fn(() => 'Constraint failed');
+    const rule = kind === 'pattern'
+      ? pattern(source as never, { message })
+      : oneOf<string>(source as never, { message });
+    const value = field('Ada', [required, rule]);
+    value.markAsDirty();
+    value.markAsTouched();
+    expect(value.errors()).toMatchObject([{ kind }]);
+    expect(message).toHaveBeenCalledTimes(1);
+    expect(value.pattern()).toEqual(kind === 'pattern' ? [constraint] : []);
+    for (const absent of [null, undefined]) {
+      source.set(absent);
+      expect(value.valid()).toBe(true);
+      expect(value.errors()).toEqual([]);
+      expect(value.pattern()).toEqual([]);
+      expect(value.pending()).toBe(false);
+      expect(value()).toBe('Ada');
+      expect(value.dirty()).toBe(true);
+      expect(value.touched()).toBe(true);
+      expect(message).toHaveBeenCalledTimes(1);
+    }
+    source.set(constraint);
+    expect(value.errors()).toMatchObject([{ kind }]);
+    expect(message).toHaveBeenCalledTimes(2);
+    expect(value.pattern()).toEqual(kind === 'pattern' ? [constraint] : []);
+    source.set(kind === 'pattern' ? /^Ada$/ : ['Ada']);
+    expect(value.valid()).toBe(true);
+    expect(message).toHaveBeenCalledTimes(2);
+    if (kind === 'oneOf') {
+      source.set([]);
+      expect(value.errors()).toMatchObject([{ kind: 'oneOf', options: [] }]);
+      expect(message).toHaveBeenCalledTimes(3);
+    }
+    value.reset('');
+    expect(value.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(value.pristine()).toBe(true);
+    expect(value.untouched()).toBe(true);
+  });
 });
