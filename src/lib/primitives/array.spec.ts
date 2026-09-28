@@ -3069,3 +3069,35 @@ describe('duplicate tracking key reconciliation', () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 });
+
+it.each([null, undefined])('uses default array options in each options position for runtime %s', (options) => {
+  const template = { name: field('', required) };
+  const positional = array(template, [{ name: 'Ada' }], options as never);
+  const validated = array(template, [{ name: 'Ada' }], minLength(2), options as never);
+  const validatorOnly = array(template, minLength(1), options as never);
+  expect(positional()).toEqual([{ name: 'Ada' }]);
+  expect(positional.valid()).toBe(true);
+  expect(validated.hasError('minLength')).toBe(true);
+  expect(validatorOnly.hasError('minLength')).toBe(true);
+  validatorOnly.push({ name: 'Grace' });
+  expect(validatorOnly.valid()).toBe(true);
+  const first = positional[0]!;
+  first.markAsDirty();
+  first.markAsTouched();
+  positional.set([{ name: '' }, { name: 'Grace' }]);
+  expect(positional[0]).toBe(first);
+  expect(positional.invalid()).toBe(true);
+  expect(positional.dirty()).toBe(true);
+  expect(positional.touched()).toBe(true);
+  positional.resetToInitial();
+  expect(positional()).toEqual([{ name: 'Ada' }]);
+  expect(positional.valid()).toBe(true);
+  expect(positional.pristine()).toBe(true);
+  expect(positional.untouched()).toBe(true);
+  const nested = array({ rows: positional }, { initialLength: 2 });
+  expect(nested()).toEqual([{ rows: [{ name: 'Ada' }] }, { rows: [{ name: 'Ada' }] }]);
+  expect(nested[0]!.rows).not.toBe(nested[1]!.rows);
+  nested[0]!.rows.push({ name: '' });
+  expect(nested.invalid()).toBe(true);
+  expect(nested[1]!.rows.valid()).toBe(true);
+});

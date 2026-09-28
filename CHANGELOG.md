@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Treat runtime null optional options as omitted in `minDate`, `maxDate`, `dateBetween`, `requiredIf`, `createFormPrimitives`, and array construction. Default parsing, validation, and factory behavior remain active without throwing; TypeScript continues to reject null options.
 - Handle null and undefined items safely in property-based `uniqueItems()` validation. Nullable item types now support property selectors; absent items and missing or undefined properties share an undefined key and produce normal duplicate-index validation errors when repeated. Null property values remain distinct, and callback selectors still receive the original items.
 - Accept `undefined` as an absent field value in `minDate`, `maxDate`, `dateBetween`, `minWords`, and `maxWords`, preventing validation crashes with deferred validators or external data. Their public types and callback contexts now include `undefined`; combine with `required` to reject absent values.
 - Use template/factory defaults for whole nullish object rows received at runtime by array `set()`, `patch()`, and `update()`. Reused rows retain identity and dirty/touched state while replacing values and discarding overwritten pending input; new rows use their construction defaults. Nullable field rows retain their supplied values, and TypeScript still requires complete object rows.

@@ -51,6 +51,10 @@ It accepts the same absolute dates, relative shortcuts, reactive sources, and pa
 These absent values are accepted by the public types and remain unchanged in the field. Add
 `required` when a value must be present; see [optional values](../../guides/validation.md#optional-values).
 
+If untyped data passes `null` as the optional options argument, it uses the same defaults as
+omitting options. Validation remains active and no warning is emitted. TypeScript still rejects
+null options; omit the argument or pass `undefined` in typed code.
+
 ## 💬 Message configuration {#message-configuration}
 
 Every failure has a default English message. Where supported, pass a string as the final argument

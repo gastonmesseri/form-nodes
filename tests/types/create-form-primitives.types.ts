@@ -93,3 +93,6 @@ createFormPrimitives().array(() => ({ count: 0 }), { initialLength: 1 });
 createFormPrimitives().array({ name: '' }, { initialLength: 2, initialValue: 2 });
 // @ts-expect-error configured factory positional counts exclude initialLength
 createFormPrimitives().array(() => field(''), 2, { initialLength: 2 });
+
+// @ts-expect-error Shared defaults must be an options object when supplied.
+createFormPrimitives(null);

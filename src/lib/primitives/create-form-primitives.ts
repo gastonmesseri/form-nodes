@@ -33,15 +33,16 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * profile.nickname(); // ''
  * ```
  *
- * @param options Defaults shared by the returned primitive factories.
+ * @param options Defaults shared by the returned primitive factories. Runtime null uses the same defaults as omission; TypeScript still requires an object when supplied.
  */
 export const createFormPrimitives = <const TNullable extends boolean | undefined = undefined>(options: FormPrimitivesOptions<TNullable> = {}): FormPrimitives<TNullable> => {
-  const defaultNullable = options.nullable;
+  const defaults: FormPrimitivesOptions<TNullable> = options ?? {};
+  const defaultNullable = defaults.nullable;
   const defaultNodeOptions = {
-    syncInputs: options.syncInputs,
-    bindInputOutputPairs: options.bindInputOutputPairs,
-    inheritInjector: options.inheritInjector,
-    adoptBindingInjector: options.adoptBindingInjector,
+    syncInputs: defaults.syncInputs,
+    bindInputOutputPairs: defaults.bindInputOutputPairs,
+    inheritInjector: defaults.inheritInjector,
+    adoptBindingInjector: defaults.adoptBindingInjector,
   };
   const mergeNodeOptions = <TOptions extends object>(nodeOptions?: TOptions): TOptions => {
     return {
@@ -57,7 +58,7 @@ export const createFormPrimitives = <const TNullable extends boolean | undefined
     } as TOptions;
   };
   const registerDefaults = <TNode extends AnyNode>(node: TNode): TNode => {
-    registerNodeDefaultValidatorMessages(node, options.validatorMessages);
+    registerNodeDefaultValidatorMessages(node, defaults.validatorMessages);
     return node;
   };
   const configuredField = ((...args: unknown[]) => {

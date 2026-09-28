@@ -83,6 +83,7 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  * @param minimum Static inclusive minimum date or ISO calendar-date string, or a reactive function returning one.
  * @param maximum Static inclusive maximum date or ISO calendar-date string, or a reactive function returning one.
  * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * Runtime null options use the same defaults as omission; TypeScript still excludes null.
  */
 export const dateBetween = (
   minimum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
@@ -219,7 +220,7 @@ export const dateBetween = (
     parseAs?: 'utc' | 'local';
   },
 ): Validator<Date | null | undefined> => {
-  const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
+  const parseAs = typeof options === 'object' ? options?.parseAs ?? 'utc' : 'utc';
   const message = resolveValidatorMessageOption(options);
   const normalizedMinimum = normalizeDateConstraintSource(minimum as DateConstraintSource, parseAs);
   const normalizedMaximum = normalizeDateConstraintSource(maximum as DateConstraintSource, parseAs);

@@ -23,6 +23,10 @@ createFormPrimitives();
 createFormPrimitives(options?);
 ```
 
+If untyped data supplies `null` as the whole options argument, the factory uses the same defaults
+as `createFormPrimitives()` without throwing or warning. TypeScript still requires an object when
+options are supplied; omit the argument or pass `undefined` in typed code.
+
 The options object and every property are optional. Omitting `nullable` uses the same inference
 as `field()`: non-nullish defaults do not add null. Set `nullable: true` to always add null or
 `nullable: false` to require nullability in the declared input type. Omitting either injector

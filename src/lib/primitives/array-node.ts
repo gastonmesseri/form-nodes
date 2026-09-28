@@ -257,7 +257,7 @@ export class ArrayNode<TItem extends AnyNode> {
     public itemTemplateValue?: () => unknown,
   ) {
     this.equal = resolveValueEquality(this.options?.equal);
-    if (this.options !== undefined) {
+    if (isNotNil(this.options)) {
       const { initialValue: _initialValue, initialLength: _initialLength, ...cloneOptions } = this.options;
       this.cloneOptions = cloneOptions;
     }

@@ -193,3 +193,6 @@ nullableTrackedRows.patch([undefined]);
 nullableTrackedRows.update(() => [null]);
 nullableTrackedRows.reset([undefined]);
 type _NullableTrackedRow = Expect<Equal<ReturnType<NonNullable<typeof nullableTrackedRows[0]>>, { id: string } | null | undefined>>;
+
+// @ts-expect-error Explicit array options must be an object when supplied.
+array(field(''), [], [], null);

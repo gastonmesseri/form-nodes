@@ -71,6 +71,10 @@ const myForm = form({
 });
 ```
 
+If untyped data passes `null` as the optional options argument, it uses the same defaults as
+omitting options. Validation remains active and no warning is emitted. TypeScript still rejects
+null options; omit the argument or pass `undefined` in typed code.
+
 ## 💬 Message configuration {#message-configuration}
 
 Pass a string for a static message:

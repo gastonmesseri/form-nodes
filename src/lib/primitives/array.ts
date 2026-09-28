@@ -35,6 +35,8 @@ type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNo
 export function array(): ArrayNodeType<FieldNode<unknown>>;
 /**
  * Creates a dynamic array by cloning a declarative node template for every item.
+ * Runtime null in an options argument uses the defaults for omitted options; TypeScript still excludes null there.
+ * A positional null initial value retains its separate meaning: an empty initial collection.
  *
  * The template itself remains independent; each item is a fresh clone. Use a factory overload
  * when item construction must be deferred or customized.

@@ -8238,3 +8238,50 @@ it('propagates nullable item uniqueness through nested forms and updates duplica
   expect(profile.valid()).toBe(true);
   expect(profile.allErrors()).toEqual([]);
 });
+
+it.each([null, undefined])('propagates validators with runtime %s options through nested forms', (options) => {
+  const enabled = signal(false);
+  const profile = form({ details: form({
+    start: field(new Date('2025-01-01'), [minDate('2026-01-01', options as never)]),
+    end: field(new Date('2027-01-01'), [maxDate('2026-12-31', options as never)]),
+    visit: field(new Date('2025-01-01'), [dateBetween('2026-01-01', '2026-12-31', options as never)]),
+    name: field('', [requiredIf(() => enabled(), options as never)]),
+  }) });
+  expect(profile.allErrors().map(error => error.kind)).toEqual(['minDate', 'maxDate', 'dateBetween']);
+  enabled.set(true);
+  expect(profile.details.name.required()).toBe(true);
+  expect(profile.allErrors().map(error => error.kind)).toEqual(['minDate', 'maxDate', 'dateBetween', 'required']);
+  profile.markAsDirty();
+  profile.markAsTouched();
+  profile.reset({ details: {
+    start: new Date('2026-06-01'), end: new Date('2026-06-01'), visit: new Date('2026-06-01'), name: 'Ada',
+  } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  expect(profile.pending()).toBe(false);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+});
+
+it.each([null, undefined])('creates usable default factories with runtime %s options outside injection context', (options) => {
+  const configured = createFormPrimitives(options as never);
+  const profile = configured.form({
+    name: configured.field('', required),
+    details: configured.group({ city: configured.field('Zurich') }),
+    rows: configured.array({ code: configured.field('', required) }, { initialLength: 1 }),
+  });
+  expect(profile()).toEqual({ name: '', details: { city: 'Zurich' }, rows: [{ code: '' }] });
+  expect(profile.allErrors().map(error => error.kind)).toEqual(['required', 'required']);
+  profile.set({ name: 'Ada', details: { city: 'Bern' }, rows: [{ code: 'a' }, { code: 'b' }] });
+  expect(profile.valid()).toBe(true);
+  expect(profile.rows.length()).toBe(2);
+  profile.markAsDirty();
+  profile.markAsTouched();
+  profile.resetToInitial();
+  expect(profile()).toEqual({ name: '', details: { city: 'Zurich' }, rows: [{ code: '' }] });
+  expect(profile.invalid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  expect(configured.field.strict('Strict')()).toBe('Strict');
+  expect(configured.field.nullable()()).toBeNull();
+});

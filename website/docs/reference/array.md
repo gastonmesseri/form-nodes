@@ -226,6 +226,11 @@ with a parent contract. Put `configure` on the **template group** for row rules;
 
 ## ⚙️ Options {#options}
 
+If untyped data supplies `null` in an options argument, array construction uses the defaults for
+omitted options without throwing or warning. Supplied initial values and validators remain active.
+TypeScript still excludes null options. A positional null initial value retains its separate
+meaning: an empty initial collection.
+
 Arrays accept most of the options available to [`form()`](./form.md), together with array-specific
 initialization and reconciliation options. They do not accept `onSubmit`: an array can report
 the submission state inherited from an ancestor form, but cannot initiate submission itself.

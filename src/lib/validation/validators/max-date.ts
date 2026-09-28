@@ -68,6 +68,7 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  * @reactive Tracks signals read by the maximum and message sources while they are active.
  * @param maximum Static maximum date or ISO calendar-date string, or a reactive function returning one.
  * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * Runtime null options use the same defaults as omission; TypeScript still excludes null.
  */
 export const maxDate = (
   maximum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
@@ -203,7 +204,7 @@ export const maxDate = (
     parseAs?: 'utc' | 'local';
   },
 ): Validator<Date | null | undefined> => {
-  const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
+  const parseAs = typeof options === 'object' ? options?.parseAs ?? 'utc' : 'utc';
   const message = resolveValidatorMessageOption(options);
   const normalizedMaximum = normalizeDateConstraintSource(maximum as DateConstraintSource, parseAs);
 

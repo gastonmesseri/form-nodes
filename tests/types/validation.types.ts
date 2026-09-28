@@ -291,3 +291,12 @@ uniqueItems<NullableUniqueRow>((item, index) => {
 });
 // @ts-expect-error Property selectors must exist on the non-nullish item type.
 uniqueItems<NullableUniqueRow>('missing');
+
+// @ts-expect-error Optional date validator options require an object or message when supplied.
+minDate('2026-01-01', null);
+// @ts-expect-error Optional date validator options require an object or message when supplied.
+maxDate('2026-12-31', null);
+// @ts-expect-error Optional date validator options require an object or message when supplied.
+dateBetween('2026-01-01', '2026-12-31', null);
+// @ts-expect-error Conditional required options require an object or message when supplied.
+requiredIf(() => true, null);

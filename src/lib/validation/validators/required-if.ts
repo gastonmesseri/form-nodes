@@ -28,6 +28,7 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * @reactive Tracks signals read by `condition` and by a custom message function while active.
  * @param condition Reactive boolean condition. Its return type is unchecked to support class self-references.
  * @param options Optional static message string, or an object containing a static or reactive message.
+ * Runtime null options use the same defaults as omission; TypeScript still excludes null.
  */
 export const requiredIf = (
   condition: () => any,
@@ -63,7 +64,7 @@ export const requiredIf = (
     error?: ValidationResult | ((context: ValidatorContext<unknown>) => ValidationResult);
   },
 ): Validator<unknown> => {
-  if (typeof options === 'object' && options.error !== undefined) {
+  if (typeof options === 'object' && options?.error !== undefined) {
     return required({ error: options.error, when: () => condition() });
   }
   const message = typeof options === 'string' ? options : options?.message;

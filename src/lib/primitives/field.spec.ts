@@ -5488,3 +5488,50 @@ it.each([false, true])('validates nullable item keys on field writes and reset w
   expect(node.pristine()).toBe(true);
   expect(node.untouched()).toBe(true);
 });
+
+it.each([null, undefined])('uses default date validator options for runtime %s', (options) => {
+  const start = new Date('2026-01-01T00:00:00.000Z');
+  const end = new Date('2026-12-31T00:00:00.000Z');
+  const cases = [
+    { rule: minDate('2026-01-01', options as never), kind: 'minDate', invalid: new Date(start.getTime() - 1), valid: start, bounds: { minDate: start } },
+    { rule: maxDate('2026-12-31', options as never), kind: 'maxDate', invalid: new Date(end.getTime() + 1), valid: end, bounds: { maxDate: end } },
+    { rule: dateBetween('2026-01-01', '2026-12-31', options as never), kind: 'dateBetween', invalid: new Date(start.getTime() - 1), valid: end, bounds: { minDate: start, maxDate: end } },
+  ];
+  for (const { rule, kind, invalid, valid, bounds } of cases) {
+    const node = field<Date>(null, [rule]);
+    expect(node.valid()).toBe(true);
+    node.markAsDirty();
+    node.markAsTouched();
+    node.set(invalid);
+    expect(node.getError(kind)).toMatchObject({ kind, actual: invalid, ...bounds });
+    expect(node.getError(kind)?.message).toEqual(expect.any(String));
+    expect(node.pending()).toBe(false);
+    expect(node.dirty()).toBe(true);
+    expect(node.touched()).toBe(true);
+    node.reset(valid);
+    expect(node.valid()).toBe(true);
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+  }
+});
+
+it.each([null, undefined])('keeps conditional required validation reactive with runtime %s options', (options) => {
+  const enabled = signal(false);
+  const condition = vi.fn(() => enabled());
+  const node = field('', [requiredIf(condition, options as never)]);
+  expect(node.valid()).toBe(true);
+  expect(node.required()).toBe(false);
+  expect(condition).toHaveBeenCalledTimes(3);
+  enabled.set(true);
+  expect(node.getError('required')?.message).toBe('This field is required.');
+  expect(node.required()).toBe(true);
+  expect(condition).toHaveBeenCalledTimes(6);
+  node.set('Ada');
+  expect(node.valid()).toBe(true);
+  expect(node.required()).toBe(true);
+  node.reset('');
+  expect(node.invalid()).toBe(true);
+  enabled.set(false);
+  expect(node.valid()).toBe(true);
+  expect(node.required()).toBe(false);
+});

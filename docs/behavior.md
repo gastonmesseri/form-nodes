@@ -5084,3 +5084,29 @@ contract differences. Parameter names inherit Angular Router serializer limitati
 is not retained. In the tested Angular 21.0.7, `hasOwnProperty` followed by another parameter can
 throw during parsing; Angular v22.1.7 uses `Object.hasOwn` in `parseQueryParam` for that case.
 The helper does not replace Angular's URL parser. `constructor` and `toString` round trips are covered.
+
+
+## Null optional options at runtime
+
+When untyped data supplies null for optional options, `minDate`, `maxDate`, `dateBetween`,
+`requiredIf`, `createFormPrimitives`, and array construction treat it like omitted options.
+Undefined continues to use the existing defaults. Public signatures remain strict and reject null
+options; the fallback is runtime resilience, not a new typed call style. No warning is emitted.
+
+Date validators retain UTC parsing, their default message resolution, and their supplied bounds.
+`requiredIf` still tracks the condition, updates required metadata, and validates normally. The
+factory set uses ordinary default nullability inference, validation, and ownership rules. Arrays
+retain the supplied initial values and validators and use default node options, including for
+subsequent template clones. A positional null array initial value still means an empty collection;
+only arguments resolved as options use this fallback. Individual option values such as
+`syncInputs: null` retain their existing documented meaning.
+
+`configureGlobalFormNodes` and `provideFormNodesConfig` retain required configuration objects.
+Their complete nullish arguments are not normalized to an empty configuration.
+
+Angular reference: **v22.2.0**, commit **fc187d4aec254b52a0cff7a16a390a4b0c3e57d8**.
+Inspected `packages/forms/signals/src/api/rules/validation/min_date.ts` and
+`packages/forms/signals/test/node/api/validators/min_date.spec.ts`. Angular accesses optional
+validator configuration with optional chaining and preserves default validation when omitted.
+Its tests cover omitted configuration, without an explicit null-options contract. Form Nodes'
+shared factory and array options fallback is a library-specific API decision.
