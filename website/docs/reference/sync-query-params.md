@@ -7,6 +7,7 @@ import basicSource from '!!raw-loader!../../examples/query-params-basic.typechec
 import signalsSource from '!!raw-loader!../../examples/query-params-signals.typecheck.ts';
 import arraysSource from '!!raw-loader!../../examples/query-params-arrays.typecheck.ts';
 import jsonSource from '!!raw-loader!../../examples/query-params-json.typecheck.ts';
+import validatedJsonSource from '!!raw-loader!../../examples/query-params-validated-json.example.ts';
 import customSerializerSource from '!!raw-loader!../../examples/query-params-custom-serializer.typecheck.ts';
 import hooksSource from '!!raw-loader!../../examples/query-params-hooks.typecheck.ts';
 import lifecycleSource from '!!raw-loader!../../examples/query-params-lifecycle.typecheck.ts';
@@ -386,6 +387,30 @@ This serializer restricts sorting to two choices and preserves the source's lite
 `?sort=date` imports `'date'`. `?sort=unknown` reports a parsing failure and imports `'name'`.
 Choosing `'name'` for an outbound edit removes the parameter because it is the captured default.
 Use the same extension point to validate a JSON schema or encode repeated numeric values.
+
+### Validate complete JSON structures {#validated-json}
+
+`serializer: 'json'` checks JSON syntax, not the shape of a form or its array rows. Use a custom
+serializer to validate the **complete value before returning it**. For collections, check every
+row and nested branch before returning the array. A schema validation library can perform this
+check too. Parsing should not modify the bound source.
+
+If `parse()` throws, `syncQueryParams()` calls `onError` (or Angular `ErrorHandler`) and applies
+the complete `defaultValue` or the value captured when connecting. The rejected data never reaches
+`set()`, and array factories are not called for it. The original parameter text stays in the URL
+and `params`; the helper does not publish an automatic correction.
+
+<CodeBlock language="ts" title="Validated JSON serializer">{validatedJsonSource}</CodeBlock>
+
+This example requires a complete profile and rejects `null`. A custom parser can choose to accept
+nullish values; returning them uses the source's normal `set()` behavior. Form/group branches
+ignore them, arrays clear, and object rows use their construction defaults.
+
+The integration calls the source's ordinary `set()` after parsing. It does not inspect factories
+or roll back writes. If a serializer returns an incompatible structure, the write can still fail
+or partially update children. Exceptions from the write or consumer callbacks are not parse
+failures. Supply a compatible fallback as well.
+
 
 ## Defaults and initialization {#defaults-and-initialization}
 

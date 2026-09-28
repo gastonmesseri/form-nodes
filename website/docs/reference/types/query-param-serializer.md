@@ -37,7 +37,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `parse` | Parses present values. Throw for malformed input; absence uses the binding default. |
+| `parse` | Parses present values. Validate the complete result before returning and throw for malformed input or an incompatible structure. A thrown parse error uses the binding fallback; absence uses it without parsing. Do not mutate the source while parsing. |
 | `serialize` | Returns decoded values; null removes the key. Angular Router handles URL escaping. |
 
 ## Related reference

@@ -11,7 +11,11 @@
  * ```
  */
 export type QueryParamSerializer<T> = {
-  /** Parses present values. Throw for malformed input; absence uses the binding default. */
+  /**
+   * Parses present values. Validate the complete result before returning and throw for
+   * malformed input or an incompatible structure. A thrown parse error uses the binding
+   * fallback; absence uses it without parsing. Do not mutate the source while parsing.
+   */
   parse(values: readonly string[]): T;
   /** Returns decoded values; null removes the key. Angular Router handles URL escaping. */
   serialize(value: T): readonly string[] | null;

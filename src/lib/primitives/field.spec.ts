@@ -37,6 +37,7 @@ import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
 import type { ValidatorContext } from '../validation/validation.type';
 import { lengthBetween } from '../validation/validators/length-between';
+import { profileSerializer } from '../router/tests/validated-json.fixture';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
@@ -5662,4 +5663,30 @@ it.each([null, undefined, {}])('synchronizes a field with default query options 
   name.set('Lin');
   await settle();
   expect(router.requested).toHaveLength(1);
+});
+
+it('imports JSON leaf values without treating their TypeScript types as runtime schemas', () => {
+  const { router, injector, handleError } = setup();
+  const value = field<{ id: number }>(null);
+  const sync = syncQueryParams({ value: { source: value, serializer: 'json' } }, { injector });
+  for (const incoming of [null, { id: 1 }, [], 123, 'text']) {
+    router.external(`/search?value=${encodeURIComponent(JSON.stringify(incoming))}`);
+    expect(value()).toEqual(incoming);
+    expect(sync.params.value()).toBe(JSON.stringify(incoming));
+    expect(value.valid()).toBe(true);
+  }
+  expect(handleError).not.toHaveBeenCalled();
+  injector.destroy();
+});
+
+it('uses a serializer to validate an object field before applying its captured fallback', () => {
+  const { router, injector, handleError } = setup();
+  const original = { name: 'Ada', address: { city: 'Zurich' } };
+  const profile = field(original);
+  const sync = syncQueryParams({ profile: { source: profile, serializer: profileSerializer } }, { injector });
+  router.external(`/search?profile=${encodeURIComponent(JSON.stringify({ name: 'Partial', address: 123 }))}`);
+  expect(profile()).toBe(original);
+  expect(handleError).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ key: 'profile', phase: 'parse' }));
+  expect(sync.closed()).toBe(false);
+  injector.destroy();
 });

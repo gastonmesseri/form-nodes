@@ -11,6 +11,7 @@ import { queryParam } from './query-param-serializer';
 import { setup, settle } from './tests/router.fixture';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { profileSerializer, profilesSerializer } from './tests/validated-json.fixture';
 
 describe('syncQueryParams', () => {
   it('hydrates a mixed map, preserves interaction and validation, and batches nested form changes', async () => {
@@ -1079,5 +1080,57 @@ it('still requires a Router-providing injector for empty maps and null options',
   expect(() => syncQueryParams({}, null)).toThrow(/injection context/);
   const injector = Injector.create({ providers: [] });
   expect(() => runInInjectionContext(injector, () => syncQueryParams({}, null))).toThrow(/Router/);
+  injector.destroy();
+});
+
+it.each([false, true])('validates the entire array in a serializer before writing rows with trackBy=%s', async (keyed) => {
+  const { router, injector } = setup();
+  const factory = vi.fn(() => form({ name: field('Template'), address: { city: field('Zurich') } }));
+  const original = [{ name: 'Ada', address: { city: 'Zurich' } }, { name: 'Grace', address: { city: 'Bern' } }];
+  const rows = array(factory, { initialValue: original, ...(keyed ? { trackBy: 'name' as const } : {}) });
+  const first = rows[0]!;
+  const second = rows[1]!;
+  const onError = vi.fn(() => {
+    expect(rows()).toEqual(original);
+    expect(factory).toHaveBeenCalledTimes(2);
+  });
+  const sync = syncQueryParams({ rows: { source: rows, serializer: profilesSerializer } }, { injector, onError });
+  for (const incoming of [null, {}, [original[0], { name: 'Partial', address: false }], [original[0], null]]) {
+    router.external(`/search?rows=${encodeURIComponent(JSON.stringify(incoming))}`);
+    expect(rows()).toEqual(original);
+    expect(rows[0]).toBe(first);
+    expect(rows[1]).toBe(second);
+    expect(sync.params.rows()).toBe(JSON.stringify(incoming));
+  }
+  expect(onError).toHaveBeenCalledTimes(4);
+  expect(onError).toHaveBeenLastCalledWith(expect.objectContaining({ key: 'rows', phase: 'parse', cause: expect.any(Error) }));
+  expect(factory).toHaveBeenCalledTimes(2);
+  await settle();
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  injector.destroy();
+});
+
+it('applies an explicit complete fallback when a serializer rejects the initial structure', () => {
+  const { injector } = setup(`/search?profile=${encodeURIComponent(JSON.stringify({ name: 'Partial', address: {} }))}`);
+  const profile = form({ name: field('Ada'), address: { city: field('Zurich') } });
+  const before = profile();
+  const fallback = { name: 'Fallback', address: { city: 'Bern' } };
+  const onError = vi.fn(() => expect(profile()).toBe(before));
+  const initial = vi.fn();
+  const sync = syncQueryParams({ profile: { source: profile, serializer: profileSerializer, defaultValue: fallback } }, { injector, onError, onInitialUrlSync: initial });
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(profile()).toEqual(fallback);
+  expect(initial).toHaveBeenCalledExactlyOnceWith({ reason: 'initial', values: { profile: fallback } });
+  expect(sync.closed()).toBe(false);
+  injector.destroy();
+});
+
+it('leaves callback exceptions outside the parse fallback path', () => {
+  const { injector } = setup('/search?name=URL');
+  const name = field('Ada', { onValueChange: () => { throw new Error('Consumer callback'); } });
+  const onError = vi.fn();
+  expect(() => syncQueryParams({ name }, { injector, onError })).toThrow('Consumer callback');
+  expect(name()).toBe('URL');
+  expect(onError).not.toHaveBeenCalled();
   injector.destroy();
 });

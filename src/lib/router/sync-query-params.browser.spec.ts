@@ -11,6 +11,7 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { syncQueryParams } from './sync-query-params';
+import { profileSerializer } from './tests/validated-json.fixture';
 import { FormNodeDirective } from '../form-node/form-node.directive';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
@@ -224,4 +225,47 @@ it('retains edits made by the initial hook during real component activation with
   await harness.navigateByUrl('/search?q=Grace', InitialEditPage);
   expect(page.urlSync).toHaveBeenCalledTimes(2);
   expect(page.urlSync).toHaveBeenLastCalledWith({ reason: 'navigation', values: { q: 'Grace' } });
+});
+
+@Component({
+  selector: 'test-json-query',
+  template: '<input [formNode]="profile.name" />',
+  imports: [FormNodeDirective],
+})
+class JsonQueryPage {
+  profile = form({ name: field('Ada', { debounce: 'blur' }), address: { city: field('Zurich') } });
+  errors = vi.fn();
+  querySync = syncQueryParams({ profile: { source: this.profile, serializer: profileSerializer } }, { onError: this.errors });
+}
+
+it('restores complete fallbacks after serializer rejection on real Router navigation without exposing partial control values', async () => {
+  TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'json', component: JsonQueryPage }]), provideLocationMocks()] });
+  const harness = await RouterTestingHarness.create();
+  const malformed = encodeURIComponent(JSON.stringify({ name: 'Partial', address: 123 }));
+  const page = await harness.navigateByUrl(`/json?profile=${malformed}`, JsonQueryPage);
+  harness.detectChanges();
+  const input = harness.routeNativeElement!.querySelector('input')!;
+  expect(page.errors).toHaveBeenCalledTimes(1);
+  expect(page.profile()).toEqual({ name: 'Ada', address: { city: 'Zurich' } });
+  expect(input.value).toBe('Ada');
+  input.value = 'Draft';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  harness.detectChanges();
+  expect(page.profile.name.debouncing()).toBe(true);
+  page.errors.mockImplementation(() => {
+    expect(page.profile.name()).toBe('Ada');
+    expect(page.profile.name.value.control()).toBe('Draft');
+  });
+  const changed = vi.fn();
+  page.profile.onValueChange(changed);
+  const second = encodeURIComponent(JSON.stringify({ name: 'Another partial', address: [] }));
+  await harness.navigateByUrl(`/json?profile=${second}`, JsonQueryPage);
+  harness.detectChanges();
+  expect(page.errors).toHaveBeenCalledTimes(2);
+  expect(input.value).toBe('Ada');
+  expect(page.profile.name.debouncing()).toBe(false);
+  expect(page.profile.name.dirty()).toBe(true);
+  expect(changed).not.toHaveBeenCalled();
+  expect(page.querySync.closed()).toBe(false);
+  expect(page.querySync.params.profile()).toBe(decodeURIComponent(second));
 });

@@ -17,6 +17,8 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  * entry injectors and node owners may end individual entries.
  * URL values initialize nodes through set without resetting interaction state or initial values.
  * Forms, groups, and arrays retain their normal set semantics and need explicit serializers.
+ * Use a custom serializer to validate external structures before returning them. JSON parsing
+ * alone checks syntax; a thrown parse error reports onError and imports the binding fallback.
  * Signals use set and their own equality; readonly signals are not supported.
  * Committed edits are batched across helpers; default history mode is replace.
  *

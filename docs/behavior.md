@@ -5064,6 +5064,24 @@ normal form-node state propagation and URL synchronization semantics remain unch
   coercions apply, including toJSON, omitted undefined object properties, and non-finite numbers
   becoming null. Incoming JSON null is imported; outgoing null/undefined still removes the key
   before the serializer runs. Default comparison uses serialized JSON text, including property order.
+- Structural validation belongs to the configured serializer. Its `parse()` must validate the
+  complete input without mutating sources before returning a value; throwing reports a parse
+  error and imports the binding's explicit `defaultValue` or captured registration-time fallback
+  through the ordinary source `set()`. This prevents partial imports of values rejected by parsing.
+  No node writes or array factory calls occur for a value rejected entirely inside the parser.
+  Accepted values and fallbacks use the existing node reconciliation and callback ordering.
+- The built-in JSON serializer checks JSON syntax and repetition, not object schemas, field
+  types, or array row structures. There is no automatic recursive preflight, prepared-write
+  protocol, or rollback in the core nodes or Router bridge. A structurally invalid value returned
+  by a serializer can still fail during `set()` after partial mutation; setter, validator, and
+  callback exceptions are not converted into parse failures. Fallbacks must be compatible too.
+- Custom parsers choose their accepted nullish values. If a parser returns one, existing `set()`
+  rules apply: nullish forms/groups are ignored, arrays clear, object rows use construction
+  defaults, and nullable fields retain the value. Domain validation remains the parser's job.
+- Angular reference rechecked at **v22.2.0**: `packages/forms/signals/src/field/node.ts` and
+  `packages/forms/signals/test/node/api/debounce.spec.ts` (direct model writes replace pending
+  control input). The Router integration continues to delegate to normal node writes; serializer
+  validation and parse fallbacks are library-specific and have no Signal Forms counterpart.
 - Malformed values report a parse failure separately from form validity. A validly parsed value
   still participates in ordinary synchronous/asynchronous validation, stale-result cancellation,
   pending state, and parent aggregation. URL imports use `set()`, preserving dirty/touched state
