@@ -3,6 +3,7 @@
 - Use English throughout the entire project.
 - Write all source code, identifiers, comments, documentation, tests, commit-facing text, warnings, errors, and generated user-facing copy in English.
 - Keep new and updated files in English even when the conversation with the user is in another language.
+- Before adding helper logic, check existing project utilities and nearby implementations. Reuse existing utilities when their semantics fit the task instead of duplicating equivalent checks or transformations; preserve behavior and clarity when deciding whether reuse is appropriate.
 - Read and follow the [JSDoc authoring guide](docs/JSDOC_GUIDE.md) before adding or updating JSDoc, IntelliSense examples, consumer documentation examples, or documentation formatting tools. The guide contains the project-specific authoring and example conventions.
 - Read and follow the [website documentation authoring guide](docs/WEBSITE_DOCS_GUIDE.md) before adding or updating website documentation, canonical website examples, or website documentation tools. Record agreed website authoring preferences in that guide.
 - `form()` and `field()` must remain safe to declare and use outside an Angular injection context. Their synchronous behavior and explicitly triggered asynchronous validation must always work without dependency injection.

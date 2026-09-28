@@ -150,6 +150,11 @@ profileForm.update(value => ({ ...value, age: (value.age ?? 0) + 1 }));
 profileForm.patch({ name: 'Grace' });
 ```
 
+Passing `null` or `undefined` to `form.patch()` or `group.patch()` leaves that node unchanged.
+The same applies to nested form or group branches, such as `profileForm.patch({ address: undefined })`.
+Pending validation and pending control input on the skipped node continue normally. Supplied leaf
+values still use the field's value contract; nullish array patches clear the collection.
+
 Use `set()` to replace a field value. Supplied arrays in `patch()` reconcile exactly like `set()`,
 requiring complete item values and adjusting length and order. Use an individual row's `patch()` for partial row edits;
 see [Dynamic arrays](../guides/dynamic-arrays.md).

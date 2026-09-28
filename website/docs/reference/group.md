@@ -1324,7 +1324,7 @@ address.city(); // 'Zurich'
 
 #### – patch() {#patch}
 
-**Signature:** `patch(value: GroupPatch): void`
+**Signature:** `patch(value: GroupPatch | null | undefined): void`
 
 Supplied arrays are complete collection values: their length and order replace the previous
 collection, and every item requires its complete set value. Matching nodes are reused by index
@@ -1334,6 +1334,12 @@ See [array patching](./array.md#complete-and-partial-value-updates).
 
 Recursively updates supplied child branches and leaves omitted branches unchanged. It does not mark
 nodes dirty.
+
+Passing `null` or `undefined` to a form or group skips that node entirely, including when supplied
+as a nested object branch. Its values, errors, interaction state, pending validation, and pending
+control input are preserved. For example, `address.patch(undefined)` does nothing. This rule is
+specific to forms and groups: a supplied field value is assigned, and a nullish array patch clears
+the collection.
 
 ```ts
 const address = group({

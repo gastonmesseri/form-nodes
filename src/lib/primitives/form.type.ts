@@ -1073,16 +1073,18 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
   /**
    * Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored.
+   * Passing null or undefined to a form or group leaves its values, state, and pending work unchanged.
    *
    * ```ts
    * const node = form({
    *   name: field('Ada'),
    * });
    * node.patch({ name: 'Lia' });
+   * node.patch(null);
    * node(); // { name: 'Lia' }
    * ```
    */
-  patch(value: FormPatch<TNodes>): void;
+  patch(value: FormPatch<TNodes> | null | undefined): void;
   /**
    * Recursively clears touched and dirty state and cancels pending control input. Passing a complete
    * value also assigns it; omitting the value preserves all current committed values.

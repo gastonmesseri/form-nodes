@@ -51,7 +51,7 @@ type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
     asReadonly(): Signal<FormValue<TNodes>>;
     set(value: FormSet<TNodes>): void;
     update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
-    patch(value: FormPatch<TNodes>): void;
+    patch(value: FormPatch<TNodes> | null | undefined): void;
     reset(...args: [
     ] | [
         value: FormSet<TNodes>
@@ -138,7 +138,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `set` | Assigns a complete form value immediately without marking the form or its descendants dirty. |
 | `update` | Computes and sets the complete form value from its current value without marking nodes dirty. |
-| `patch` | Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. |
+| `patch` | Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. Passing null or undefined to a form or group leaves its values, state, and pending work unchanged. |
 | `reset` | Recursively clears touched and dirty state and cancels pending control input. Passing a complete value also assigns it; omitting the value preserves all current committed values. |
 | `resetToInitial` | Restores the initial values of the current form/group subtree and resets interaction state. |
 | `validators` | Current normalized validators assigned directly to this form, in declaration order. |

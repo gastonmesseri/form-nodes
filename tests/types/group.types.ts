@@ -21,6 +21,10 @@ type _NestedGroupRoot = Expect<Equal<ReturnType<typeof address.location.latitude
 
 address.set({ city: 'Bern', location: { latitude: 46.95 } });
 address.patch({ location: { latitude: 47 } });
+address.patch(undefined);
+address.$api.patch(null);
+address.patch({ location: undefined });
+address.patch({ location: null });
 
 // @ts-expect-error groups do not expose submission behavior
 address.submit();

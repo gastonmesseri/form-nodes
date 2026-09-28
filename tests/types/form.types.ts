@@ -116,6 +116,10 @@ type _MomentField = Expect<Equal<ReturnType<typeof momentForm.appointment>, Mome
 
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
 profile.patch({ address: { city: 'Geneva' } });
+profile.patch(undefined);
+profile.$api.patch(null);
+profile.patch({ address: undefined });
+profile.patch({ address: null });
 profile.update((value) => ({ ...value, age: value.age + 1 }));
 profile.reset();
 profile.reset({ name: '', age: 42, address: { city: '' } });

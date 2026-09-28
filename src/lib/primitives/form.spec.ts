@@ -3703,6 +3703,104 @@ describe('form', () => {
     expect(formGroup.$api.value()).toEqual({ age: 30, city: 'Zurich' });
   });
 
+  it.each([null, undefined])('ignores a %s form patch without changing values or state', (value) => {
+    const profile = form({
+      code: field<string>(null, [required]),
+      date: field<string>(null, [required]),
+      period: field<string>(null, [required]),
+      conversation: field<string>(null, [required]),
+    });
+    profile.code.markAsDirty();
+    profile.code.markAsTouched();
+    const previous = profile();
+    const errors = profile.allErrors();
+    const notify = vi.fn();
+    profile.onValueChange(notify);
+
+    profile.patch(value);
+    profile.$api.patch(value);
+
+    expect(profile()).toBe(previous);
+    expect(profile.allErrors()).toBe(errors);
+    expect(errors).toHaveLength(4);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.pending()).toBe(false);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(profile.date.pristine()).toBe(true);
+    expect(profile.date.untouched()).toBe(true);
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it.each([null, undefined])('ignores %s nested object patches while applying field and array patches', (value) => {
+    const profile = form({
+      name: field<string | null | undefined>('Ada', [required]),
+      details: form({ address: { city: field('Zurich') } }),
+      tags: array(field(''), ['first']),
+    });
+    profile.details.address.city.markAsDirty();
+    profile.details.address.city.markAsTouched();
+    const details = profile.details();
+
+    profile.patch({ details: value });
+    profile.patch({ details: { address: value }, name: value, tags: value });
+
+    expect(profile.details()).toBe(details);
+    expect(profile.details.address.city()).toBe('Zurich');
+    expect(profile.details.dirty()).toBe(true);
+    expect(profile.details.touched()).toBe(true);
+    expect(profile.name()).toBe(value);
+    expect(profile.name.hasError('required')).toBe(true);
+    expect(profile.tags()).toEqual([]);
+    expect(profile.invalid()).toBe(true);
+  });
+
+  it.each([null, undefined])('preserves pending form and group control input when patched with %s', (value) => {
+    const profile = form({ details: group({ name: field('Ada') }) }, { debounce: 'blur' });
+    profile.value.control.set({ details: { name: 'Grace' } });
+    profile.patch(value);
+    expect(profile.value.control()).toEqual({ details: { name: 'Grace' } });
+    expect(profile()).toEqual({ details: { name: 'Ada' } });
+    expect(profile.debouncing()).toBe(true);
+    profile.flush();
+    expect(profile.details.name()).toBe('Grace');
+
+    profile.details.value.control.set({ name: 'Lin' });
+    profile.patch({ details: value });
+    profile.details.patch(value);
+    expect(profile.details.value.control()).toEqual({ name: 'Lin' });
+    expect(profile.details.name()).toBe('Grace');
+    expect(profile.debouncing()).toBe(true);
+    profile.flush();
+    expect(profile.details.name()).toBe('Lin');
+    expect(profile.debouncing()).toBe(false);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+
+  it.each([null, undefined])('preserves pending field and form validation when patched with %s', async (value) => {
+    const runs: { abortSignal: AbortSignal; finish(result: null): void }[] = [];
+    const validate = vi.fn((context: Context<unknown> & { abortSignal: AbortSignal }) => {
+      context.value();
+      return new Promise<null>((finish) => { runs.push({ abortSignal: context.abortSignal, finish }); });
+    });
+    const profile = form({ nested: form({ name: field('Ada', asyncValidator(validate)) }) }, {
+      validators: asyncValidator(validate),
+    });
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    expect(profile.pending()).toBe(true);
+    profile.patch(value);
+    profile.patch({ nested: value });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(runs.every(run => !run.abortSignal.aborted)).toBe(true);
+    expect(profile.pending()).toBe(true);
+    runs.forEach(run => run.finish(null));
+    await vi.waitFor(() => expect(profile.pending()).toBe(false));
+    expect(profile.valid()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+  });
+
   it('patches nested forms partially', () => {
     const formGroup = form({
       age: field(23),

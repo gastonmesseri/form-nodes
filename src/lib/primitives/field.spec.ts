@@ -5279,3 +5279,17 @@ it('keeps the index signal available through the collision-safe API', () => {
   expect(profile.index()).toBe(1);
   expect(profile.$api.index()).toBeNull();
 });
+
+it.each([null, undefined])('assigns a %s leaf patch and updates required validation', (value) => {
+  const name = field<string | null | undefined>('Ada', [required]);
+  expect(name.valid()).toBe(true);
+  name.$api.patch(value);
+  expect(name()).toBe(value);
+  expect(name.value.control()).toBe(value);
+  expect(name.hasError('required')).toBe(true);
+  expect(name.pristine()).toBe(true);
+  expect(name.untouched()).toBe(true);
+  name.resetToInitial();
+  expect(name()).toBe('Ada');
+  expect(name.valid()).toBe(true);
+});

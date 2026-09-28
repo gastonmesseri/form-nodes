@@ -755,7 +755,7 @@ search.debouncing(); // true
 
 Every new control update restarts the complete delay. `debounce: 'blur'` instead keeps the latest control value buffered until the native control blurs, a Signal control emits `touch`, a CVA invokes its touched callback, or application code calls `markAsTouched()`. Marking any interactive node touched commits its own pending control value for every debounce strategy, matching Angular Signal Forms. Aggregate `markAsTouched()` also applies this to descendants unless `skipDescendants` is true. A custom debouncer receives an `AbortSignal` and may return a promise; the value commits when that promise resolves. A newer control value aborts the previous signal and ignores its eventual settlement. A rejected debouncer leaves the committed value unchanged and ends `debouncing()`. A synchronous `void` result commits immediately, while a synchronous throw is propagated after cancelling the debounce. `flush()` commits the latest buffered value immediately for every strategy and aborts custom asynchronous work. A missing, non-finite, zero, or negative numeric debounce commits control updates immediately.
 
-Programmatic operations are never debounced. On fields, forms, and arrays, `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `value.control()` and `value()` immediately. `reset()` without a value aborts custom asynchronous debounce work, discards the buffered control value, and restores `value.control()` and any bound custom control from the currently committed value. This prevents a stale completion from overwriting newer programmatic state. A control update marks its directly bound node dirty immediately; reset clears dirty and touched state as usual without dirtying aggregate descendants.
+Programmatic operations are never debounced. On fields, forms, and arrays, `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `value.control()` and `value()` immediately. `reset()` without a value aborts custom asynchronous debounce work, discards the buffered control value, and restores `value.control()` and any bound custom control from the currently committed value. This prevents a stale completion from overwriting newer programmatic state. A nullish patch on a form or group is a no-op and preserves pending input instead. A control update marks its directly bound node dirty immediately; reset clears dirty and touched state as usual without dirtying aggregate descendants.
 
 Scheduled control-value debounce callbacks have weak ownership of their node state and per-update
 abort controller. Otherwise unreachable fields, forms, groups, arrays, and parent trees can be
@@ -845,6 +845,25 @@ Debouncer inheritance was verified against Angular Signal Forms `v22.1.4` at com
 | `api.reset(value)` | Recursively assigns the complete value | Clears dirty throughout the subtree | Clears touched throughout the subtree |
 
 At the type level, `set()` and the result of `update()` require every form key, while `patch()` rejects unknown keys. At runtime, unknown keys passed through an unsafe cast are ignored and produce an English console warning in development mode. The `update()` callback runs synchronously once in an untracked context and delegates its complete result to `set()`.
+
+A form or group accepts `patch(null)` and `patch(undefined)` as no-ops, including through `$api`
+and recursive patches such as `profile.patch({ address: undefined })`. The skipped node retains
+its committed and control values, errors, dirty/touched/submitted state, pending control input,
+and active asynchronous validation. It emits no value-change notification and does not rerun or
+cancel validators. Other supplied branches continue to patch normally. This guard is specific to
+object aggregates: field patches assign the supplied value when their types allow it, and array
+patches with null or undefined clear the collection. A non-null object patch still cancels pending
+direct input on its receiver before visiting its supplied branches.
+
+Reference inspected: latest stable Angular 22 tag `v22.2.0`, commit
+`fc187d4aec254b52a0cff7a16a390a4b0c3e57d8`. Signal Forms exposes writable model values rather than
+this library's recursive patch API. Inspected `packages/forms/signals/src/field/structure.ts`
+(`computeChildrenMap`, including undefined-valued child removal), `src/field/state.ts`
+(interaction aggregation), and `src/api/types.ts`, with tests in
+`packages/forms/signals/test/node/dynamic.spec.ts` and `test/node/api/debounce.spec.ts`
+(control input versus direct model writes). Retaining declared object nodes and skipping nullish
+object patches are intentional Form Nodes semantics; Angular's model-driven structure can remove
+undefined-valued children. Actual writes retain the existing value and validation propagation rules.
 
 Calling reset on a nested form only resets that subtree. State belonging to siblings is preserved.
 

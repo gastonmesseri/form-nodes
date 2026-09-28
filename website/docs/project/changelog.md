@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Prevent `form.patch(null)` and `form.patch(undefined)` from throwing. Forms and groups ignore nullish patches, including nested object branches, preserving their values, interaction state, and pending work. The public types now accept these calls.
+
 ## 📦 5.6.0 — 2026-09-25 {#560--2026-09-25}
 
 ### Added

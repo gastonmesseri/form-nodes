@@ -1,6 +1,6 @@
 import { computed, signal, untracked, type Injector } from '@angular/core';
 
-import { isNotNil } from '../utils/is-nil';
+import { isNil, isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
@@ -8,7 +8,6 @@ import { isNode, markAsNode } from './utils/node-marker';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
-import { getClosestArrayIndex, createNodeIndexContext } from '../utils/node-array-index';
 import { watchCommittedValue } from './utils/watch-committed-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -26,6 +25,7 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
+import { getClosestArrayIndex, createNodeIndexContext } from '../utils/node-array-index';
 import { captureSubmission, clearSubmissionErrors } from '../validation/submission-errors';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
@@ -409,7 +409,8 @@ export class FormGroupNode<TNodes extends Nodes> {
     });
   }
 
-  patch(value: FormPatch<TNodes>) {
+  patch(value: FormPatch<TNodes> | null | undefined) {
+    if (isNil(value)) return;
     this.controlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = this.children[key] as AnyNode | undefined;
@@ -593,7 +594,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: FormSet<TNodes>) => this.set(next), (next: FormSet<TNodes>) => this.controlValueBuffer.set(next)),
       set: (value: FormSet<TNodes>) => this.set(value),
       update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),
-      patch: (value: FormPatch<TNodes>) => this.patch(value),
+      patch: (value: FormPatch<TNodes> | null | undefined) => this.patch(value),
       reset: (...args: [] | [value: FormSet<TNodes>]) => this.reset(...args),
       resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
