@@ -589,21 +589,24 @@ export class ArrayNode<TItem extends AnyNode> {
       if (isNil(value)) return undefined;
       return (value as Record<string, unknown>)[trackBy as string];
     };
-    const remainingItemsByKey = this.indexItemsByKey(getTrackingKey);
+    const current = this.items();
+    const currentItemsByKey = this.indexItemsByKey(getTrackingKey);
     const incomingKeys = this.getIncomingKeys(values, getTrackingKey);
     const next = values.map((value, index) => {
       const key = incomingKeys[index]!;
-      const existing = remainingItemsByKey.get(key);
+      const existing = currentItemsByKey.get(key);
       const item = existing ?? this.createItem(value);
       if (existing) {
-        remainingItemsByKey.delete(key);
         if (mode === 'initial') (item as unknown as InternalNode).$api._resetToInitial(value);
         else if (mode === 'reset') item.$api.reset(value);
         else item.$api.set(this.itemValueNormalizers.get(item)!(value));
       }
       return item;
     });
-    remainingItemsByKey.forEach(item => this.detachItem(item));
+    const retained = new Set(next);
+    current.forEach((item) => {
+      if (!retained.has(item)) this.detachItem(item);
+    });
     this.items.set(next);
     this.reparentItems();
   }
@@ -613,7 +616,7 @@ export class ArrayNode<TItem extends AnyNode> {
     const currentByKey = new Map<unknown, TItem>();
     current.forEach((item, index) => {
       const key = getTrackingKey((item as unknown as InternalNode).$api._value() as NodeValue<TItem>, index);
-      if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
+      if (currentByKey.has(key)) return;
       currentByKey.set(key, item);
     });
     return currentByKey;

@@ -1979,16 +1979,74 @@ describe('array', () => {
     expect(names()).toEqual([]);
   });
 
-  it('rejects duplicate keys already present in current tracked items', () => {
-    const names = array(
-      { id: field.strict('') },
-      [{ id: 'one' }, { id: 'two' }],
-      { trackBy: value => value.id },
-    );
-    names[1]!.id.set('one');
+  it.each(['set', 'patch', 'update', 'reset'] as const)('reuses the first current duplicate key through %s and detaches the rest', (operation) => {
+    const rows = array({ id: field.strict(''), name: field('', required) }, {
+      initialValue: [{ id: 'one', name: 'Ada' }, { id: 'two', name: '' }],
+      trackBy: value => value.id,
+    });
+    const first = rows[0]!;
+    const duplicate = rows[1]!;
+    duplicate.id.set('one');
+    first.markAsDirty();
+    first.markAsTouched();
+    expect(rows.invalid()).toBe(true);
+    const previous = rows();
+    const changed = vi.fn();
+    rows.onValueChange(changed);
+    expect(() => {
+      return rows[operation === 'update' ? 'set' : operation]([
+        { id: 'one', name: 'Rejected' }, { id: 'one', name: 'Duplicate' },
+      ]);
+    }).toThrow('duplicate trackBy key one in incoming values');
+    expect(rows()).toBe(previous);
+    expect(rows[0]).toBe(first);
+    expect(rows[1]).toBe(duplicate);
+    expect(changed).not.toHaveBeenCalled();
+    const next = [{ id: 'one', name: 'Grace' }];
+    if (operation === 'update') rows.update(() => next);
+    else rows[operation](next);
+    expect(rows()).toEqual(next);
+    expect(rows[0]).toBe(first);
+    expect(first.dirty()).toBe(operation !== 'reset');
+    expect(first.touched()).toBe(operation !== 'reset');
+    expect(first.index()).toBe(0);
+    expect(duplicate.parent()).toBeNull();
+    expect(duplicate.index()).toBeNull();
+    expect(rows.valid()).toBe(true);
+    expect(rows.allErrors()).toEqual([]);
+    expect(changed).toHaveBeenCalledOnce();
+    duplicate.name.set('Detached update');
+    expect(changed).toHaveBeenCalledOnce();
+    expect(rows()).toEqual(next);
+  });
 
-    expect(() => names.set([{ id: 'one' }]))
-      .toThrow('array: duplicate trackBy key one in current items');
+  it('selects duplicate keys in current array order after a move', () => {
+    const rows = array({ id: field('same'), name: field('') }, {
+      initialValue: [{ id: 'same', name: 'Ada' }, { id: 'same', name: 'Lin' }], trackBy: 'id',
+    });
+    const originalFirst = rows[0]!;
+    const movedFirst = rows[1]!;
+    rows.move(1, 0);
+    rows.set([{ id: 'same', name: 'Grace' }]);
+    expect(rows[0]).toBe(movedFirst);
+    expect(originalFirst.parent()).toBeNull();
+    expect(rows()).toEqual([{ id: 'same', name: 'Grace' }]);
+  });
+
+  it('restores initial values when current keys have become duplicated', () => {
+    const rows = array({ id: field('') }, { initialValue: [{ id: 'a' }, { id: 'b' }], trackBy: 'id' });
+    const first = rows[0]!;
+    const duplicate = rows[1]!;
+    duplicate.id.set('a');
+    first.markAsDirty();
+    first.markAsTouched();
+    rows.resetToInitial();
+    expect(rows()).toEqual([{ id: 'a' }, { id: 'b' }]);
+    expect(rows[0]).toBe(first);
+    expect(rows[1]).not.toBe(duplicate);
+    expect(duplicate.parent()).toBeNull();
+    expect(rows.pristine()).toBe(true);
+    expect(rows.untouched()).toBe(true);
   });
 
   it('allows ordinary function properties while keeping numeric properties readonly', () => {
@@ -2853,14 +2911,20 @@ describe('nullish keyed array items', () => {
     expect(changed).not.toHaveBeenCalled();
   });
 
-  it('reports duplicate current nullish keys and permits clearing them', () => {
+  it('reuses the first duplicate nullish key and detaches every row when the key disappears', () => {
     const rows = array(field<Row>(null), { initialValue: [null, undefined], trackBy: 'id' });
-    const original = [...rows];
-    expect(() => rows.set([{ id: 'a' }])).toThrow('array: duplicate trackBy key undefined in current items');
-    expect(rows()).toEqual([null, undefined]);
-    rows.set([]);
-    expect(rows()).toEqual([]);
-    original.forEach(item => expect(item.parent()).toBeNull());
+    const first = rows[0]!;
+    const duplicate = rows[1]!;
+    rows.set([undefined]);
+    expect(rows[0]).toBe(first);
+    expect(rows()).toEqual([undefined]);
+    expect(duplicate.parent()).toBeNull();
+    rows.push(null);
+    const anotherDuplicate = rows[1]!;
+    rows.set([{ id: 'a' }]);
+    expect(rows()).toEqual([{ id: 'a' }]);
+    expect(first.parent()).toBeNull();
+    expect(anotherDuplicate.parent()).toBeNull();
   });
 
   it.each(['set', 'patch', 'update', 'reset'] as const)('clears nullish collections through %s without evaluating any tracking callback', (operation) => {

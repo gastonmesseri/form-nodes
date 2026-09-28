@@ -5411,3 +5411,26 @@ describe.each([false, true])('optional date and word validators with deferred=%s
     expect(node.valid()).toBe(true);
   });
 });
+
+it('keeps the first field row state while recovering from duplicate current tracking keys', () => {
+  const rows = array(field<string | null | undefined>(null, [required]), {
+    initialValue: [null, undefined], trackBy: value => value ?? 'empty',
+  });
+  const first = rows[0]!;
+  const duplicate = rows[1]!;
+  first.markAsDirty();
+  first.markAsTouched();
+  rows.set([undefined]);
+  expect(rows[0]).toBe(first);
+  expect(first()).toBeUndefined();
+  expect(first.dirty()).toBe(true);
+  expect(first.touched()).toBe(true);
+  expect(first.hasError('required')).toBe(true);
+  expect(rows.allErrors()).toHaveLength(1);
+  expect(duplicate.parent()).toBeNull();
+  rows.reset([null]);
+  expect(rows[0]).toBe(first);
+  expect(first()).toBeNull();
+  expect(first.pristine()).toBe(true);
+  expect(first.untouched()).toBe(true);
+});

@@ -180,21 +180,24 @@ describe('array keyed reconciliation invariants', () => {
     });
   });
 
-  it('rejects duplicate current keys before mutating or detaching any node', () => {
+  it('keeps the first current duplicate and detaches the later node', () => {
     const people = createPeople();
     const alex = people[0]!;
     const kirill = people[1]!;
     kirill.id.set('alex');
-    const beforeValue = people();
+    alex.name.markAsDirty();
+    alex.name.markAsTouched();
 
-    expect(() => people.set([{ id: 'alex', name: 'Replacement' }]))
-      .toThrow('array: duplicate trackBy key alex in current items');
+    people.set([{ id: 'alex', name: 'Replacement' }]);
 
-    expect(people()).toEqual(beforeValue);
+    expect(people()).toEqual([{ id: 'alex', name: 'Replacement' }]);
     expect(people[0]).toBe(alex);
-    expect(people[1]).toBe(kirill);
+    expect(people.length()).toBe(1);
+    expect(alex.name.dirty()).toBe(true);
+    expect(alex.name.touched()).toBe(true);
     expect(alex.parent()).toBe(people);
-    expect(kirill.parent()).toBe(people);
+    expect(kirill.parent()).toBeNull();
+    expect(kirill.index()).toBeNull();
   });
 
   it('leaves the complete tree unchanged when trackBy throws for an incoming value', () => {

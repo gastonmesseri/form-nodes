@@ -189,7 +189,7 @@ Use a stable property or callback when values can be reordered or replaced from 
 :::warning Identity must be stable and unique
 
 Choose `trackBy` from immutable domain identity, not the current index or another editable value.
-Duplicate keys are rejected before the array mutates.
+Duplicate incoming keys are rejected before item values or membership change.
 
 :::
 
@@ -206,10 +206,12 @@ const myForm = form({
 });
 ```
 
-Matching keys reuse and move existing nodes. Keys must be unique among current and incoming items;
-duplicates throw before applying item values. Property-name tracking treats a null or undefined item
+Matching keys reuse and move existing nodes. Incoming keys must be unique; incoming duplicates
+throw before applying item values. If existing rows share a key, the first in current array order
+is reused and the others are detached on a successful reconciliation. Reused rows retain
+dirty/touched state through set/patch/update; reset operations clear it. Property-name tracking treats a null or undefined item
 as the key `undefined`. An object with a missing or undefined selected property shares that key, so
-only one such item is allowed per collection. A null property value remains a separate key.
+only one such item is allowed in an incoming replacement. A null property value remains a separate key.
 Callback tracking receives the original value. See the [nullable tracking example](../reference/array.md#trackby-option).
 
 Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying it to `reset(value)` clears the collection. The observable array value itself remains `[]`, never nullish.

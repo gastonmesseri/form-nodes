@@ -8144,3 +8144,30 @@ it.each([false, true])('aggregates optional date and word validation through nes
   expect(profile.valid()).toBe(true);
   expect(profile.allErrors()).toEqual([]);
 });
+
+it.each([null, undefined])('repairs template-created duplicate keys on the next nested array update for %s', (value) => {
+  const profile = form({ details: form({
+    rows: array({ id: field('default'), name: field('', required) }, { trackBy: 'id' }),
+  }) });
+  profile.details.rows.set([{ id: 'default', name: 'Ada' }, value] as never);
+  const first = profile.details.rows[0]!;
+  const duplicate = profile.details.rows[1]!;
+  expect(profile.details.rows()).toEqual([{ id: 'default', name: 'Ada' }, { id: 'default', name: '' }]);
+  first.markAsDirty();
+  first.markAsTouched();
+  expect(profile.invalid()).toBe(true);
+  const changed = vi.fn();
+  profile.onValueChange(changed);
+
+  profile.patch({ details: { rows: [{ id: 'default', name: 'Grace' }] } });
+
+  expect(profile.details.rows[0]).toBe(first);
+  expect(profile()).toEqual({ details: { rows: [{ id: 'default', name: 'Grace' }] } });
+  expect(first.dirty()).toBe(true);
+  expect(first.touched()).toBe(true);
+  expect(duplicate.parent()).toBeNull();
+  expect(duplicate.index()).toBeNull();
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  expect(changed).toHaveBeenCalledOnce();
+});

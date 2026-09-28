@@ -368,9 +368,11 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * Selects stable item identity during `set()`, `patch()`, `update()`, and value-reset reconciliation.
    * Matching keys retain and move existing nodes; new keys create nodes and removed keys detach them.
    * Retained nodes keep their identity and interaction state while their values and paths update.
-   * Every current and incoming key must be unique; duplicates throw before item values or membership change.
+   * Incoming keys must be unique; duplicates throw before item values or membership change.
+   * If current keys are duplicated, the first item in current array order is reused and the other
+   * matching items are detached during successful reconciliation. Reset operations clear reused state.
    * Property names read null or undefined items as an undefined key, like item?.id.
-   * This key can occur only once, including objects whose selected property is undefined.
+   * This key can occur only once in incoming values, including objects whose selected property is undefined.
    * A null property value is a distinct key. Functions receive the original item value.
    * Empty incoming collections detach all items without reading keys or invoking trackBy.
    *
