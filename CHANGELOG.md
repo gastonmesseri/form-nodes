@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.6.1] - 2026-09-28
+
 ### Fixed
 
 - Prevent `form.patch(null)` and `form.patch(undefined)` from throwing. Forms and groups ignore nullish patches, including nested object branches, preserving their values, interaction state, and pending work. The public types now accept these calls.
@@ -493,7 +495,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.1...HEAD
+[5.6.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.0...v5.6.1
 [5.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.5.0...v5.6.0
 [5.5.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.3.1...v5.4.0
