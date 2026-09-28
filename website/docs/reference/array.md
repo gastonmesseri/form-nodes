@@ -3,6 +3,7 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import nullableTrackingSource from '!!raw-loader!../../examples/array-nullish-tracking.example.ts';
 import arrayAtSource from '!!raw-loader!../../examples/array-at.example.ts';
 import arrayTemplateValueSource from '!!raw-loader!../../examples/array-template-value.example.ts';
 import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
@@ -465,6 +466,18 @@ const users = array({
   trackBy: 'id',
 });
 ```
+
+With a property name, a `null` or `undefined` item has the key `undefined`, just like `item?.id`.
+That key must remain unique: `[null, null]`, `[null, undefined]`, and `[null, { id: undefined }]`
+conflict. An object with `id: null` has the distinct key `null`. Nullable items must use a field
+template whose value type allows them; object-form row templates still require objects.
+
+Matching `undefined` keys preserve the same field node when its value changes between `null` and
+`undefined`. Callback tracking receives the original item, so you can explicitly distinguish them.
+Empty incoming collections skip key extraction entirely: clearing through `set`, `patch`, `update`,
+or a value reset succeeds even if current keys conflict, and never calls a tracking callback.
+
+<CodeBlock language="ts" title="array-nullish-tracking.example.ts">{nullableTrackingSource}</CodeBlock>
 
 #### – debounce {#debounce-option}
 

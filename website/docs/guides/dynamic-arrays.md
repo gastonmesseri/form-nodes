@@ -206,9 +206,16 @@ const myForm = form({
 });
 ```
 
-Matching keys reuse and move existing nodes. Keys must be unique among current and incoming items; duplicates throw before mutation.
+Matching keys reuse and move existing nodes. Keys must be unique among current and incoming items;
+duplicates throw before applying item values. Property-name tracking treats a null or undefined item
+as the key `undefined`. An object with a missing or undefined selected property shares that key, so
+only one such item is allowed per collection. A null property value remains a separate key.
+Callback tracking receives the original value. See the [nullable tracking example](../reference/array.md#trackby-option).
 
 Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying it to `reset(value)` clears the collection. The observable array value itself remains `[]`, never nullish.
+Empty collections skip all tracking-key reads and callback calls, including when the existing keys
+are duplicated. Clearing preserves interaction state through `set`/`patch`/`update`; a value reset
+also resets interaction state.
 
 ## 📝 Patching collections and individual rows {#positional-patching}
 

@@ -2694,3 +2694,118 @@ it('uses the nearest containing array for nested array and field validators', ()
   expect(nested.hasError('outerSecond')).toBe(false);
   expect(nested[1]!.hasError('innerSecond')).toBe(true);
 });
+
+describe('nullish keyed array items', () => {
+  type Row = { id?: string | null; name?: string } | null | undefined;
+
+  it.each(['set', 'patch', 'update', 'reset'] as const)('reuses nullish item identity through %s and preserves the operation state semantics', (operation) => {
+    const rows = array(field<Row>(null), { initialValue: [{ id: 'a' }, null], trackBy: 'id' });
+    const first = rows[0]!;
+    const empty = rows[1]!;
+    first.markAsDirty();
+    first.markAsTouched();
+    empty.markAsDirty();
+    empty.markAsTouched();
+    const changed = vi.fn();
+    rows.onValueChange(changed);
+    const next: Row[] = [undefined, { id: 'a', name: 'Ada' }];
+    if (operation === 'update') rows.update(() => next);
+    else rows[operation](next);
+    expect(rows()).toEqual(next);
+    expect(rows[0]).toBe(empty);
+    expect(rows[1]).toBe(first);
+    expect(empty()).toBeUndefined();
+    expect(empty.index()).toBe(0);
+    expect(first.index()).toBe(1);
+    expect(first.dirty()).toBe(operation !== 'reset');
+    expect(empty.touched()).toBe(operation !== 'reset');
+    expect(changed).toHaveBeenCalledOnce();
+    rows.resetToInitial();
+    expect(rows()).toEqual([{ id: 'a' }, null]);
+    expect(rows[0]).toBe(first);
+    expect(rows[1]).toBe(empty);
+    expect(rows.pristine()).toBe(true);
+    expect(rows.untouched()).toBe(true);
+  });
+
+  it('distinguishes null property keys from absent items and preserves callback-defined identities', () => {
+    const rows = array(field<Row>(undefined), { trackBy: 'id' });
+    rows.set([null, { id: null }]);
+    const absent = rows[0]!;
+    const nullKey = rows[1]!;
+    rows.set([{ id: null }, undefined]);
+    expect(rows[0]).toBe(nullKey);
+    expect(rows[1]).toBe(absent);
+    expect(rows()).toEqual([{ id: null }, undefined]);
+    rows.set([{}]);
+    expect(rows[0]).toBe(absent);
+    expect(nullKey.parent()).toBeNull();
+    const trackBy = vi.fn((value: Row) => value === null ? 'null' : value === undefined ? 'undefined' : value.id);
+    const custom = array(field<Row>(null), { initialValue: [null, undefined], trackBy });
+    const nullItem = custom[0]!;
+    const undefinedItem = custom[1]!;
+    custom.set([undefined, null]);
+    expect(custom[0]).toBe(undefinedItem);
+    expect(custom[1]).toBe(nullItem);
+    expect(trackBy.mock.calls.map(([value]) => value)).toEqual([null, undefined, undefined, null]);
+  });
+
+  it.each([
+    [null, null],
+    [undefined, undefined],
+    [null, undefined],
+    [null, {}],
+    [{ id: undefined }, undefined],
+  ] as Row[][])('rejects colliding undefined keys in %j and %j before applying values', (first, second) => {
+    const rows = array(field<Row>(null), { initialValue: [{ id: 'a', name: 'Ada' }, null], trackBy: 'id' });
+    const original = [...rows];
+    const changed = vi.fn();
+    rows.onValueChange(changed);
+    expect(() => rows.set([{ id: 'a', name: 'Rejected' }, first, second]))
+      .toThrow('array: duplicate trackBy key undefined in incoming values');
+    expect(rows()).toEqual([{ id: 'a', name: 'Ada' }, null]);
+    expect([...rows]).toEqual(original);
+    expect(changed).not.toHaveBeenCalled();
+  });
+
+  it('reports duplicate current nullish keys and permits clearing them', () => {
+    const rows = array(field<Row>(null), { initialValue: [null, undefined], trackBy: 'id' });
+    const original = [...rows];
+    expect(() => rows.set([{ id: 'a' }])).toThrow('array: duplicate trackBy key undefined in current items');
+    expect(rows()).toEqual([null, undefined]);
+    rows.set([]);
+    expect(rows()).toEqual([]);
+    original.forEach(item => expect(item.parent()).toBeNull());
+  });
+
+  it.each(['set', 'patch', 'update', 'reset'] as const)('clears nullish collections through %s without evaluating any tracking callback', (operation) => {
+    for (const next of [null, undefined, []] as const) {
+      const trackBy = vi.fn(() => { throw new Error('Tracking is unnecessary for an empty collection'); });
+      const rows = array(field<Row>(null), { initialValue: [null, undefined], trackBy });
+      const original = [...rows];
+      rows.markAsDirty();
+      rows.markAsTouched();
+      if (operation === 'update') rows.update(() => next);
+      else rows[operation](next);
+      expect(rows()).toEqual([]);
+      expect(rows.dirty()).toBe(operation !== 'reset');
+      expect(rows.touched()).toBe(operation !== 'reset');
+      original.forEach(item => expect(item.parent()).toBeNull());
+      expect(trackBy).not.toHaveBeenCalled();
+    }
+  });
+
+  it('restores an empty initial collection without tracking current items', () => {
+    const trackBy = vi.fn(() => { throw new Error('Tracking is unnecessary for an empty collection'); });
+    const rows = array(field<Row>(null), { trackBy });
+    const item = rows.push(null);
+    rows.markAsDirty();
+    rows.markAsTouched();
+    rows.resetToInitial();
+    expect(rows()).toEqual([]);
+    expect(rows.pristine()).toBe(true);
+    expect(rows.untouched()).toBe(true);
+    expect(item.parent()).toBeNull();
+    expect(trackBy).not.toHaveBeenCalled();
+  });
+});

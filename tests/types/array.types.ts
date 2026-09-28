@@ -174,3 +174,10 @@ array(field(''), { initialLength: '3' });
 const conflictingLengthOptions = { initialLength: 1, debounce: 'blur' as const };
 // @ts-expect-error positional exclusivity also applies to option variables
 array(field(''), 1, conflictingLengthOptions);
+
+const nullableTrackedRows = array(field<{ id: string } | null | undefined>(null), { trackBy: 'id' });
+nullableTrackedRows.set([null, { id: 'a' }]);
+nullableTrackedRows.patch([undefined]);
+nullableTrackedRows.update(() => [null]);
+nullableTrackedRows.reset([undefined]);
+type _NullableTrackedRow = Expect<Equal<ReturnType<NonNullable<typeof nullableTrackedRows[0]>>, { id: string } | null | undefined>>;

@@ -1,8 +1,7 @@
 import { computed, signal, untracked, type Injector, type Signal } from '@angular/core';
 
 import { group } from './group';
-import { isNotNil } from '../utils/is-nil';
-import { getClosestArrayIndex } from '../utils/node-array-index';
+import { isNil, isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
@@ -11,6 +10,7 @@ import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
 import { computedFunction } from '../utils/computed-function';
 import { cloneInitialValue } from './utils/clone-initial-value';
+import { getClosestArrayIndex } from '../utils/node-array-index';
 import { watchCommittedValue } from './utils/watch-committed-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -579,9 +579,14 @@ export class ArrayNode<TItem extends AnyNode> {
   }
 
   reconcileByKey(values: ArraySet<TItem>, mode: 'set' | 'reset' | 'initial') {
+    if (values.length === 0) {
+      this.clear();
+      return;
+    }
     const trackBy = this.options!.trackBy!;
     const getTrackingKey = (value: NodeValue<TItem>, index: number): unknown => {
       if (typeof trackBy === 'function') return trackBy(value, index);
+      if (isNil(value)) return undefined;
       return (value as Record<string, unknown>)[trackBy as string];
     };
     const remainingItemsByKey = this.indexItemsByKey(getTrackingKey);

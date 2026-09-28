@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Make property-name `trackBy` handle nullish array items as an `undefined` key, preserving node identity and rejecting duplicate keys before applying item values. Empty or nullish collection updates now detach all items without evaluating tracking keys, including when existing keys are duplicated.
+
 ## 📦 5.6.1 — 2026-09-28 {#561--2026-09-28}
 
 ### Fixed

@@ -7764,3 +7764,40 @@ it('passes the containing array index to nested form submission callbacks', asyn
   expect(await first.submit()).toBe(true);
   expect(submitted).toEqual([1]);
 });
+
+it('propagates nullable keyed row moves, validation, clearing and reset through nested forms', () => {
+  type Row = { id: string } | null | undefined;
+  const profile = form({ nested: form({ rows: array(field<Row>(null, [required]), {
+    initialValue: [{ id: 'a' }, null], trackBy: 'id',
+  }) }) });
+  const absent = profile.nested.rows[1]!;
+  absent.markAsDirty();
+  absent.markAsTouched();
+  expect(profile.invalid()).toBe(true);
+  profile.patch({ nested: { rows: [undefined, { id: 'a' }] } });
+  expect(profile.nested.rows[0]).toBe(absent);
+  expect(absent()).toBeUndefined();
+  expect(absent.path()).toEqual(['nested', 'rows', '0']);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  expect(profile.invalid()).toBe(true);
+  profile.nested.rows.markAsDirty();
+  profile.nested.rows.markAsTouched();
+  profile.set({ nested: { rows: null } });
+  expect(profile()).toEqual({ nested: { rows: [] } });
+  expect(absent.parent()).toBeNull();
+  expect(profile.valid()).toBe(true);
+  expect(profile.allErrors()).toEqual([]);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  profile.resetToInitial();
+  expect(profile()).toEqual({ nested: { rows: [{ id: 'a' }, null] } });
+  expect(profile.invalid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  profile.reset({ nested: { rows: undefined } });
+  expect(profile()).toEqual({ nested: { rows: [] } });
+  expect(profile.valid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+});

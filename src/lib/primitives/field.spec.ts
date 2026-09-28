@@ -5293,3 +5293,38 @@ it.each([null, undefined])('assigns a %s leaf patch and updates required validat
   expect(name()).toBe('Ada');
   expect(name.valid()).toBe(true);
 });
+
+it('preserves nullable field validation ownership when keyed rows move and cancels replaced nullish values', async () => {
+  type Row = { id: string } | null | undefined;
+  const rows = array(field<Row>(null), { initialValue: [null, { id: 'a' }], trackBy: 'id' });
+  const item = rows[0]!;
+  const runs: { value: Row; abortSignal: AbortSignal; finish: (result: null | { kind: string }) => void }[] = [];
+  item.setValidators(asyncValidator(({ value, abortSignal }) => {
+    const current = value();
+    return new Promise<null | { kind: string }>((finish) => { runs.push({ value: current, abortSignal, finish }); });
+  }));
+  await vi.waitFor(() => expect(runs).toHaveLength(1));
+  expect(item.pending()).toBe(true);
+  expect(rows.pending()).toBe(true);
+  rows.set([{ id: 'a' }, null]);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(rows[1]).toBe(item);
+  expect(item.index()).toBe(1);
+  expect(runs).toHaveLength(1);
+  expect(runs[0]!.abortSignal.aborted).toBe(false);
+  rows.patch([{ id: 'a' }, undefined]);
+  await vi.waitFor(() => expect(runs).toHaveLength(2));
+  expect(rows[1]).toBe(item);
+  expect(runs.map(run => run.value)).toEqual([null, undefined]);
+  expect(runs[0]!.abortSignal.aborted).toBe(true);
+  runs[0]!.finish({ kind: 'stale' });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(item.pending()).toBe(true);
+  expect(rows.allErrors()).toEqual([]);
+  runs[1]!.finish(null);
+  await vi.waitFor(() => expect(rows.pending()).toBe(false));
+  expect(item.valid()).toBe(true);
+  expect(rows.valid()).toBe(true);
+});
