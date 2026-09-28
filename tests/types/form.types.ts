@@ -115,6 +115,20 @@ const momentForm = form({ appointment: moment('2026-09-03T14:30:00Z') });
 type _MomentField = Expect<Equal<ReturnType<typeof momentForm.appointment>, Moment>>;
 
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
+// @ts-expect-error complete object writes reject null
+profile.set(null);
+// @ts-expect-error complete object writes reject undefined
+profile.set(undefined);
+// @ts-expect-error the API facade keeps complete object writes strict
+profile.$api.set(null);
+// @ts-expect-error committed writes require a complete object
+profile.value.committed.set(undefined);
+// @ts-expect-error update callbacks must return a complete object
+profile.update(() => null);
+// @ts-expect-error nested object branches reject null in complete writes
+profile.set({ name: 'Daniel', age: 43, address: null });
+// @ts-expect-error nested object branches reject undefined in complete writes
+profile.set({ name: 'Daniel', age: 43, address: undefined });
 profile.patch({ address: { city: 'Geneva' } });
 profile.patch(undefined);
 profile.$api.patch(null);

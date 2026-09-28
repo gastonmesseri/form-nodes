@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Ignore runtime `null` and `undefined` inputs to form and group `set()`, including nested object branches, preserving their values, interaction state, and pending work while other supplied branches update. TypeScript still requires complete objects. The same guard applies to `update()` results and `value.committed.set()` writes.
 - Make property-name `trackBy` handle nullish array items as an `undefined` key, preserving node identity and rejecting duplicate keys before applying item values. Empty or nullish collection updates now detach all items without evaluating tracking keys, including when existing keys are duplicated.
 
 ## 📦 5.6.1 — 2026-09-28 {#561--2026-09-28}

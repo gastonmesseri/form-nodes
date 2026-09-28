@@ -20,6 +20,20 @@ type _NestedGroupForm = Expect<Equal<ReturnType<NonNullable<ReturnType<typeof ad
 type _NestedGroupRoot = Expect<Equal<ReturnType<typeof address.location.latitude.root>, typeof address>>;
 
 address.set({ city: 'Bern', location: { latitude: 46.95 } });
+// @ts-expect-error complete object writes reject null
+address.set(null);
+// @ts-expect-error complete object writes reject undefined
+address.set(undefined);
+// @ts-expect-error the API facade keeps complete object writes strict
+address.$api.set(null);
+// @ts-expect-error committed writes require a complete object
+address.value.committed.set(undefined);
+// @ts-expect-error update callbacks must return a complete object
+address.update(() => null);
+// @ts-expect-error nested object branches reject null in complete writes
+address.set({ city: 'Bern', location: null });
+// @ts-expect-error nested object branches reject undefined in complete writes
+address.set({ city: 'Bern', location: undefined });
 address.patch({ location: { latitude: 47 } });
 address.patch(undefined);
 address.$api.patch(null);

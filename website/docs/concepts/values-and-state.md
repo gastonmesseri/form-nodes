@@ -144,6 +144,13 @@ profileForm.set({
 profileForm.update(value => ({ ...value, age: (value.age ?? 0) + 1 }));
 ```
 
+Form and group `set()` calls require complete objects in TypeScript. If `null` or `undefined`
+arrives at runtime, that object branch is ignored and retains its values, interaction state,
+pending validation, and pending control input. Other supplied branches still update. This also
+applies to `update()` results and `value.committed.set()` writes. Fields still accept nullish
+values when their types allow them; nullish array writes clear the collection. This defensive
+guard does not validate other malformed inputs or change `reset()`.
+
 `patch()` updates only supplied form branches:
 
 ```ts

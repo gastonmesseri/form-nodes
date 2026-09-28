@@ -398,6 +398,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   }
 
   set(value: FormSet<TNodes>) {
+    if (isNil(value)) return;
     this.controlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = this.children[key];

@@ -1046,6 +1046,10 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /**
    * Assigns a complete form value immediately without marking the form or its descendants dirty.
    *
+   * Types require complete objects. At runtime, null or undefined skips the receiving form or
+   * group branch, preserving its values, interaction state, and pending work. Other supplied
+   * branches still update. The same protection applies through `update()` and `value.committed.set()`.
+   *
    * ```ts
    * const node = form({
    *   name: field('Ada'),

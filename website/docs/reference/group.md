@@ -1286,6 +1286,12 @@ filters.remove('missing'); // undefined
 Immediately assigns a complete value to every supplied child without marking nodes dirty. The
 public type requires the complete initially declared group shape.
 
+If JavaScript or external data supplies `null` or `undefined` at runtime, the receiving form or
+group branch is ignored. Its values, interaction state, pending validation, and pending control
+input are preserved. Other supplied branches still update. TypeScript continues to reject these
+nullish object writes, including nested branches. This protection also applies through `$api.set()`,
+`update()`, and `value.committed.set()`. It does not validate other malformed inputs.
+
 ```ts
 const address = group({
   city: field('Zurich'),
