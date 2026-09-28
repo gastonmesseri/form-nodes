@@ -7370,6 +7370,49 @@ it('restarts aggregate async validation for replaced arrays and ignores stale re
 });
 
 describe('form patch array declaration defaults', () => {
+  it.each(['set', 'patch', 'update'] as const)('applies template values to nullish array rows through form %s', (operation) => {
+    for (const value of [null, undefined]) {
+      const profile = form({ people: array({ name: field('', required) }, [{ name: 'Ada' }]) });
+      const first = profile.people[0]!;
+      first.name.markAsDirty();
+      first.name.markAsTouched();
+      const next = { people: [value, value] } as never;
+      if (operation === 'update') profile.update(() => next);
+      else profile[operation](next);
+      expect(profile()).toEqual({ people: [{ name: '' }, { name: '' }] });
+      expect(profile.people[0]).toBe(first);
+      expect(first.dirty()).toBe(true);
+      expect(first.touched()).toBe(true);
+      expect(profile.people[1]!.pristine()).toBe(true);
+      expect(profile.people[1]!.untouched()).toBe(true);
+      expect(profile.invalid()).toBe(true);
+      expect(profile.allErrors()).toHaveLength(2);
+    }
+  });
+
+  it.each([null, undefined])('cancels stale row validation and validates template values for %s', async (value) => {
+    const runs: { value: string; abortSignal: AbortSignal; finish(result: null): void }[] = [];
+    const validate = vi.fn((context: Context<string> & { abortSignal: AbortSignal }) => {
+      const current = context.value();
+      return new Promise<null>((finish) => { runs.push({ value: current, abortSignal: context.abortSignal, finish }); });
+    });
+    const profile = form({ rows: array({ name: field('Template') }, [{ name: 'Ada' }]) });
+    profile.rows[0]!.name.setValidators(asyncValidator(validate));
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
+    expect(runs[0]!.value).toBe('Ada');
+    profile.rows.set([value] as never);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    expect(runs[0]!.abortSignal.aborted).toBe(true);
+    expect(runs[1]!.value).toBe('Template');
+    expect(profile.pending()).toBe(true);
+    runs[0]!.finish(null);
+    await Promise.resolve();
+    expect(profile.pending()).toBe(true);
+    runs[1]!.finish(null);
+    await vi.waitFor(() => expect(profile.pending()).toBe(false));
+    expect(profile.valid()).toBe(true);
+  });
+
   it('fills omitted nested branches without merging object fields or preserving previous row data', () => {
     const model = form({
       note: field('keep'),

@@ -2288,6 +2288,91 @@ describe('array patch replacement', () => {
 });
 
 describe('array replacement defaults for untyped data', () => {
+  it.each([null, undefined])('uses construction defaults for existing and new nullish object rows: %s', (value) => {
+    const rows = array({ name: field('', required), settings: field({ enabled: true }) }, {
+      initialValue: [{ name: 'Ada', settings: { enabled: false } }, { name: 'Lin', settings: { enabled: false } }],
+      debounce: 'blur',
+    });
+    const first = rows[0]!;
+    const removed = rows[1]!;
+    first.markAsTouched();
+    first.name.value.control.set('draft');
+    const changed = vi.fn();
+    rows.onValueChange(changed);
+
+    rows.set([value] as never);
+
+    expect(rows()).toEqual([{ name: '', settings: { enabled: true } }]);
+    expect(rows[0]).toBe(first);
+    expect(removed.parent()).toBeNull();
+    expect(first.dirty()).toBe(true);
+    expect(first.touched()).toBe(true);
+    expect(first.name.value.control()).toBe('');
+    expect(rows.debouncing()).toBe(false);
+    expect(rows.invalid()).toBe(true);
+    expect(first.name.hasError('required')).toBe(true);
+    expect(changed).toHaveBeenCalledOnce();
+    rows.flush();
+    expect(first.name()).toBe('');
+
+    first.settings().enabled = false;
+    rows.set([value, value] as never);
+    expect(rows()).toEqual([
+      { name: '', settings: { enabled: true } },
+      { name: '', settings: { enabled: true } },
+    ]);
+    expect(rows[1]!.pristine()).toBe(true);
+    expect(rows[1]!.untouched()).toBe(true);
+    expect(first.settings()).not.toBe(rows[1]!.settings());
+    first.resetToInitial();
+    expect(first()).toEqual({ name: 'Ada', settings: { enabled: false } });
+  });
+
+  it.each([null, undefined])('uses captured factory defaults without recreating existing rows for %s', (value) => {
+    let calls = 0;
+    const rows = array(() => form({ number: field(++calls) }), { initialValue: [{ number: 90 }] });
+    const first = rows[0]!;
+    rows.set([value, value] as never);
+    expect(rows()).toEqual([{ number: 1 }, { number: 2 }]);
+    expect(rows[0]).toBe(first);
+    expect(calls).toBe(2);
+    rows.set([value, value] as never);
+    expect(calls).toBe(2);
+    expect(rows()).toEqual([{ number: 1 }, { number: 2 }]);
+    const inserted = rows.insert(1, value as never);
+    const appended = rows.push(value as never);
+    expect(inserted()).toEqual({ number: 3 });
+    expect(appended()).toEqual({ number: 4 });
+  });
+
+  it.each([null, undefined])('preserves nested nullish group semantics inside supplied object rows: %s', (value) => {
+    const rows = array({
+      name: field<string | null | undefined>('Template'),
+      details: { city: field('Zurich') },
+      tags: array(field(''), ['default']),
+    }, [{ name: 'Ada', details: { city: 'Bern' }, tags: ['current'] }]);
+    rows[0]!.details.city.markAsDirty();
+    rows.set([{ name: value, details: value, tags: value }] as never);
+    expect(rows()).toEqual([{ name: value, details: { city: 'Bern' }, tags: [] }]);
+    expect(rows[0]!.details.dirty()).toBe(true);
+  });
+
+  it.each([null, undefined])('normalizes object rows after matching their original tracking keys for %s', (value) => {
+    const rows = array({ id: field<string | undefined>(undefined), name: field('Template') }, {
+      initialValue: [{ id: undefined, name: 'Ada' }], trackBy: 'id',
+    });
+    const first = rows[0]!;
+    first.markAsDirty();
+    first.markAsTouched();
+    rows.set([value] as never);
+    expect(rows[0]).toBe(first);
+    expect(rows()).toEqual([{ id: undefined, name: 'Template' }]);
+    expect(first.dirty()).toBe(true);
+    expect(first.touched()).toBe(true);
+    expect(() => rows.set([value, value] as never)).toThrow('duplicate trackBy key undefined');
+    expect(rows[0]).toBe(first);
+  });
+
   it.each(['set', 'patch'] as const)('restores declaration defaults with %s on new and reused rows', (operation) => {
     const people = array({ username: field(''), age: field<number | null | undefined>(null, required) }, {
       initialValue: [{ username: 'old', age: 28 }],

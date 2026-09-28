@@ -5328,3 +5328,17 @@ it('preserves nullable field validation ownership when keyed rows move and cance
   expect(item.valid()).toBe(true);
   expect(rows.valid()).toBe(true);
 });
+
+it.each([null, undefined])('keeps explicit nullable field row values when replacing an array with %s', (value) => {
+  const rows = array(field<string | null | undefined>('Template'), ['Ada']);
+  const first = rows[0]!;
+  first.markAsDirty();
+  first.markAsTouched();
+  rows.set([value, value]);
+  expect(rows()).toEqual([value, value]);
+  expect(rows[0]).toBe(first);
+  expect(first.dirty()).toBe(true);
+  expect(first.touched()).toBe(true);
+  expect(rows[1]!.pristine()).toBe(true);
+  expect(rows[1]!.untouched()).toBe(true);
+});

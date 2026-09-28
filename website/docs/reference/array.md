@@ -1908,6 +1908,19 @@ omitted row properties fall back to the template/factory defaults: `age: field(n
 come from item construction, before incoming `initialValue` data is applied; previous row values
 are not defaults. Factories retain the defaults captured when each row was created.
 
+A whole `null` or `undefined` object row received at runtime also uses its complete construction
+defaults. For example, with a `{ name: field('') }` template, an incoming `[null]` produces
+`[{ name: '' }]`, whether the row is reused or newly created. Reused rows retain dirty/touched
+state and discard overwritten control drafts; new rows start pristine/untouched. TypeScript
+continues to reject nullish object rows. Nullable field rows still keep their explicit values.
+Explicit nullish nested groups inside a supplied row follow the group's own no-op `set()` behavior.
+
+Tracking keys are evaluated before fallback; template defaults do not supply missing keys for
+matching. With property-name tracking, a nullish input has key `undefined`. If the new row's default
+key is defined, another nullish replacement can recreate it. Direct row `set(null/undefined)` still
+ignores the write, and array `reset()` with an existing nullish object row preserves that row's
+values and clears its interaction state.
+
 Explicit `undefined` on a field remains `undefined`. Object-valued fields are assigned atomically,
 without merging their internal properties. An individual row's `patch()` still preserves omitted
 properties. Nullish array values clear arrays; `null` does not delete declared form properties.

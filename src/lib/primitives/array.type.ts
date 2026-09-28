@@ -1020,18 +1020,18 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   /**
    * Reconciles the complete array value while preserving matching item nodes.
    *
-   * Untyped item properties omitted at runtime use construction defaults; explicit `undefined` is preserved.
    * ℹ️ Passing `null` or `undefined` clears the array.
+   * 
+   * ️ℹ️ ️Untyped omitted properties and whole nullish object rows use construction defaults.
+   * Explicit nullish field values are preserved. Reused rows retain dirty/touched state.
    *
    * ```ts
    * const node = array({
    *   name: field('Ada'),
-   * }, {
-   *   initialValue: 1,
-   * });
-   * node.set([
-   *   { name: 'Lia' },
-   * ]);
+   * }, { initialLength: 1 });
+   * 
+   * node.set([{ name: 'Lia' }]);
+   * 
    * node(); // [{ name: 'Lia' }]
    * ```
    */
@@ -1055,8 +1055,9 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
    * Reconciles the complete array value, exactly like `set()`.
-   * Untyped omitted item properties use template/factory defaults, including on reused rows.
-   * Explicit `undefined` remains explicit; TypeScript still requires complete items.
+   * Untyped omitted item properties and whole nullish object rows use template/factory defaults,
+   * including on reused rows. Explicit nullish field values remain explicit.
+   * TypeScript still requires complete items.
    *
    * The incoming collection determines the length and order. Every item must supply its complete
    * set value, including nested arrays. Matching nodes are reused by index or `trackBy`, new nodes

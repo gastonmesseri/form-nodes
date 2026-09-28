@@ -230,6 +230,17 @@ For a partial edit to one existing object row, call that row's `patch()`. Empty 
 and `undefined` clear the collection. Sparse arrays no longer express skipped positional updates.
 See the [array patch reference](../reference/array.md#patch).
 
+### Nullish object rows from untyped data
+
+When an untyped `set()`, `patch()`, or `update()` supplies a whole nullish object row, its values
+come from the template/factory defaults. A reused row keeps its identity and dirty/touched state;
+its overwritten pending input is discarded. A new row starts pristine/untouched. Array length
+still follows the incoming collection. TypeScript requires complete object rows.
+
+This differs from a nullish collection, which clears the array, and a nullable field row, which
+stores its nullish value. Direct calls to a form/group row's `set(null/undefined)` remain no-ops.
+See [array replacement defaults](../reference/array.md#patch) for nested values and tracking keys.
+
 ## ⚡ State aggregation {#state-aggregation}
 
 Array validity, errors, dirty, touched, disabled, readonly, hidden, pending, debouncing, focus, and reset behavior aggregate or propagate like forms. Removed items detach from that aggregation immediately.

@@ -65,6 +65,18 @@ people.at(0)?.patch({ name: 'Grace' });
 people.update((value) => [...value, { id: 'four', name: '', age: 0 }]);
 people.focus({ preventScroll: true });
 
+// @ts-expect-error object rows require complete objects
+people.set([null]);
+// @ts-expect-error undefined is not an object row value
+people.set([undefined]);
+// @ts-expect-error array patches require complete object rows
+people.patch([null]);
+// @ts-expect-error array update results require complete object rows
+people.update(() => [undefined]);
+// @ts-expect-error inserted object rows require complete objects
+people.insert(0, null);
+// @ts-expect-error explicit pushed object values must be complete
+people.push(undefined);
 people.set(null);
 people.reset(undefined);
 people.update(() => null);

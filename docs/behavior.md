@@ -4801,12 +4801,29 @@ are atomic, including object-valued fields and explicit undefined. Defaults are 
 use so mutation of a previous fallback does not change future defaults. Newly constructed items
 also receive these defaults before their initial reset baseline is captured.
 
+A whole nullish form/group row supplied to array set()/patch()/update() uses that row's complete
+construction defaults, like an empty object. Reused rows keep their node identity and dirty/touched
+state, replace their values, discard overwritten control drafts, and revalidate changed values.
+Incoming length still controls which rows are removed or created; new rows start pristine and
+untouched. The same defaults apply to new object rows created from nullish initial/inserted data.
+Only a whole object row gets this fallback: explicit nullish field values remain values, and
+explicit nullish nested form/group branches retain their own set/patch no-op behavior. A nullish
+collection still clears the array. Types continue to reject nullish object row values.
+
+Direct row.set(null/undefined) still follows the form/group no-op contract. Array reset of an
+existing nullish object row still preserves its committed values and clears interaction state.
+Construction defaults are distinct from the row's resetToInitial() baseline, which can include
+incoming initial row data. With trackBy, matching and duplicate checks use the incoming keys
+before fallback; a nullish item has an undefined property-name key. Defaults do not supply an
+identity for matching, so a default row with a defined key can be recreated on the next nullish
+keyed replacement. Callback tracking receives the original input.
+
 This does not reset reused interaction state or change row.patch(), ordinary form.patch(), or
 resetToInitial() baselines. Validation observes the resulting values using existing batched write
 behavior. Incoming trackBy keys are still checked before any reconciliation; defaults do not
 supply missing identity keys during matching. This is fallback behavior, not runtime validation.
 
-Reference rechecked: Angular v22.1.6 (356adf749188d996a641181c56621a6285126f3c),
+Reference rechecked: Angular v22.2.0 (fc187d4aec254b52a0cff7a16a390a4b0c3e57d8),
 packages/forms/signals/src/field/structure.ts and packages/forms/signals/test/node/dynamic.spec.ts.
 Angular tracks model structure and object identity and removes undefined-valued children; it has
 no template-default merge operation. Template fallback and retention of declared undefined-valued
