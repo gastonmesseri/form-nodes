@@ -4,8 +4,8 @@ import '@angular/compiler';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { Component, forwardRef, model, signal } from '@angular/core';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { form } from '../primitives/form';
@@ -13,7 +13,7 @@ import { field } from '../primitives/field';
 import type { AnyNode } from '../types/node.type';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
-import { useFormNodeState } from '../form-node-state/form-node-state';
+import { useControlState } from '../control-state/control-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
@@ -33,7 +33,7 @@ afterAll(() => TestBed.resetTestEnvironment());
 class StandaloneCva implements ControlValueAccessor {
   issue = signal<string | null>(null);
 
-  state = useFormNodeState({ errors: () => this.issue() });
+  state = useControlState({ errors: () => this.issue() });
 
   writeValue = vi.fn((_value: unknown) => {});
 
@@ -334,7 +334,7 @@ describe('formNodeValue', () => {
     class ModelControl {
       value = model('');
 
-      state = useFormNodeState();
+      state = useControlState();
     }
     registerSignalModelForJit(ModelControl, 'value');
     @Component({

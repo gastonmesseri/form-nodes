@@ -1,6 +1,6 @@
 import type { Provider } from '@angular/core';
 
-import { field, useFormNodeState, provideFormNodeStateErrors, type ControlError, type ControlState, type FormNodeStateOptions } from '../../src/public-api';
+import { field, useControlState, provideFormNodeStateErrors, type ControlError, type ControlState, type FormNodeStateOptions } from '../../src/public-api';
 
 const callbacks: FormNodeStateOptions[] = [
   {},
@@ -15,7 +15,7 @@ const callbacks: FormNodeStateOptions[] = [
 const error: ControlError = { kind: 'invalidDate' };
 const providers: Provider[] = provideFormNodeStateErrors();
 function constructControl() {
-  const state: ControlState<Date | null> = useFormNodeState<Date | null>({ errors: () => error });
+  const state: ControlState<Date | null> = useControlState<Date | null>({ errors: () => error });
   return state;
 }
 const invalidOptions: FormNodeStateOptions = {

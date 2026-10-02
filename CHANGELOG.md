@@ -12,7 +12,11 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
-- Add `useFormNodeState().hasValidators()`, a reactive signal reporting registered synchronous/asynchronous validators or a configured local `errors` callback, independently of current errors and disabled state. Unbound controls return false unless they configure `errors`; Signal Forms returns undefined when no local callback establishes validation presence.
+- Add `useControlState().hasValidators()`, a reactive signal reporting registered synchronous/asynchronous validators or a configured local `errors` callback, independently of current errors and disabled state. Unbound controls return false unless they configure `errors`; Signal Forms returns undefined when no local callback establishes validation presence.
+
+### Deprecated
+
+- Use `useControlState()` to observe any supported form binding and contribute component validation. `useFormNodeState()` remains available as a deprecated alias with identical behavior and types; existing consumers do not need a breaking migration. Documentation and examples now use `useControlState()`.
 
 ## [5.7.0] - 2026-10-02
 

@@ -1,7 +1,7 @@
 import type { Signal, Provider, OutputRef } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNodeDirective, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
+import { FormNodeDirective, createFormPrimitives, field, useControlState, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
@@ -36,9 +36,9 @@ const classConfig = {
 classConfig.classes.touched = () => true;
 provideFormNodesConfig(classConfig);
 
-declare const formNodeState: ControlState<string | null>;
-const injectedControlState = useFormNodeState<string | null>();
-const boundValue: string | null | undefined = formNodeState.value();
+declare const controlState: ControlState<string | null>;
+const injectedControlState = useControlState<string | null>();
+const boundValue: string | null | undefined = controlState.value();
 const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
 const queriedError = injectedControlState.getError('required');
@@ -147,3 +147,6 @@ type _StateHasValidators = Expect<Equal<typeof hasValidatorsResult, boolean | un
 type _StateHasValidatorsSignal = Expect<Equal<typeof injectedControlState.hasValidators, Signal<boolean | undefined>>>;
 // @ts-expect-error Validator presence is a readonly signal.
 injectedControlState.hasValidators.set(true);
+
+// The deprecated alias preserves the exact generic call contract.
+type _LegacyControlStateHook = Expect<Equal<typeof useFormNodeState, typeof useControlState>>;

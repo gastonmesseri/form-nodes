@@ -6,11 +6,11 @@ import { attempt } from '../utils/attempt';
 import type { AnyNode } from '../types/node.type';
 import type { FormNode } from '../primitives/form';
 import { isFormNode } from '../primitives/is-form-node';
-import type { ControlState, ControlStateError } from '../form-node-state/form-node-state';
+import type { ControlState, ControlStateError } from '../control-state/control-state';
 import { resolveMessage, shouldShowMessages, setupErrorHeightAnimation, type FormNodeErrorsContext } from './form-node-errors.utils';
 
 /**
- * Read-only validation messages for a node or a custom control's useFormNodeState() facade.
+ * Read-only validation messages for a node or a custom control's useControlState() facade.
  *
  * ```ts
  * import { Component } from '@angular/core';

@@ -500,7 +500,7 @@ experimental `bindInputOutputPairs: true` (including `[]` for value transport wi
 For `FormValueControl`, value binding through `model()` works without experimental options.
 Full automatic state/constraint input synchronization requires experimental `syncInputs: 'all'`;
 `'signal-controls'` also synchronizes all supported inputs for model controls, while excluding CVAs and paired input/output controls. Other modes select fewer inputs. Alternatively, a component can combine its value model with
-[`useFormNodeState()`](./form-node-state.md) for full bound-state access and render that state itself without input writes.
+[`useControlState()`](./control-state.md) for full bound-state access and render that state itself without input writes.
 Standard CVA value, touch, and disabled-state integration does not require `syncInputs`.
 See [FormValueControl support and a complete example](../guides/custom-controls.md#create-a-signal-model-control).
 

@@ -4,7 +4,7 @@ import { DestroyRef, effect, untracked, ChangeDetectorRef } from '@angular/core'
 import { connectLegacyValidators } from './legacy-validators';
 import { connectControlInputs } from '../sync-control-inputs';
 import type { InternalNode, AnyNode } from '../../../types/node.type';
-import { hasControlStateConsumer } from '../../../form-node-state/adapters/form-node';
+import { hasControlStateConsumer } from '../../../control-state/adapters/form-node';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
 
 /**

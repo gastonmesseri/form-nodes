@@ -20,7 +20,7 @@ providers, or a replacement for the directive's runtime adapter discovery.
 | Generic code accepting either model shape | [`FormNodeControl<TValue, TNode>`](./types/form-node-control.md) |
 | Shared optional state inputs and hooks | [`FormNodeUiControl<TValue, TNode>`](./types/form-node-ui-control.md) |
 | The directive attached to a host | [`FormNodeBinding<TNode>`](./types/form-node-binding.md) or [`FormNodeDirective<TNode>`](./types/form-node-directive.md) |
-| Read-only state across supported binding APIs | [`ControlState<TValue>`](./types/control-state.md), returned by [`useFormNodeState()`](./form-node-state.md) |
+| Read-only state across supported binding APIs | [`ControlState<TValue>`](./types/control-state.md), returned by [`useControlState()`](./control-state.md) |
 | A native form submission output | [`FormNodeSubmitEvent<TNode>`](./types/form-node-submit-event.md) |
 
 ## Value and checkbox components

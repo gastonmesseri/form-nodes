@@ -113,7 +113,7 @@ Update `getError('required')`, `hasError('required')`, error templates, and mess
 for those acceptance fields to the `requiredTrue` kind. Its default message is
 "This field must be accepted." Existing custom messages can be passed to the new validator.
 
-Both rules keep `node.required()` and `useFormNodeState().required()` true while active. Native
+Both rules keep `node.required()` and `useControlState().required()` true while active. Native
 checkboxes and custom controls with a public `checked` input receive a required constraint only
 for acceptance; the latter requires `syncInputs` to select `required`. Custom wrappers that
 manually bind logical required state to an inner native checkbox should follow the
@@ -122,7 +122,7 @@ manually bind logical required state to an inner native checkbox should follow t
 The new `notNil` validator rejects only null and undefined. It permits empty strings and `NaN`
 and contributes no required metadata. See the [validator comparison](../reference/built-in-validators.md#presence-and-acceptance).
 
-Angular Reactive Forms and Signal Forms controls observed independently through `useFormNodeState()`
+Angular Reactive Forms and Signal Forms controls observed independently through `useControlState()`
 keep their own validator semantics. This change applies to Form Nodes validators.
 
 ## Moving to 3.7.0: closest form state {#closest-form-state}
@@ -384,13 +384,14 @@ or missing actions. Pending validation is not awaited. See [Form submission](../
 
 ## 🔌 Renaming the custom-control state hook {#renaming-the-custom-control-state-hook}
 
-In the first public release, `1.0.0`, `useControlState()` is renamed to
-`useFormNodeState()`. Update imports from `@ngblocks/form-nodes` and every call to the hook. The old
-name is no longer exported.
+Use `useControlState()` for new and existing custom controls. Replace imports and calls to the
+deprecated `useFormNodeState()` alias with `useControlState()`. The alias remains exported for
+compatibility, so existing applications continue working without a major-version migration.
 
-The return type remains `ControlState<TValue>`, and all `ControlState*` types retain their
-names. Supported bindings, signal behavior, and injection-context requirements are unchanged;
-see the [`useFormNodeState()` reference](../reference/form-node-state.md).
+The return type remains `ControlState<TValue>`, and the existing `ControlState*` types and
+`FormNodeStateOptions` retain their names. Supported bindings, error contributions, signals,
+and injection-context requirements are unchanged. See the
+[`useControlState()` reference](../reference/control-state.md).
 
 ## 🧩 Removing the field adapter {#removing-the-field-adapter}
 
@@ -416,9 +417,9 @@ configures its own `[formField]` controls independently; both providers can coex
 previously came from Angular's provider on an adapted control, move them to `provideFormNodesConfig()`
 and read state with `binding.node()` instead of `binding.state()`.
 
-`useFormNodeState()` remains available for all supported forms APIs. Use Angular's `form()` and
+`useControlState()` remains available for all supported forms APIs. Use Angular's `form()` and
 `signal()` for controls bound through Angular `[formField]`; see the
-[`useFormNodeState()` example](../reference/form-node-state.md#bind-with-formfield).
+[`useControlState()` example](../reference/control-state.md#bind-with-formfield).
 
 Custom components may implement the Form Nodes control types without depending on Angular's
 version-specific `FormUiControl` type. The supported Angular ranges are now `^21.0.7 || ^22.1.5`;
@@ -585,5 +586,5 @@ node access. Returning to an enabled node resynchronizes its current value.
 
 Targets in `{ inputs, target }` filter the selected adapter, not component interfaces. A CVA with a
 model still matches cva. Active pairs only match all. Model controls can receive complete supported
-input synchronization with signal-controls, or use useFormNodeState() without experimental writes.
+input synchronization with signal-controls, or use useControlState() without experimental writes.
 See [the full configuration reference](../reference/provide-form-nodes-config.md#custom-control-inputs).

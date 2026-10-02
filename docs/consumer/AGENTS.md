@@ -38,7 +38,7 @@ instructions when applying these library usage rules.
 - The model tree determines parent membership. A separate `field()` stays independent even if
   its control is rendered inside the same HTML form. No `standalone` registration option is needed.
 - Use the integration guide for custom controls. `[formNode]` supports native controls and CVAs;
-  `useFormNodeState()` can observe a control's active binding, including independently used
+  `useControlState()` can observe a control's active binding, including independently used
   Angular form directives. It is not a second model to synchronize manually.
 
 ## Writes, arrays, and reset

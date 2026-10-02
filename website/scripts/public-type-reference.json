@@ -199,11 +199,11 @@
     },
     "ControlState": {
       "family": "controls",
-      "usage": "Use for reusable UI that observes a binding through [`useFormNodeState()`](../form-node-state.md). This read-only facade normalizes supported Angular binding sources and does not expose node write operations."
+      "usage": "Use for reusable UI that observes a binding through [`useControlState()`](../control-state.md). This read-only facade normalizes supported Angular binding sources and does not expose node write operations."
     },
     "ControlStateError": {
       "family": "controls",
-      "usage": "Use when rendering errors obtained from [`useFormNodeState()`](../form-node-state.md). This is a source-neutral error contract rather than a guarantee of a Form Nodes target node."
+      "usage": "Use when rendering errors obtained from [`useControlState()`](../control-state.md). This is a source-neutral error contract rather than a guarantee of a Form Nodes target node."
     },
     "ControlStateSource": {
       "family": "controls",
@@ -211,7 +211,7 @@
     },
     "ControlStateDisabledReason": {
       "family": "controls",
-      "usage": "Use for disabled explanations from [`useFormNodeState()`](../form-node-state.md). Unlike node-specific [`DisabledReason`](./disabled-reason.md), this contract does not assume the original source is a Form Nodes node."
+      "usage": "Use for disabled explanations from [`useControlState()`](../control-state.md). Unlike node-specific [`DisabledReason`](./disabled-reason.md), this contract does not assume the original source is a Form Nodes node."
     },
     "ValidatorMessages": {
       "family": "configuration",
@@ -469,11 +469,11 @@
     },
     "ControlError": {
       "family": "controls",
-      "usage": "Use for structured component errors contributed through [`useFormNodeState({ errors })`](../form-node-state.md#contribute-errors). Errors belong to the host binding and cannot target another node."
+      "usage": "Use for structured component errors contributed through [`useControlState({ errors })`](../control-state.md#contribute-errors). Errors belong to the host binding and cannot target another node."
     },
     "FormNodeStateOptions": {
       "family": "controls",
-      "usage": "Configure a reactive component-owned error source for [`useFormNodeState()`](../form-node-state.md#contribute-errors). Return an error, a message, a readonly array, or no result."
+      "usage": "Configure a reactive component-owned error source for [`useControlState()`](../control-state.md#contribute-errors). Return an error, a message, a readonly array, or no result."
     },
     "FormNodeErrorsContext": {
       "family": "controls",

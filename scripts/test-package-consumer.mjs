@@ -42,6 +42,10 @@ try {
   if (readFileSync(join(packageDirectory, 'AGENTS.md'), 'utf8') !== consumerGuide) {
     throw new Error('The published agent guide must match the consumer guide rather than contributor instructions.');
   }
+  const declarations = readFileSync(join(packageDirectory, 'types/ngblocks-form-nodes.d.ts'), 'utf8');
+  if (!/@deprecated Use \{@link useControlState\} instead\.[\s\S]*?\*\/\s*declare const useFormNodeState: typeof useControlState;/u.test(declarations)) {
+    throw new Error('The published legacy control-state hook must retain its deprecation and generic alias signature.');
+  }
   const packageManifest = JSON.parse(readFileSync(join(packageDirectory, 'package.json'), 'utf8'));
   if (packageManifest.name !== '@ngblocks/form-nodes') {
     throw new Error('The published package must use the @ngblocks/form-nodes name.');
@@ -87,7 +91,8 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, createFormPrimitives, field, form, group, greaterThan, lessThan, required } from '@ngblocks/form-nodes';
+    import { array, createFormPrimitives, field, form, group, greaterThan, lessThan, required, useControlState, useFormNodeState } from '@ngblocks/form-nodes';
+    if (useFormNodeState !== useControlState) throw new Error('The deprecated control-state alias must preserve the new hook.');
     class Company {
       constructor(name) { this.name = name; }
     }

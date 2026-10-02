@@ -1,7 +1,7 @@
 import { DestroyRef, afterEveryRender, inject } from '@angular/core';
 
 import { attempt } from '../utils/attempt';
-import type { ControlState, ControlStateError } from '../form-node-state/form-node-state';
+import type { ControlState, ControlStateError } from '../control-state/control-state';
 
 /** Context supplied once to the projected #message template when visible messages exist. */
 export type FormNodeErrorsContext = {

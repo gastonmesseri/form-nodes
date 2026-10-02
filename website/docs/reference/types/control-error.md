@@ -14,7 +14,7 @@ import type { ControlError } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for structured component errors contributed through [`useFormNodeState({ errors })`](../form-node-state.md#contribute-errors). Errors belong to the host binding and cannot target another node.
+Use for structured component errors contributed through [`useControlState({ errors })`](../control-state.md#contribute-errors). Errors belong to the host binding and cannot target another node.
 
 ## Declaration
 

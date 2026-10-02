@@ -81,7 +81,7 @@ contributes no errors or metadata. Disabled, readonly, and hidden nodes skip val
 ## Required state and controls
 
 This validator supplies **no required metadata**: by itself, `node.required()` and
-`useFormNodeState().required()` remain false even when the value fails validation.
+`useControlState().required()` remain false even when the value fails validation.
 It does not enable HTML `required`, which would reject valid empty strings or unchecked checkboxes.
 Errors still affect field and ancestor validity and appear in `<form-node-errors>` normally.
 

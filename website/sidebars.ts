@@ -68,7 +68,7 @@ const sidebars: SidebarsConfig = {
         'reference/field',
         'reference/array',
         'reference/group',
-        { type: 'doc', id: 'reference/form-node-state', label: 'useFormNodeState()' },
+        { type: 'doc', id: 'reference/control-state', label: 'useControlState()' },
         'reference/use-closest-form-state',
         { type: 'doc', id: 'reference/sync-query-params', label: 'syncQueryParams()' },
         'reference/form-node-errors',

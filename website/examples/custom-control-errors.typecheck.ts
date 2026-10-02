@@ -1,5 +1,5 @@
 import { Component, input, model, signal } from '@angular/core';
-import { email, field, form, required, FormNodeErrors, FormNodeDirective, useFormNodeState } from '@ngblocks/form-nodes';
+import { email, field, form, required, FormNodeErrors, FormNodeDirective, useControlState } from '@ngblocks/form-nodes';
 
 // email-input.component.ts
 @Component({
@@ -37,7 +37,7 @@ export class EmailInput {
 
   value = model<string | null>(null);
 
-  state = useFormNodeState();
+  state = useControlState();
 
   onInput(event: Event) {
     this.value.set((event.target as HTMLInputElement).value);

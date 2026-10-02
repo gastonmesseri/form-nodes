@@ -14,7 +14,7 @@ import type { FormNodeStateOptions } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Configure a reactive component-owned error source for [`useFormNodeState()`](../form-node-state.md#contribute-errors). Return an error, a message, a readonly array, or no result.
+Configure a reactive component-owned error source for [`useControlState()`](../control-state.md#contribute-errors). Return an error, a message, a readonly array, or no result.
 
 ## Declaration
 

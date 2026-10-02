@@ -11,7 +11,7 @@ Form Nodes separates errors owned by one node from errors aggregated across a su
 
 Use [`FormNodeErrors`](../reference/form-node-errors.md) to display one error below a field by
 default, with touch-or-submit visibility and an optional height animation. Pass `[node]` beside a
-native input or `[state]` inside a custom control using `useFormNodeState()`.
+native input or `[state]` inside a custom control using `useControlState()`.
 
 ## Display errors below a native input {#display-errors}
 
@@ -28,7 +28,7 @@ The separate submitted-email preview belongs to the application and is not reset
 
 The unique `aria-describedby` association connects the input to its error container. Keep the
 container mounted so it can handle visibility and exit animation itself. Custom controls use
-[`[state]="state"` from `useFormNodeState()`](./custom-controls.md#built-in-error-presentation)
+[`[state]="state"` from `useControlState()`](./custom-controls.md#built-in-error-presentation)
 inside their own template. See [display options](../reference/form-node-errors.md#adjust-display)
 for multiple messages, submit-only visibility, and disabling animation. Messages use a warm red
 by default; [custom templates and colors](../reference/form-node-errors.md#custom-template) let

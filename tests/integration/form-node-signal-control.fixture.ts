@@ -2,7 +2,7 @@ import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signa
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
 import { useLegacyNgControl } from '../helpers/legacy-ng-control-hook';
-import { field, form, FormNodeDirective, useFormNodeState, provideFormNodesConfig, required, type FieldNode } from '../../src/public-api';
+import { field, form, FormNodeDirective, useControlState, provideFormNodesConfig, required, type FieldNode } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string };
 type CompanyValue = { companyId: number | null; companyName: string | null };
@@ -15,7 +15,7 @@ type CompanyValue = { companyId: number | null; companyName: string | null };
 })
 export class AotSignalValueControl implements FormValueControl<string>, OnChanges {
   value = model('');
-  formNodeState = useFormNodeState<string>();
+  controlState = useControlState<string>();
   touch = output<void>();
   disabled = input(false, { transform: booleanAttribute });
   dirty = input(false);

@@ -4,7 +4,7 @@ import type { FormNodeControl } from '../form-node-control';
 import type { AnyNode, NodeValue } from '../../types/node.type';
 import { connectCvaAdapter } from './control-value-accessor/cva-adapter';
 import { isNativeFormNodeControl } from './native-control/native-control-value';
-import { hasControlStateConsumer } from '../../form-node-state/adapters/form-node';
+import { hasControlStateConsumer } from '../../control-state/adapters/form-node';
 import { selectValueAccessor } from './control-value-accessor/select-value-accessor';
 import { connectNativeControlAdapter } from './native-control/native-control-adapter';
 import { discoverCustomControl } from './signal-forms-control/discover-custom-control';

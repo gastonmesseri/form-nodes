@@ -88,7 +88,7 @@ programmatic `set()` calls update the control without emitting control-change ou
 <CodeBlock language="ts" title="search-page.component.ts">{standaloneSource}</CodeBlock>
 
 The same binding works with native controls, CVAs, and supported signal controls. The field owns
-its validators, debounce, and interaction state. `useFormNodeState()` observes that state and can
+its validators, debounce, and interaction state. `useControlState()` observes that state and can
 contribute errors. `reset()` clears interaction state while retaining the current value;
 `resetToInitial()` restores the declared initial value.
 
@@ -293,7 +293,7 @@ input receive the same acceptance-specific value, including checkbox CVAs such a
 Other custom controls receive the node's logical `required()` state. Existing CVA validators
 still apply their own rules.
 
-Inside a custom checkbox, use `useFormNodeState().required()` for a required indicator, but do
+Inside a custom checkbox, use `useControlState().required()` for a required indicator, but do
 not automatically copy it to an inner native checkbox's `[required]`: the logical flag also
 represents presence-only rules. Let Form Nodes errors drive validation, use the synchronized
 `required` input on a `checked` control, or expose an explicit acceptance option in your wrapper.

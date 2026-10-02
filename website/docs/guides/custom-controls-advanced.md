@@ -4,7 +4,7 @@ title: Advanced custom controls
 
 import CodeBlock from '@theme/CodeBlock';
 import directNgControlSource from '!!raw-loader!../../examples/direct-ng-control.typecheck.ts';
-import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
+import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
 import ngControlSource from '!!raw-loader!../../examples/cva-ng-control-subscriptions.typecheck.ts';
 import dateErrorsSource from '!!raw-loader!../../examples/cva-date-errors.typecheck.ts';
 
@@ -51,7 +51,7 @@ defaults, [`provideFormNodesConfig()`](../reference/provide-form-nodes-config.md
 to that node's binding. See [selection modes and precedence](../reference/provide-form-nodes-config.md#custom-control-inputs).
 
 A component implementing `FormValueControl` can instead combine `value = model()` with
-[`useFormNodeState()`](../reference/form-node-state.md). It then has value binding and full access to Form Nodes state through public
+[`useControlState()`](../reference/control-state.md). It then has value binding and full access to Form Nodes state through public
 APIs, without enabling input synchronization. The component reads the hook's signals to render
 state, constraints, and errors and calls `markAsTouched()` on blur. The hook does not write the
 component's existing input properties or render its DOM for it. The same approach works with a
@@ -143,14 +143,14 @@ changes. The optional `touch` output marks the node touched; `focus(options?)` i
 
 ## ⚡ Read bound state without state inputs {#read-bound-state-without-state-inputs}
 
-The [`useFormNodeState()` reference](../reference/form-node-state.md) lists the complete API,
+The [`useControlState()` reference](../reference/control-state.md) lists the complete API,
 defaults, source precedence, and lifecycle behavior.
 
-`useFormNodeState()` is the stable alternative when a component does not want `[formNode]` to
+`useControlState()` is the stable alternative when a component does not want `[formNode]` to
 write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call
 it in the component injection context and read its signals directly:
 
-<CodeBlock language="ts">{formNodeStateSource}</CodeBlock>
+<CodeBlock language="ts">{controlStateSource}</CodeBlock>
 
 **The same state implementation works with `[formNode]`, `[formField]`, `[formControl]`,
 `[formControlName]`, and `[(ngModel)]`.** This makes the hook suitable for reusable custom controls
@@ -158,8 +158,8 @@ whose callers use different Angular forms APIs; no manual state adapter selectio
 Use `hasError(kind)` and `getError(kind)` to query the same normalized errors across those bindings.
 The latter returns the first full error object or `undefined`; names are preserved, including
 Angular `minlength` versus Form Nodes `minLength`.
-Use [`hasValidators()`](../reference/form-node-state.md#hasvalidators) to detect registered
-validation independently of current errors. A configured `useFormNodeState({ errors })` callback
+Use [`hasValidators()`](../reference/control-state.md#hasvalidators) to detect registered
+validation independently of current errors. A configured `useControlState({ errors })` callback
 also counts, even when empty or unbound. Without that callback, unbound controls return `false`
 and Signal Forms bindings return `undefined` because validator presence is unknown.
 
@@ -168,7 +168,7 @@ state. Other functions use direct registration identity for Form Nodes and Angul
 bindings; Angular Signal Forms returns `undefined` for unsupported reference queries.
 Pass `{ resolve: true }` as the second argument to inspect synchronous compositions on a
 `[formNode]` binding; other bindings retain their existing query behavior. See
-[validator queries](../reference/form-node-state.md#hasvalidatorvalidator) for the complete contract.
+[validator queries](../reference/control-state.md#hasvalidatorvalidator) for the complete contract.
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
 adapter without changing the component's API.
 
@@ -178,7 +178,7 @@ and reconcile the current directive control after rendering. They therefore foll
 disabled, dirty, touched, invalid, pending, errors, required-rule detection, and names declared by `formControlName` or
 `ngModel`. Required detection recognizes directly registered `Validators.required` / `Validators.requiredTrue` and an active
 Angular required directive on the host, including changes while the value is valid. Properties these APIs do not expose, including readonly, hidden, and disabled reasons, retain their safe neutral defaults. Standard Angular validator directives on the host additionally expose numeric, length, and pattern
-constraints; validator-function parameters are not inspected. See [constraint support](../reference/form-node-state.md#constraint-properties).
+constraints; validator-function parameters are not inspected. See [constraint support](../reference/control-state.md#constraint-properties).
 `[formField]` exposes Angular
 Signal Forms state, including constraints, required, readonly, hidden, and disabled reasons.
 
@@ -199,7 +199,7 @@ Call `markAsTouched()` from the custom control's blur interaction to notify whic
 currently connected. The operation delegates to that API's native touched behavior and is a safe
 no-op while disconnected.
 
-`useFormNodeState()` is deliberately not a second form-control API. Read state from its signals
+`useControlState()` is deliberately not a second form-control API. Read state from its signals
 and use `markAsTouched()` to report the control's blur interaction. Send user-authored value changes
 through the component's `model()`, Angular `FormValueControl`, or `ControlValueAccessor` callbacks.
 Programmatic value writes, reset, disabled state, and other form operations remain owned by the API
@@ -510,5 +510,5 @@ These internal signals are compatibility details, not an additional public node 
 The injected control remains a Form Nodes adapter, not a complete Angular `FormControl`.
 In particular, a hook's optional `validator`/`asyncValidator` callbacks that depend on
 `addValidators()`/`addAsyncValidators()` are not supported. Configure those rules on the node,
-or use the documented `NG_VALIDATORS` CVA integration. Use `useFormNodeState()` for new
+or use the documented `NG_VALIDATORS` CVA integration. Use `useControlState()` for new
 components that need a supported state facade without patching Angular control methods.

@@ -36,7 +36,7 @@ For Angular templates and custom controls, add the integration you need:
 | --- | --- | --- |
 | Bind a control or native form with `[formNode]` | [`FormNodeDirective`](../reference/form-node-binding.md) | The component's `imports` array |
 | Render `<form-node-errors>` | [`FormNodeErrors`](../reference/form-node-errors.md) | The component's `imports` array |
-| Observe form state inside a custom control | [`useFormNodeState`](../reference/form-node-state.md) | Call in the control's class initializer |
+| Observe form state inside a custom control | [`useControlState`](../reference/control-state.md) | Call in the control's class initializer |
 
 The [first-form example](./first-form.md) shows the model, component imports, and template together.
 If Angular does not recognize a binding, check the

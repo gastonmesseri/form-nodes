@@ -127,6 +127,8 @@ When a code block represents several application files, identify each logical fi
 
 End each progressive tutorial step with a concise `Related guides and reference` section linking to relevant concepts, detailed guides, API references, and recipes. Keep links contextual rather than repeating the entire sidebar. Maintain stable anchors, cross-page links, inherited contracts, and sidebar entries together.
 
+When an API is renamed, align its reference filename, canonical example filenames, example variables, and sidebar entry with the recommended name. Preserve published URLs with an explicit `slug` and retain legacy anchor IDs when changing headings, so existing links remain valid. Mention deprecated names only to explain compatibility or migration; use the current name in guidance and examples.
+
 ## Generated references and synchronization
 
 Author JSDoc in source. Do not patch generated reference pages instead of their source or generator. The [public-type reference generator](../website/scripts/sync-public-type-reference.mjs) produces declarations and member summaries in `website/docs/reference/types/`; it does not publish every complete hover example automatically. Maintain detailed guides separately where readers need more explanation.

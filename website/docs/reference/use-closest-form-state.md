@@ -12,9 +12,9 @@ Observe submission history through one interface for Form Nodes, Angular Reactiv
 Angular template-driven forms. The hook returns a stable object whose properties are signals.
 It is independent of the forms API used by the caller, but requires Angular dependency injection.
 
-Custom controls already using `useFormNodeState()` can access this entire facade through
+Custom controls already using `useControlState()` can access this entire facade through
 `state.form`, or read `state.formSubmitted()` directly; a second helper call is unnecessary. See
-[nearest form state](./form-node-state.md#nearest-form-state).
+[nearest form state](./control-state.md#nearest-form-state).
 
 ## Signature
 
@@ -45,7 +45,7 @@ operations such as `formState.formNode()?.reset()`. The API is collision-safe: a
 `formState.formNode()?.submitted()`. Access children through `.children`.
 
 For reusable custom controls, combine this hook's `submitted()` with
-[`useFormNodeState()`](./form-node-state.md)'s `touched()` and `invalid()` signals.
+[`useControlState()`](./control-state.md)'s `touched()` and `invalid()` signals.
 
 ## Resolution and priority
 

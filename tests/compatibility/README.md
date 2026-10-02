@@ -59,7 +59,7 @@ partially compiled package code; strict Angular template checking runs separatel
 `noEmit`. They do not replace production linking or browser tests.
 
 The former `$field` adapter has been removed. Bind Form Nodes through `[formNode]`.
-`useFormNodeState()` continues to observe independently created Angular Signal Forms controls.
+`useControlState()` continues to observe independently created Angular Signal Forms controls.
 
 To refresh a consumer lockfile after deliberately updating its pinned dependencies:
 

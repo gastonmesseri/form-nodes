@@ -10,9 +10,9 @@ import { field } from '../primitives/field';
 import { notNil } from '../validation/validators/not-nil';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
+import { useControlState } from '../control-state/control-state';
 import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { requiredTrue } from '../validation/validators/required-true';
-import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
@@ -106,7 +106,7 @@ describe('presence and acceptance bindings', () => {
     class Checkbox {
       checked = model<boolean | null>(false);
       required = input(false);
-      state = useFormNodeState();
+      state = useControlState();
     }
     registerSignalModelForJit(Checkbox, 'checked');
     registerSignalInputForJit(Checkbox, 'required', 'required');

@@ -7,7 +7,7 @@ Organize implementation code by responsibility directly under `src/lib/`:
 | `primitives/` | Field, form, group, and array declarations, types, and state. |
 | `validation/` | Validator execution, messages, metadata, and built-in `validators/`. |
 | `form-node/` | The `[formNode]` directive and its control integration. |
-| `form-node-state/` | Shared `useFormNodeState()` access and source-specific `adapters/`. |
+| `control-state/` | Shared `useControlState()` access and source-specific `adapters/`. |
 | `metadata/` | Node metadata storage and access. |
 | `types/` | Contracts shared across features. Keep feature-specific types with their feature. |
 | `utils/` | General helpers and infrastructure shared across features. |

@@ -292,7 +292,7 @@ one value; they do not merge. A node option affects its own binding, not descend
 
 Provider/global fallbacks are captured when a connection is created. Rebinding uses the replacement
 node's options. Inputs no longer selected retain their last values rather than restoring defaults.
-For state access without experimental writes, use a model with [`useFormNodeState()`](./form-node-state.md) and render its
+For state access without experimental writes, use a model with [`useControlState()`](./control-state.md) and render its
 signals. See [custom controls](../guides/custom-controls.md).
 
 ## 🧪 `bindInputOutputPairs` (experimental) {#bind-input-output-pairs}
@@ -342,4 +342,4 @@ rule accepts `false` and leaves that checkbox input false. Other components rece
 logical `required()` state. `notNil` contributes no required metadata.
 
 See [boolean presence and acceptance](../guides/control-binding.md#boolean-presence-and-acceptance)
-for native controls and custom wrappers using `useFormNodeState()`.
+for native controls and custom wrappers using `useControlState()`.

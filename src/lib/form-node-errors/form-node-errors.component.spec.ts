@@ -10,8 +10,8 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from '../validation/validators/required';
 import { FormNodeErrors } from './form-node-errors.component';
+import { useControlState } from '../control-state/control-state';
 import { FormNodeDirective } from '../form-node/form-node.directive';
-import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerErrorTemplateQueryForJit } from '../../../tests/helpers/register-error-template-query-for-jit';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
@@ -100,7 +100,7 @@ describe('FormNodeErrors', () => {
     class Control {
       value = model('');
 
-      state = useFormNodeState();
+      state = useControlState();
     }
     registerSignalModelForJit(Control, 'value');
     registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');

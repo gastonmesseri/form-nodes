@@ -51,13 +51,13 @@ because another validation is pending.
 
 ## Inside custom controls {#custom-control}
 
-Pass the entire `useFormNodeState()` result through `[state]`. This preserves the errors visible
+Pass the entire `useControlState()` result through `[state]`. This preserves the errors visible
 to that specific control binding and supports Form Nodes, Angular Signal Forms, Reactive Forms,
 and template-driven forms through the helper's existing adapters. Supply **either `node` or
 `state`**. Conflicting sources, missing sources, or unreadable sources render no messages.
 
 This reusable email input owns its internal markup and error display. The parent owns the field
-and validators. The custom control calls `useFormNodeState()` once and passes **`state`, without
+and validators. The custom control calls `useControlState()` once and passes **`state`, without
 calling it**, to `[state]`; it does not need a node input of its own.
 
 The comments in this example identify suggested application files:
@@ -71,7 +71,7 @@ The backup instance also demonstrates opting out of the height animation through
 The important connections are:
 
 - `value = model()` handles the value binding; `onInput()` forwards native input changes to it.
-- `state = useFormNodeState()` observes validators, interaction, availability, and the owning form.
+- `state = useControlState()` observes validators, interaction, availability, and the owning form.
 - Blur calls `state.markAsTouched()` so leaving an invalid input can reveal its message.
 - `<form-node-errors [state]="state">` renders those errors and applies touch-or-submit visibility.
 - The parent binds `[formNode]` to the custom control; the internal native input uses the model

@@ -1,6 +1,6 @@
 import { Component, viewChild, type Signal, type WritableSignal } from '@angular/core';
 
-import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, greaterThan, lessThan, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, useControlState, array, createFormPrimitives, field, form, group, required, greaterThan, lessThan, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -143,3 +143,8 @@ const writableApi: WritableSignal<ReturnType<typeof writableCollision>> = writab
 writableApi.set({ set: 'published', asReadonly: 'preserved' });
 // @ts-expect-error Readonly views must not regain writable operations in the published declarations.
 const invalidWritable: WritableSignal<number> = readonlyAge;
+
+@Component({ selector: 'package-control-state', template: '{{ state.hasValidators() }}' })
+export class PackageControlState {
+  state = useControlState<string>({ errors: () => null });
+}

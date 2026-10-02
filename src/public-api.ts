@@ -53,6 +53,7 @@ export {
   type NonNullableFieldFactory,
 } from './lib/primitives/create-form-primitives';
 export {
+  useControlState,
   useFormNodeState,
   type ControlError,
   type ControlState,
@@ -60,7 +61,7 @@ export {
   type ControlStateSource,
   type FormNodeStateOptions,
   type ControlStateDisabledReason,
-} from './lib/form-node-state/form-node-state';
+} from './lib/control-state/control-state';
 export {
   type ValidatorMessages,
   type ValidatorMessageParameters,
@@ -128,7 +129,7 @@ export type { NodeValueSignal } from './lib/types/node-value-signal.type';
 export type { CallableNodeApi } from './lib/types/callable-node-api.type';
 export type { NodeErrorsSignal } from './lib/types/node-errors-signal.type';
 export type { FormNodeSubmitEvent } from './lib/types/form-node-binding.type';
-export { provideFormNodeStateErrors } from './lib/form-node-state/control-errors';
+export { provideFormNodeStateErrors } from './lib/control-state/control-errors';
 export { FormNodeErrors } from './lib/form-node-errors/form-node-errors.component';
 export type { SyncInputs, SyncInputName } from './lib/configuration/node-input-config';
 export type { FormNodeErrorsContext } from './lib/form-node-errors/form-node-errors.utils';

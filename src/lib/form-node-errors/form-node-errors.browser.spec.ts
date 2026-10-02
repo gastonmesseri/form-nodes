@@ -10,10 +10,10 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from '../validation/validators/required';
 import { FormNodeErrors } from './form-node-errors.component';
+import { useControlState } from '../control-state/control-state';
 import { FormNodeDirective } from '../form-node/form-node.directive';
-import { useFormNodeState } from '../form-node-state/form-node-state';
-import { registerErrorTemplateQueryForJit } from '../../../tests/helpers/register-error-template-query-for-jit';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
+import { registerErrorTemplateQueryForJit } from '../../../tests/helpers/register-error-template-query-for-jit';
 
 registerErrorTemplateQueryForJit();
 
@@ -37,7 +37,7 @@ class CustomControl implements ControlValueAccessor {
 
   localIssue = signal<string | null>(null);
 
-  state = useFormNodeState({ errors: () => this.localIssue() });
+  state = useControlState({ errors: () => this.localIssue() });
 
   change: (value: string) => void = () => {};
 

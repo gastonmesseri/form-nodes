@@ -17,8 +17,8 @@ import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { useClosestFormState } from './use-closest-form-state';
 import { asyncValidator } from '../validation/async-validator';
+import { useControlState } from '../control-state/control-state';
 import { provideFormNodesConfig } from './provide-form-nodes-config';
-import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
@@ -541,7 +541,7 @@ describe('FormNodeDirective in Chromium', () => {
     class ExternalControl {
       value = model('');
 
-      state = useFormNodeState<string>();
+      state = useControlState<string>();
     }
     registerSignalModelForJit(ExternalControl, 'value');
     registerSignalOutputForJit(ExternalControl, 'valueChange', 'value');
@@ -590,15 +590,15 @@ describe('FormNodeDirective in Chromium', () => {
   });
 
   it('exposes current committed control state through formNode while public equality retains an older value', () => {
-    @Component({ selector: 'equality-form-node-state', template: '' })
+    @Component({ selector: 'equality-control-state', template: '' })
     class EqualityControl {
       value = model('');
-      state = useFormNodeState<string>();
+      state = useControlState<string>();
     }
     registerSignalModelForJit(EqualityControl, 'value');
     registerSignalOutputForJit(EqualityControl, 'valueChange', 'value');
     @Component({
-      template: `<equality-form-node-state [formNode]="profile.name" />`,
+      template: `<equality-control-state [formNode]="profile.name" />`,
       imports: [EqualityControl, FormNodeDirective],
     })
     class Host {
@@ -2182,8 +2182,8 @@ describe('FormNodeDirective in Chromium', () => {
     const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
-    expect(valueControl.formNodeState.source()).toBe('formNode');
-    expect(valueControl.formNodeState.required()).toBe(true);
+    expect(valueControl.controlState.source()).toBe('formNode');
+    expect(valueControl.controlState.required()).toBe(true);
     expect(valueControl.requiredState()).toBe(true);
     expect(valueControl.stateChanges.some(changes => changes['requiredState']?.currentValue === true)).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
@@ -2203,7 +2203,7 @@ describe('FormNodeDirective in Chromium', () => {
     fixture.componentInstance.name.disable();
     fixture.detectChanges();
     expect(valueControl.disabled()).toBe(true);
-    expect(valueControl.formNodeState.disabled()).toBe(true);
+    expect(valueControl.controlState.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
     fixture.destroy();
   });

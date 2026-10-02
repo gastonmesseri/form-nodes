@@ -50,7 +50,7 @@ export type FormNodesConfig = {
    * Rebinding applies the new selection; inputs no longer selected retain their last values.
    *
    * Selected writes may replace component defaults and explicit template bindings. CVA value and
-   * disabled-state integration remain independent. Use {@link useFormNodeState} for state observation.
+   * disabled-state integration remain independent. Use {@link useControlState} for state observation.
    *
    * ```ts
    * provideFormNodesConfig({
@@ -260,7 +260,7 @@ export const provideFormNodesConfig = (config: {
    * Rebinding applies the new selection; inputs no longer selected retain their last values.
    *
    * Selected writes may replace component defaults and explicit template bindings. CVA value and
-   * disabled-state integration remain independent. Use {@link useFormNodeState} for state observation.
+   * disabled-state integration remain independent. Use {@link useControlState} for state observation.
    *
    * ```ts
    * provideFormNodesConfig({

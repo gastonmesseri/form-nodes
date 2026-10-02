@@ -79,7 +79,7 @@ visibility, and error-query behavior.
 it is not an error object. Pending asynchronous work and existing errors must be considered
 according to the node's aggregation rules.
 
-For controls observing Angular and Form Nodes bindings through [`useFormNodeState()`](./form-node-state.md), use
+For controls observing Angular and Form Nodes bindings through [`useControlState()`](./control-state.md), use
 [`ControlStateError`](./types/control-state-error.md). For translated or configured messages, use
 [`ValidatorMessages`](./types/validator-messages.md) and
 [`ValidatorMessageParameters`](./types/validator-message-parameters.md).
@@ -98,4 +98,4 @@ No arguments, `{}`, and `{ descendants: false }` all select own errors. The opti
 
 Every error preserves its original `targetNode`. Own reads retain the concrete node type; subtree reads use [`AnyNode`](./types/any-node.md), whose collision-safe API is accessed through `targetNode.$api`. Fields have no descendants, so both queries return the same errors. Disabled descendants, asynchronous validation, and dynamic child changes follow the existing `allErrors()` behavior.
 
-The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.$api.errors`; binding and `useFormNodeState()` error signals retain their own signatures.
+The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.$api.errors`; binding and `useControlState()` error signals retain their own signatures.

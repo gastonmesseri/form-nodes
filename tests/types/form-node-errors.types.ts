@@ -1,9 +1,9 @@
 import type { InputSignal, Signal } from '@angular/core';
 
 import type { Equal, Expect } from './assert.types';
-import { FormNodeErrors, useFormNodeState, type ClosestFormState, type ControlStateError, type FormNodeErrorsContext } from '../../src/public-api';
+import { FormNodeErrors, useControlState, type ClosestFormState, type ControlStateError, type FormNodeErrorsContext } from '../../src/public-api';
 
-const state = useFormNodeState<string>();
+const state = useControlState<string>();
 type _FormState = Expect<Equal<typeof state.form, ClosestFormState>>;
 const submitted: Signal<boolean> = state.formSubmitted;
 type _FormSubmitted = Expect<Equal<typeof state.formSubmitted, Signal<boolean>>>;

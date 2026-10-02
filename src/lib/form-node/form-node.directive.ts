@@ -11,8 +11,8 @@ import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
+import { registerControlStateBinding } from '../control-state/adapters/form-node';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
-import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
 import type { FormNodeBinding, FormNodeSubmitEvent } from '../types/form-node-binding.type';
 import type { InternalNode, InternalNodeApi, AnyNode, NodeValue } from '../types/node.type';
@@ -234,7 +234,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
 
   private bindingInjectorCleanups = new Set<() => void>();
 
-  private formNodeStateCleanup: (() => void) | undefined;
+  private controlStateCleanup: (() => void) | undefined;
 
   private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
 
@@ -302,7 +302,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     this.destroyRef.onDestroy(() => {
       this.stopModelChange?.();
       this.customEvents = undefined;
-      this.formNodeStateCleanup?.();
+      this.controlStateCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
       this.bindingInjectorCleanups.clear();
     });
@@ -364,7 +364,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     this.customEvents = connection.customEvents;
     this.resetControl = connection.reset;
     this.focuser = connection.focus ?? this.focuser;
-    this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
+    this.controlStateCleanup = registerControlStateBinding(this.element, this);
     syncNativeControlState(context, connection.inputNames);
     this.registerControlBinding();
     this.warnWhenHidden();

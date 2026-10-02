@@ -8,7 +8,7 @@ import customInputsSource from '!!raw-loader!../../examples/custom-control-input
 import pairedControlSource from '!!raw-loader!../../examples/paired-control-inputs.typecheck.ts';
 import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inputs.typecheck.ts';
 import selectedInputsSource from '!!raw-loader!../../examples/selected-control-inputs.typecheck.ts';
-import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
+import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
 import customEventOrderSource from '!!raw-loader!../../examples/custom-control-event-order.typecheck.ts';
 
 # Custom controls {#custom-controls}
@@ -29,21 +29,21 @@ experimental input synchronization. The integration has two separate responsibil
 
 | Component design | Value and state integration |
 | --- | --- |
-| `value = model()` with [`useFormNodeState()`](../reference/form-node-state.md) | Value binding and full access to the bound Form Nodes state without experimental input writes. The component renders the state itself. |
+| `value = model()` with [`useControlState()`](../reference/control-state.md) | Value binding and full access to the bound Form Nodes state without experimental input writes. The component renders the state itself. |
 | `value = model()` with state/constraint `input()` properties | Value binding works by default. Automatically populating those inputs requires experimental `syncInputs`; use `'all'` for every supported input. |
 | `ControlValueAccessor` / `NG_VALUE_ACCESSOR` | Values, change/touch callbacks, and `setDisabledState()` use the normal CVA contract, independently of `syncInputs`. |
 
 **Full automatic `FormValueControl` input synchronization is experimental; using the
 `FormValueControl` value contract is not.** Merely implementing the interface does not enable
-input writes. A component designed around `useFormNodeState()` can use the bound node's state,
+input writes. A component designed around `useControlState()` can use the bound node's state,
 constraints, errors, and interaction operations without enabling them.
 
 This complete example implements `FormValueControl<string>` with `value = model('')` and reads
-state through `useFormNodeState()`. It applies disabled, readonly, required, and minimum length
+state through `useControlState()`. It applies disabled, readonly, required, and minimum length
 to its native input, renders validation messages, and reports blur. The parent explicitly keeps
 `syncInputs` off, including when a surrounding provider enables it:
 
-<CodeBlock language="ts" title="Text input and profile editor">{formNodeStateSource}</CodeBlock>
+<CodeBlock language="ts" title="Text input and profile editor">{controlStateSource}</CodeBlock>
 
 `[formNode]` discovers the value model automatically. Detection requires a declared signal input
 and matching change output that refer to the same model property. Public aliases are supported,
@@ -52,11 +52,11 @@ value model and is left untouched. Updating `value` from the component
 sends the user's input to the field; updating the field updates the component. No custom
 provider, base class, or Form Nodes interface is required.
 
-**`useFormNodeState()` supports `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`,
+**`useControlState()` supports `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`,
 and `[(ngModel)]`: implement state UI once for every supported binding.** Keep the value contract
-required by the caller's forms API. See [source-specific state support](../reference/form-node-state.md).
+required by the caller's forms API. See [source-specific state support](../reference/control-state.md).
 
-`useFormNodeState()` reads state; it does not apply attributes to the DOM or populate the
+`useControlState()` reads state; it does not apply attributes to the DOM or populate the
 component's own `disabled = input()` properties. An existing control that reads those properties
 must adopt the hook in its implementation, receive explicit bindings, or opt into experimental
 synchronization. Focus and reset integration still use the optional `focus()` and `reset()` hooks.
@@ -64,8 +64,8 @@ synchronization. Focus and reset integration still use the optional `focus()` an
 The component has three responsibilities:
 
 - Render the model value and update it when the user edits the control.
-- Apply the state it needs, such as `formNodeState.disabled()`, to its interactive element.
-- Call `formNodeState.markAsTouched()` when the user leaves the control.
+- Apply the state it needs, such as `controlState.disabled()`, to its interactive element.
+- Call `controlState.markAsTouched()` when the user leaves the control.
 
 Initialize the value model with a default, such as `model('')`, instead of `model.required()`.
 The bound field supplies its value during setup. For a checkbox-style component, expose
@@ -163,7 +163,7 @@ object and array values, optional state inputs and hooks, wrapper components, An
 ## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Build a custom rating control](../cookbook/custom-rating-control.md) shows a button-based control.
-- [`useFormNodeState()`](../reference/form-node-state.md) documents the available state signals.
+- [`useControlState()`](../reference/control-state.md) documents the available state signals.
 - [Control binding](./control-binding.md) covers native elements and shared binding behavior.
 - [Advanced custom controls](./custom-controls-advanced.md) documents the full compatibility contract.
 
@@ -267,27 +267,27 @@ replace testing Safari on the devices your application supports.
 
 ## Report errors from inside a control
 
-Use `useFormNodeState({ errors: () => ... })` when the component knows that its current input
+Use `useControlState({ errors: () => ... })` when the component knows that its current input
 cannot be interpreted, such as invalid date text. Return one `{ kind }` error, a message, an array,
 or `null`/`undefined`/`void` for success. The callback is reactive and contributes to the bound
 control's actual validity without replacing its configured validators.
 
-See [component error contributions](../reference/form-node-state.md#contribute-errors) for a complete
+See [component error contributions](../reference/control-state.md#contribute-errors) for a complete
 CVA example, lifecycle behavior, and the `provideFormNodeStateErrors()` provider required for CVAs
 used with Angular 22 Signal Forms.
 
 ## Standalone use {#standalone-use}
 
 Bind an independent `field()` with `[formNode]` when the control does not belong to a larger
-form. `useFormNodeState()` and its error contributions observe that field in the same way as a
+form. `useControlState()` and its error contributions observe that field in the same way as a
 form child. See [Independent fields](./control-binding.md#standalone-values) for an example.
 The same controls also support the [`[formNodeValue]` input](../reference/form-node-binding.md#value-input);
-`useFormNodeState()` then observes the independent field created by the binding.
+`useControlState()` then observes the independent field created by the binding.
 
 ## Built-in error presentation {#built-in-error-presentation}
 
 Place `FormNodeErrors` beneath the input inside your custom control and pass the full
-`useFormNodeState()` result through `[state]`. The parent continues to bind the custom control
+`useControlState()` result through `[state]`. The parent continues to bind the custom control
 with `[formNode]` and declares its validators on the field.
 
 This complete example uses a signal-model control. The comments identify suggested application
@@ -304,7 +304,7 @@ decorative icon. It is discovered automatically; `let-messages="messages"` also 
 visible message list when you want to render several messages yourself.
 
 For an existing CVA, keep its normal change and touch callbacks and use the same
-`state = useFormNodeState()` / `<form-node-errors [state]="state">` combination. The helper also
+`state = useControlState()` / `<form-node-errors [state]="state">` combination. The helper also
 includes the `state.formSubmitted()` shortcut and the optional `state.form.formNode()` API; the error
 component already uses submission history, so no extra visibility condition is needed.
 

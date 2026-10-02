@@ -18,7 +18,7 @@ component definition or input-signal node. There are two independent opt-ins:
 Both options exist on nodes, factory defaults, providers, and global configuration and inherit
 independently. Null/false disables an option. Ordinary CVA methods and model operations do not use
 these input writers. A component implementing FormValueControl or FormCheckboxControl can combine
-its model with useFormNodeState() to render state without populating component input properties.
+its model with useControlState() to render state without populating component input properties.
 Node operations such as markAsTouched() continue working regardless of input synchronization.
 
 Supported optional input names are disabled, disabledReasons, readonly, hidden, dirty, touched,
@@ -32,5 +32,5 @@ Angular API if one becomes available for writing inputs on an existing host comp
 
 Private lookup/write failures return false without interrupting the rest of the binding. Warn once
 per control and input when a recognized write fails, explaining the possibly stale value. Recommend
-useFormNodeState() for state reads unless already in use; CVA is an alternative for value/disabled
+useControlState() for state reads unless already in use; CVA is an alternative for value/disabled
 interoperability. Consumer-authored input transform exceptions are not suppressed.
