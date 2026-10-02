@@ -316,3 +316,9 @@ oneOf(undefined);
 // @ts-expect-error Constraint arguments remain strict.
 oneOf(() => null);
 oneOf(() => undefined);
+
+minLength(3, { allowEmptyString: true });
+minLength(3, { allowEmptyString: false, message: 'Too short' });
+minLength(3, { allowEmptyString: false, error: { kind: 'short' } });
+// @ts-expect-error Empty-string behavior is a boolean option.
+minLength(3, { allowEmptyString: 'false' });

@@ -8,6 +8,7 @@ import CodeBlock from '@theme/CodeBlock';
 import minimumSource from '!!raw-loader!../../../examples/min-length.example.ts';
 import optionalSource from '!!raw-loader!../../../examples/min-length-optional.example.ts';
 import reactiveSource from '!!raw-loader!../../../examples/min-length-reactive.example.ts';
+import emptyValuesSource from '!!raw-loader!../../../examples/min-length-empty-values.example.ts';
 
 ## 🧭 API map {#api-map}
 
@@ -32,33 +33,51 @@ where supported, return `undefined` to disable the constraint temporarily.
 
 ## 📖 Usage and behavior {#usage-and-behavior}
 
-Requires a numeric `length` or `size` to meet a minimum, including zero-length values:
+Requires a numeric `length` or `size` to meet a minimum, with optional empty text by default:
 
 <CodeBlock language="ts" title="min-length.example.ts">{minimumSource}</CodeBlock>
 
 It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`.
-`null` and `undefined` pass; empty strings and collections have length zero and fail a positive
-minimum. `minLength(0)` permits empty values. Whitespace is counted without trimming.
+`null`, `undefined`, and empty strings pass by default. Empty collections have length zero and
+fail a positive minimum. `minLength(0)` permits empty collections. Whitespace counts without trimming.
 Explicitly undefined-valued fields such as `field<string>(undefined, [minLength(3)])` are also supported.
 
 A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes
 to `minLength()` metadata, but does not mark the node as `required`.
 
-:::info Difference from Angular forms
-Angular Reactive Forms and Signal Forms v22.1.6 skip empty strings in `minLength`.
-Form Nodes measures them, consistently with empty collections. Add [`required`](./required.md)
-to reject nullish values too. An empty string with both validators produces both error kinds.
-See the [migration guide](../../project/migrations.md#minimum-length-empty-text).
+:::info Empty strings pass; empty arrays must meet the minimum
+With `minLength(3)`, **`''` is valid**, but **`[]` is invalid**. An empty string skips the
+length check by default; an empty array is measured as zero items. Nonempty strings such as
+`'a'` must meet the minimum and are invalid when shorter than three characters.
+
+<CodeBlock language="ts" title="min-length-empty-values.example.ts">{emptyValuesSource}</CodeBlock>
+
+This follows Angular Signal Forms. Reactive Forms also allows `''`, but additionally skips
+empty collections.
+Add [`required`](./required.md) to reject empty text and nullish values; an empty string then
+produces only the `required` error with the default options.
 :::
 
 ### Optional empty text {#optional-empty-text}
 
-To allow either an empty string or a string meeting the minimum, make that exception explicit:
+An empty string passes without a condition, while populated text must meet the minimum:
 
 <CodeBlock language="ts" title="min-length-optional.example.ts">{optionalSource}</CodeBlock>
 
-While `when` is false, the rule contributes neither an error nor minimum-length metadata.
-This also removes this rule's contribution to the native `minlength` constraint on bound controls.
+The configured minimum remains in `minLength()` metadata and on bound controls, even for `''`.
+A false `when` condition instead removes both the errors and the rule's constraint metadata.
+
+### Validate empty strings {#validate-empty-strings}
+
+Set `allowEmptyString: false` to measure `''` as zero, retaining the previous behavior:
+
+```ts
+minLength(3, { allowEmptyString: false })
+```
+
+`allowEmptyString` is a static boolean, defaults to `true`, and only affects empty strings.
+Nullish values still pass, and empty collections still fail a positive minimum in either mode.
+With `allowEmptyString: false`, combining `required` and `minLength` produces both errors for `''`.
 
 ## 💬 Message configuration {#message-configuration}
 
@@ -75,8 +94,8 @@ provider, process-wide, and built-in message fallbacks. See
 
 ## ⚡ Reactive behavior {#reactive-behavior}
 
-The minimum may be a signal or a zero-argument function. Changes revalidate even an empty string;
-returning `undefined` disables the constraint:
+The minimum may be a signal or a zero-argument function. Changes update its metadata even while
+the string is empty; populated strings revalidate. Returning `undefined` disables the constraint:
 
 <CodeBlock language="ts" title="min-length-reactive.example.ts">{reactiveSource}</CodeBlock>
 

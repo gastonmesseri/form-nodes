@@ -11,9 +11,9 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  * Requires a present value's numeric `length` or `size` to meet a minimum.
  *
  * This supports strings, arrays, sets, maps, and other values with a numeric `length` or `size`.
- * `null` and `undefined` pass so this validator can be composed with `required`. Empty strings and
- * collections have length zero and fail a positive minimum. Unlike Angular's `minLength`,
- * this validator does not skip empty strings; use `when` to explicitly allow optional empty text.
+ * Empty strings, `null`, and `undefined` pass so this validator can be composed with `required`.
+ * Empty collections have length zero and fail a positive minimum, matching Angular Signal Forms.
+ * Set `allowEmptyString: false` to measure empty strings as zero too.
  * A reactive constraint may return `undefined` to disable itself temporarily.
  * A failure produces `{ kind: 'minLength', minLength, actual, message }`, where `actual` is the
  * observed length or size.
@@ -23,6 +23,20 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  *   value: field('ab', [minLength(3)]),
  * });
  * profile.value.invalid(); // true
+ * ```
+ *
+ * Empty strings are optional by default, but empty arrays must meet the minimum:
+ *
+ * ```ts
+ * const profile = form({
+ *   name: field('', [minLength(3)]),
+ *   tags: field<string[]>([], [minLength(3)]),
+ * });
+ * profile.name.valid(); // true
+ * profile.tags.valid(); // false
+ * profile.tags.hasError('minLength'); // true
+ * profile.name.set('a');
+ * profile.name.valid(); // false
  * ```
  *
  * ```ts
@@ -46,7 +60,7 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  *
  * @reactive Tracks signals read by the minimum and message sources while they are active.
  * @param minimum Static minimum length or size, or a reactive function returning it.
- * @param options Optional static message string, or an object containing a static or reactive message.
+ * @param options Custom message or options for empty text, a condition, message, or replacement error.
  */
 export const minLength = (
   minimum: number | (() => number | undefined),
@@ -135,6 +149,29 @@ export const minLength = (
     error?: ValidationResult | ((context: ValidatorContext<ValueWithLengthOrSize | null | undefined>) => ValidationResult);
   }) & {
     /**
+     * Allows empty strings to pass the minimum-length check. Collections are still measured.
+     * Set to false to measure empty text as zero; null and undefined still pass.
+     *
+     * **Default:** `true`.
+     *
+     * **Accepted values:**
+     *
+     * - `true`: Skip the minimum for empty strings.
+     * - `false`: Apply the minimum to empty strings too.
+     *
+     * ```ts
+     * const profile = form({
+     *   name: field('', [
+     *     minLength(3, {
+     *       allowEmptyString: false,
+     *     }),
+     *   ]),
+     * });
+     * profile.name.invalid(); // true
+     * ```
+     */
+    allowEmptyString?: boolean;
+    /**
      * Enables the validator and its constraint metadata only while the condition is true.
      * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
      * Parameterless callbacks support class self-references with unchecked returns; return
@@ -159,9 +196,10 @@ export const minLength = (
   },
 ): Validator<ValueWithLengthOrSize | null | undefined> => {
   const message = resolveValidatorMessageOption(options);
+  const allowEmptyString = typeof options === 'string' || options?.allowEmptyString !== false;
   const validator: Validator<ValueWithLengthOrSize | null | undefined> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
-    if (isNil(currentValue)) return null;
+    if (isNil(currentValue) || allowEmptyString && currentValue === '') return null;
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue);

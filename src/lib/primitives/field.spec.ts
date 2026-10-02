@@ -467,8 +467,51 @@ describe('minimum length for empty strings', () => {
     expect(optional.invalid()).toBe(true);
   });
 
+  it.each([
+    ['minLength', (minimum: () => number | undefined, error: () => { kind: string }) => minLength(minimum, { error })],
+    ['lengthBetween', (minimum: () => number | undefined, error: () => { kind: string }) => lengthBetween(minimum, 10, { error })],
+  ] as const)('%s allows empty text while tracking constraints and validating populated text', (_label, createValidator) => {
+    const minimum = signal<number | undefined>(3);
+    const error = vi.fn(() => ({ kind: 'short' }));
+    const name = field.nullable<string>(undefined, [createValidator(minimum, error)]);
+    expect(name.valid()).toBe(true);
+    name.set('');
+    expect(name.valid()).toBe(true);
+    expect(name.minLength()).toBe(3);
+    expect(name.required()).toBe(false);
+    expect(name.pending()).toBe(false);
+    expect(name.pristine()).toBe(true);
+    expect(name.untouched()).toBe(true);
+    expect(error).not.toHaveBeenCalled();
+    minimum.set(4);
+    expect(name.minLength()).toBe(4);
+    expect(name.errors()).toEqual([]);
+    name.set('a');
+    expect(name.errors()).toMatchObject([{ kind: 'short' }]);
+    expect(error).toHaveBeenCalledTimes(1);
+    minimum.set(1);
+    expect(name.valid()).toBe(true);
+    name.set('');
+    name.markAsDirty();
+    name.markAsTouched();
+    name.reset();
+    expect(name()).toBe('');
+    expect(name.valid()).toBe(true);
+    expect(name.pristine()).toBe(true);
+    expect(name.untouched()).toBe(true);
+    minimum.set(undefined);
+    expect(name.minLength()).toBeNull();
+    expect(name.valid()).toBe(true);
+    name.reset(null);
+    expect(name.valid()).toBe(true);
+    name.resetToInitial();
+    expect(name()).toBeUndefined();
+    expect(name.valid()).toBe(true);
+    expect(error).toHaveBeenCalledTimes(1);
+  });
+
   it('validates empty text while retaining nullish absence through edits and resets', () => {
-    const name = field.nullable<string>(undefined, [minLength(1)]);
+    const name = field.nullable<string>(undefined, [minLength(1, { allowEmptyString: false })]);
     expect(name()).toBeUndefined();
     expect(name.valid()).toBe(true);
     expect(name.required()).toBe(false);
@@ -503,7 +546,7 @@ describe('minimum length for empty strings', () => {
     const minimum = signal<number | undefined>(1);
     const active = signal(true);
     const message = signal('Enter a name');
-    const name = field('', [minLength(minimum, { when: active, message })]);
+    const name = field('', [minLength(minimum, { when: active, message, allowEmptyString: false })]);
     expect(name.getError('minLength')?.message).toBe('Enter a name');
     message.set('Name is too short');
     expect(name.getError('minLength')?.message).toBe('Name is too short');
@@ -531,9 +574,9 @@ describe('minimum length for empty strings', () => {
   });
 
   it('supports optional empty text and reports presence and length errors independently', () => {
-    const optional = field('', [minLength(3, { when: ({ value }) => value() !== '' })]);
+    const optional = field('', [minLength(3)]);
     expect(optional.valid()).toBe(true);
-    expect(optional.minLength()).toBeNull();
+    expect(optional.minLength()).toBe(3);
     optional.set('ab');
     expect(optional.hasError('minLength')).toBe(true);
     expect(optional.minLength()).toBe(3);
@@ -543,7 +586,7 @@ describe('minimum length for empty strings', () => {
     expect(optional.valid()).toBe(true);
 
     const mandatory = field.nullable('', [required, minLength(1)]);
-    expect(mandatory.errors().map(error => error.kind)).toEqual(['required', 'minLength']);
+    expect(mandatory.errors().map(error => error.kind)).toEqual(['required']);
     mandatory.set(' ');
     expect(mandatory.valid()).toBe(true);
     mandatory.set(null);
@@ -4513,7 +4556,7 @@ describe('field lengthBetween', () => {
     name.enable();
     expect(name.hasError('maxLength')).toBe(true);
     name.reset('');
-    expect(name.errors()).toMatchObject([{ kind: 'minLength', actual: 0 }]);
+    expect(name.errors()).toEqual([]);
     expect(name.pristine()).toBe(true);
     expect(name.untouched()).toBe(true);
     name.resetToInitial();

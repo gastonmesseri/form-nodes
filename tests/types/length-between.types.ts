@@ -41,3 +41,9 @@ lengthBetween('1', 5);
 lengthBetween(1, 5, { message: 'Length', error: { kind: 'length' } });
 // @ts-expect-error Context-taking predicates must return a boolean.
 lengthBetween(1, 5, { when: ({ value }) => value() });
+
+lengthBetween(3, 5, { allowEmptyString: true });
+lengthBetween(3, 5, { allowEmptyString: false, message: 'Too short' });
+lengthBetween(3, 5, { allowEmptyString: false, error: { kind: 'short' } });
+// @ts-expect-error Empty-string behavior is a boolean option.
+lengthBetween(3, 5, { allowEmptyString: 'false' });

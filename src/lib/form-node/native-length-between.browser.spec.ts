@@ -46,6 +46,15 @@ describe('native lengthBetween', () => {
     expect(host.profile.name.hasError('minLength')).toBe(true);
     expect(input.getAttribute('aria-invalid')).toBe('true');
 
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(host.profile.valid()).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('false');
+    expect(input.minLength).toBe(2);
+    expect(input.maxLength).toBe(5);
+
     host.minimum.set(undefined);
     host.maximum.set(3);
     fixture.detectChanges();

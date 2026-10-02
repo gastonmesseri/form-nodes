@@ -1667,8 +1667,8 @@ const age = field<number>(null, {
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
 | `uniqueItems(keySelector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
-| `minLength(limit)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values; measures empty strings and collections as zero | `{ kind: 'minLength', minLength, actual, message }` |
-| `lengthBetween(minimum, maximum)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values; empty text and collections fail a positive minimum | Existing `minLength` and/or `maxLength` errors |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values and empty strings by default; measures empty collections as zero | `{ kind: 'minLength', minLength, actual, message }` |
+| `lengthBetween(minimum, maximum)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values and empty strings by default; empty collections fail a positive minimum | Existing `minLength` and/or `maxLength` errors |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
@@ -2025,26 +2025,32 @@ These validators deliberately use a small internal Unicode tokenizer instead of 
 
 The required collection-emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Form Nodes intentionally accepts `false` for presence, using `requiredTrue` for acceptance.
 
-`minLength` measures a present value's `length` or `size`, including zero. Empty strings and
-collections fail a positive minimum; `minLength(0)` allows them. Nullish values pass and whitespace
-is counted without trimming. This deliberately differs from Angular Signal Forms **v22.1.6**
-(commit `356adf749188d996a641181c56621a6285126f3c`, latest stable Angular 22 checked on 2026-09-14):
-`packages/forms/signals/src/api/rules/validation/min_length.ts` skips empty strings via `isEmpty`,
-and `signals/test/node/api/validators/min_length.spec.ts` explicitly tests that exemption.
-Reactive Forms also skips empty strings and additionally skips empty arrays/Sets.
+`minLength` skips nullish values and empty strings by default. Empty collections still have
+length zero and fail a positive minimum; `minLength(0)` allows them. Whitespace counts without
+trimming. Set `allowEmptyString: false` to measure empty strings as zero too; nullish values
+still pass. This option is a static boolean and does not affect collection validation or required state.
 
-Use `minLength(3, { when: ({ value }) => value() !== '' })` to explicitly allow optional empty text.
-The inactive rule removes its errors and constraint metadata. Reactive minimums, conditions, and
-messages continue tracking dependencies while the current string is empty. A minimum returning
-`undefined` disables the rule; the validator contributes minimum-length metadata, never required
-metadata. Combining `required` and a positive `minLength` produces both errors for `''`.
+The default matches Angular Signal Forms **22.2.x**, commit
+`7a5fc0c20777ea2e3eb3dcc49ec2bd7328e9569c` (latest Angular 22 maintenance branch checked on
+2026-10-02). Inspected `packages/forms/signals/src/api/rules/validation/min_length.ts` and
+`util.ts`, and `packages/forms/signals/test/node/api/validators/min_length.spec.ts`.
+The validator skips values accepted by `isEmpty`, which includes `''` but not arrays. The tests
+explicitly check empty-string success and short-array failure; empty-array failure follows from
+the implementation's length comparison. Reactive Forms also skips empty arrays/Sets, so the
+collection semantics intentionally follow Signal Forms instead.
 
-Nullable fields can start valid with `null` but become invalid when a native text control is cleared
-to `''`. The resulting error propagates to ancestor validity and blocks the default submission gate.
-Value writes do not themselves mark a node dirty or touched. Debounced drafts are validated when
-committed; reset discards them. `reset()` preserves an empty committed value and its length error,
-while `resetToInitial()` validates the restored initial value. Disabled, readonly, and hidden nodes
-continue suppressing validation. These changes do not alter collection or `maxLength` behavior.
+Empty-string success retains minimum-length metadata, including reactive limit changes. A minimum
+returning `undefined` removes that constraint. Error and message callbacks run only on failure;
+empty text does not trigger them by default. A false `when` removes both errors and metadata.
+Combining `required` and a positive `minLength` produces only `required` for `''` by default,
+or both errors with `allowEmptyString: false`.
+
+Clearing a native text control to `''` remains valid by default, without adding required state.
+Nonempty text below the minimum and empty collections invalidate ancestors and block the default
+submission gate. Value writes do not themselves mark a node dirty or touched. Debounced drafts
+are validated on commit; reset discards them. `reset()` preserves the committed value and
+revalidates it, while `resetToInitial()` validates the restored initial value. Disabled, readonly,
+and hidden nodes suppress validation. No asynchronous validation lifecycle is changed.
 
 Numeric, length, date, and pattern constraints can be static values or zero-argument functions:
 
@@ -4852,7 +4858,8 @@ suspension of `between` and `dateBetween`. Bounds are not reordered, rounded, or
 bounds can produce both errors, with minimum first. Numeric length takes precedence over size.
 String length uses UTF-16 code units without trimming, matching the separate length validators.
 
-Nullish values pass. Empty strings and collections measure as zero for the minimum. The upper
+Nullish values and empty strings pass by default. `allowEmptyString: false` measures empty text
+as zero for the minimum; empty collections are always measured. The upper
 constraint retains `maxLength`'s empty-string exemption, including for negative maximums; empty
 collections are still checked. No required metadata is added. Active bounds contribute MIN_LENGTH
 and MAX_LENGTH metadata, exposed through field minLength()/maxLength() and the existing control
@@ -4872,9 +4879,10 @@ Inspected `packages/forms/signals/src/api/rules/validation/min_length.ts`, `max_
 `packages/forms/signals/test/node/api/validators/min_length.spec.ts`, `max_length.spec.ts`.
 These establish inclusive length/size checks, independent undefined constraints, conditional
 metadata, custom errors/messages, and strongest-bound metadata merging. Their empty-string tests
-confirm Angular skips empty text. Form Nodes intentionally keeps its existing positive-minimum
-rejection for empty strings. The combined factory and existing Form Nodes error shapes are library
-API decisions. Tests cover the intentional difference, both constraints, and parent propagation.
+confirm Angular skips empty text. The default now follows that behavior, rechecked against
+22.2.x commit `7a5fc0c20777ea2e3eb3dcc49ec2bd7328e9569c` as recorded above.
+The `allowEmptyString: false` option, combined factory, and existing Form Nodes error shapes are
+library API decisions. Tests cover both empty-string modes, both constraints, and parent propagation.
 
 
 ## Array patch replacement

@@ -6,7 +6,17 @@ title: Migration guides
 
 import CodeBlock from '@theme/CodeBlock';
 import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
-import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
+
+## Upcoming minor release: optional empty text {#optional-empty-text-default}
+
+`minLength` and `lengthBetween` now accept `''` by default, matching Angular Signal Forms.
+Empty arrays and other collections still fail a positive minimum. The maintainer has chosen
+to ship this default change in a minor release.
+
+To retain empty-string length errors, pass `{ allowEmptyString: false }` to either validator.
+Alternatively, use `required` when empty text and nullish values should be rejected; with the
+default length options, an empty string now produces only the `required` error. Minimum-length
+metadata remains available on empty text. Existing `when` conditions remain supported.
 
 ## Moving to 5.0.0 {#version-5}
 
@@ -60,6 +70,9 @@ for conversion examples.
 
 ## Moving to 4.0.0: minimum length checks empty text {#minimum-length-empty-text}
 
+This section describes the historical 4.0.0 change. The [upcoming minor release](#optional-empty-text-default)
+restores optional empty strings by default.
+
 **Breaking:** `minLength(n)` now measures an empty string as length zero, just like an empty
 collection. With a positive minimum, `''` produces a `minLength` error with `actual: 0`.
 `minLength(0)` still allows `''`; `null` and `undefined` still pass.
@@ -68,7 +81,9 @@ Previously, empty strings bypassed this validator, as they do in Angular Reactiv
 Signal Forms v22.1.6. Optional text fields initialized or cleared to `''` can now make a form
 invalid and block its submission. Preserve the previous empty-or-long-enough behavior with `when`:
 
-<CodeBlock language="ts" title="min-length-optional.example.ts">{optionalMinimumSource}</CodeBlock>
+```ts
+minLength(3, { when: ({ value }) => value() !== '' })
+```
 
 The condition also removes the rule's constraint metadata while empty. Required text fields
 can keep `[required, minLength(n)]`; they remain invalid when empty, but now expose both

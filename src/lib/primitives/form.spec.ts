@@ -468,10 +468,53 @@ describe('self-referencing form state', () => {
 });
 
 describe('minimum length propagation', () => {
+  it.each([
+    ['minLength', () => minLength(3)],
+    ['lengthBetween', () => lengthBetween(3, 5)],
+  ] as const)('%s accepts cleared text but rejects empty arrays through nested forms and submission', async (_label, createValidator) => {
+    const save = vi.fn();
+    const profile = form({
+      details: form({
+        name: field('', [createValidator()]),
+        tags: field<string[]>([], [createValidator()]),
+        rows: array(field(''), { validators: createValidator() }),
+      }),
+    }, { onSubmit: save });
+    expect(profile.details.name.valid()).toBe(true);
+    expect(profile.details.tags.getError('minLength')).toMatchObject({ actual: 0 });
+    expect(profile.details.rows.getError('minLength')).toMatchObject({ actual: 0 });
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(await profile.submit()).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    profile.details.tags.set(['a', 'b', 'c']);
+    profile.details.rows.set(['a', 'b', 'c']);
+    expect(profile.valid()).toBe(true);
+    expect(await profile.submit()).toBe(true);
+    expect(save).toHaveBeenCalledOnce();
+    profile.details.name.set('a');
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'minLength', actual: 1 }]);
+    profile.details.name.set('');
+    expect(profile.valid()).toBe(true);
+    expect(profile.pending()).toBe(false);
+    expect(profile.allErrors()).toEqual([]);
+    profile.reset();
+    expect(profile.details.name()).toBe('');
+    expect(profile.valid()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    profile.resetToInitial();
+    expect(profile.details.tags()).toEqual([]);
+    expect(profile.details.rows()).toEqual([]);
+    expect(profile.details.name.valid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+  });
+
   it('propagates empty-string errors through nested forms and submission', async () => {
     const save = vi.fn();
     const profile = form({
-      details: form({ name: field<string>(null, [minLength(1)]) }),
+      details: form({ name: field<string>(null, [minLength(1, { allowEmptyString: false })]) }),
     }, { onSubmit: save });
     expect(profile.valid()).toBe(true);
     const name = profile.details.name;
@@ -511,7 +554,7 @@ describe('minimum length propagation', () => {
   });
 
   it('discards pending empty text on reset and validates it when committed', () => {
-    const profile = form({ details: { name: field('Ada', [minLength(1)], { debounce: 'blur' }) } });
+    const profile = form({ details: { name: field('Ada', [minLength(1, { allowEmptyString: false })], { debounce: 'blur' }) } });
     const name = profile.details.name;
     name.value.control.set('');
     expect(name()).toBe('Ada');
@@ -7212,14 +7255,14 @@ describe('form lengthBetween', () => {
     expect(profile.valid()).toBe(true);
     members.clear();
     username.value.control.set('');
-    expect(profile.allErrors().map(error => error.kind)).toEqual(['minLength', 'minLength']);
+    expect(profile.allErrors().map(error => error.kind)).toEqual(['minLength']);
     expect(profile.dirty()).toBe(true);
     profile.markAsTouched();
     expect(username.touched()).toBe(true);
     profile.disable();
     expect(profile.allErrors()).toEqual([]);
     profile.enable();
-    expect(profile.allErrors()).toHaveLength(2);
+    expect(profile.allErrors()).toHaveLength(1);
     profile.resetToInitial();
     expect(profile()).toEqual({ details: { username: 'ab', members: [{ name: 'Ada' }] } });
     expect(profile.valid()).toBe(true);

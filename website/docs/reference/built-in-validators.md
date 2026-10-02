@@ -241,11 +241,11 @@ const myForm = form({
 });
 ```
 
-It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`. `null` and `undefined` pass; empty strings and collections have length zero and fail a positive minimum. A reactive minimum returning `undefined` disables the constraint. A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes to `minLength()` metadata without marking the node as required.
+It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`. `null`, `undefined`, and empty strings pass by default; empty collections have length zero and fail a positive minimum. Set `allowEmptyString: false` to measure empty strings too. A reactive minimum returning `undefined` disables the constraint. A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes to `minLength()` metadata without marking the node as required.
 
-Unlike Angular Reactive Forms and Signal Forms v22.1.6, empty strings are measured. Use
-[`when` for optional empty text](./validators/min-length.md#optional-empty-text), or combine with
-`required` to also reject nullish values. An empty string then produces both error kinds.
+The default follows Signal Forms for strings and collections. Combine with `required` to reject
+empty text and nullish values; empty strings then produce only `required` unless
+[`allowEmptyString: false`](./validators/min-length.md#validate-empty-strings) is configured.
 
 ## ✅ maxLength {#maxlength}
 
@@ -274,8 +274,8 @@ lengthBetween(() => minimumLength(), () => maximumLength())
 lengthBetween(1, 5, 'Use between one and five characters.')
 ```
 
-It supports the same values as `minLength`, including nullish values, which pass. Empty strings
-and collections fail a positive minimum. Failures retain the `minLength` or `maxLength` kind,
+It supports the same values as `minLength`, including nullish values and empty strings, which pass by default. Empty
+collections fail a positive minimum. Set `allowEmptyString: false` to measure empty strings too. Failures retain the `minLength` or `maxLength` kind,
 parameters, and message fallbacks. Each bound contributes its corresponding constraint metadata;
 returning `undefined` or `NaN` disables only that bound. A false `when` disables both bounds.
 See [lengthBetween()](./validators/length-between.md) for executable form and array examples,

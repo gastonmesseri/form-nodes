@@ -20,7 +20,7 @@ lengthBetween(minimum, maximum, options)
 ```
 
 Each bound accepts `number | (() => number | undefined)`. Options support `message`, `error`,
-and `when`, with the same contracts as other [built-in validators](../built-in-validators.md).
+`when`, and `allowEmptyString`. Shared options use the same contracts as other [built-in validators](../built-in-validators.md).
 `message` and `error` are mutually exclusive.
 
 ## Text and collections
@@ -31,12 +31,12 @@ Strings, arrays, sets, maps, and other values with numeric `length` or `size` ar
 When both properties exist, numeric `length` takes precedence. Strings use JavaScript's UTF-16
 length, including whitespace, without trimming or counting grapheme clusters.
 
-`null` and `undefined` pass. Empty strings and collections have length zero and fail a positive
-minimum. Add `required` to reject nullish values too. As with `maxLength`, the upper bound skips
-empty strings, even for a negative maximum; empty collections are measured normally.
-
-This follows Form Nodes' `minLength` behavior: Angular Signal Forms v22.1.6 skips empty strings
-for minimum-length validation, while Form Nodes measures them.
+`null`, `undefined`, and empty strings pass by default. Empty collections have length zero and
+fail a positive minimum. Add `required` to reject empty text and nullish values.
+Set `allowEmptyString: false` to apply the minimum to empty strings too; its default is `true`.
+As with `maxLength`, the upper bound always skips empty strings, even for a negative maximum.
+Empty collections are measured normally. The defaults follow Angular Signal Forms' separate
+length validators.
 
 A short value produces `{ kind: 'minLength', minLength, actual, message }`; a long value produces
 `{ kind: 'maxLength', maxLength, actual, message }`. `actual` is the observed length or size.
@@ -53,11 +53,8 @@ minimum-then-maximum order. This preserves the behavior of declaring the two rul
 Each bound is independent: `undefined` or `NaN` disables only that bound and its metadata.
 Unlike `between()` and `dateBetween()`, an unavailable bound does not disable the whole range.
 
-Use `when` to turn both bounds off together, or explicitly allow optional empty text:
-
-```ts
-lengthBetween(3, 20, { when: ({ value }) => value() !== '' })
-```
+Use `when` to turn both bounds off together. Empty text passes by default while retaining
+constraint metadata; a false `when` removes both validation and metadata.
 
 Active bounds contribute minimum- and maximum-length metadata. Fields expose these through
 `minLength()` and `maxLength()`, and bound controls receive the corresponding constraints.

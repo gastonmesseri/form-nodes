@@ -11,8 +11,8 @@ const profile = form({
 });
 
 profile.username(); // ''
-profile.username.getError('minLength')?.actual; // 0
-if (!profile.username.hasError('minLength')) throw new Error('Empty text must fail a positive minimum.');
+profile.username.valid(); // true
+if (!profile.username.valid()) throw new Error('Empty text must remain optional.');
 
 profile.username.set('Ada');
 profile.valid(); // true

@@ -16,7 +16,14 @@ describe('minLength', () => {
     expect(minLength(3, { message: 'Too short' })(context('ab'))).toMatchObject({ message: 'Too short' });
     expect(minLength(3)(context('abc'))).toBeNull();
     expect(minLength(1)(context(new Set()))).toMatchObject({ kind: 'minLength', minLength: 1 });
-    expect(minLength(3)(context(''))).toMatchObject({ kind: 'minLength', minLength: 3, actual: 0 });
+    expect(minLength(3)(context(''))).toBeNull();
+    expect(minLength(3, { allowEmptyString: false })(context(''))).toMatchObject({ kind: 'minLength', minLength: 3, actual: 0 });
+    expect(minLength(3, { allowEmptyString: true })(context(''))).toBeNull();
+    expect(minLength(3, 'Too short')(context(''))).toBeNull();
+    expect(minLength(3, { allowEmptyString: false })(context(null))).toBeNull();
+    expect(minLength(0, { allowEmptyString: false })(context(''))).toBeNull();
+    expect(minLength(3)(context([]))).toMatchObject({ kind: 'minLength', actual: 0 });
+    expect(minLength(3, { allowEmptyString: true })(context(new Map()))).toMatchObject({ kind: 'minLength', actual: 0 });
     expect(minLength(0)(context(''))).toBeNull();
     expect(minLength(1)(context(null))).toBeNull();
     expect(minLength(1)(context(undefined))).toBeNull();

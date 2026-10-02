@@ -11,7 +11,8 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext, 
  * Combines inclusive minimum and maximum length constraints in one validator.
  *
  * Supports strings, arrays, sets, maps, and values with numeric `length` or `size`.
- * Nullish values pass; empty strings and collections fail a positive minimum.
+ * Nullish values and empty strings pass; empty collections fail a positive minimum.
+ * Set `allowEmptyString: false` to apply the minimum to empty strings too.
  * Like `maxLength`, the upper constraint skips empty strings. Each reactive limit may return
  * `undefined` to disable only that limit. Bounds are not reordered or rounded.
  * Failures retain the `minLength` and `maxLength` error kinds, parameters, and message fallbacks.
@@ -50,7 +51,7 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext, 
  * @reactive Tracks signals read by active limits, conditions, and failing message or error sources.
  * @param minimum Static inclusive minimum length or size, or a reactive function returning it.
  * @param maximum Static inclusive maximum length or size, or a reactive function returning it.
- * @param options Custom message or options for a reactive condition, message, or replacement error.
+ * @param options Custom message or options for empty text, a condition, message, or replacement error.
  */
 export const lengthBetween = (
   minimum: number | (() => number | undefined),
@@ -140,6 +141,29 @@ export const lengthBetween = (
     error?: ValidationResult | ((context: ValidatorContext<ValueWithLengthOrSize | null | undefined>) => ValidationResult);
   }) & {
     /**
+     * Allows empty strings to pass the minimum-length check. Collections are still measured.
+     * Set to false to measure empty text as zero; null and undefined still pass.
+     *
+     * **Default:** `true`.
+     *
+     * **Accepted values:**
+     *
+     * - `true`: Skip the minimum for empty strings.
+     * - `false`: Apply the minimum to empty strings too.
+     *
+     * ```ts
+     * const profile = form({
+     *   name: field('', [
+     *     lengthBetween(3, 20, {
+     *       allowEmptyString: false,
+     *     }),
+     *   ]),
+     * });
+     * profile.name.invalid(); // true
+     * ```
+     */
+    allowEmptyString?: boolean;
+    /**
      * Enables the validator and its constraint metadata only while the condition is true.
      * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
      * Parameterless callbacks support class self-references with unchecked returns; return
@@ -166,9 +190,10 @@ export const lengthBetween = (
   },
 ): Validator<ValueWithLengthOrSize | null | undefined> => {
   const message = resolveValidatorMessageOption(options);
+  const allowEmptyString = typeof options === 'string' || options?.allowEmptyString !== false;
   const validator: Validator<ValueWithLengthOrSize | null | undefined> = ({ value }) => {
     const currentValue = value();
-    if (isNil(currentValue)) return null;
+    if (isNil(currentValue) || allowEmptyString && currentValue === '') return null;
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     const actual = getLengthOrSize(currentValue);

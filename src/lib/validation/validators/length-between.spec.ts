@@ -21,6 +21,15 @@ describe('lengthBetween', () => {
     expect(combined.required()).toBe(false);
   });
 
+  it('can measure empty text without changing nullish or collection handling', () => {
+    expect(field('', [lengthBetween(3, 5, { allowEmptyString: true })]).valid()).toBe(true);
+    expect(field('', [lengthBetween(3, 5, 'Too short')]).valid()).toBe(true);
+    expect(field('', [lengthBetween(3, 5, { allowEmptyString: false })]).getError('minLength')).toMatchObject({ actual: 0 });
+    expect(field('', [lengthBetween(0, -1, { allowEmptyString: false })]).valid()).toBe(true);
+    expect(field(null, [lengthBetween(3, 5, { allowEmptyString: false })]).valid()).toBe(true);
+    expect(field([], [lengthBetween(3, 5, { allowEmptyString: true })]).hasError('minLength')).toBe(true);
+  });
+
   it('preserves both failures for reversed bounds and maxLength empty-text semantics', () => {
     const node = field('abc', [lengthBetween(5, 1)]);
     expect(node.errors()).toMatchObject([

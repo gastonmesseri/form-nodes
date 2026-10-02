@@ -2,11 +2,11 @@ import { field, form, minLength } from '@ngblocks/form-nodes';
 
 const profile = form({
   nickname: field('', [
-    minLength(3, { when: ({ value }) => value() !== '' }),
+    minLength(3),
   ]),
 });
 
-profile.nickname.valid(); // true: an empty nickname is explicitly allowed
+profile.nickname.valid(); // true: empty text is allowed by default
 if (!profile.valid()) throw new Error('An optional empty nickname must be valid.');
 
 profile.nickname.set('Al');
@@ -18,7 +18,7 @@ profile.nickname.valid(); // true
 if (!profile.valid()) throw new Error('A sufficiently long nickname must be valid.');
 
 profile.nickname.set('');
-profile.nickname.minLength(); // null: the inactive rule also removes its constraint metadata
-if (!profile.valid() || profile.nickname.minLength() !== null) {
-  throw new Error('Clearing an optional nickname must deactivate its length rule.');
+profile.nickname.minLength(); // 3: the constraint remains configured
+if (!profile.valid() || profile.nickname.minLength() !== 3) {
+  throw new Error('Clearing an optional nickname must preserve its constraint without an error.');
 }
