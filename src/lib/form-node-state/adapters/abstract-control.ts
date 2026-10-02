@@ -97,6 +97,10 @@ export const injectAbstractControlStateAdapter = <TValue>(
     disabled: computed(() => currentControl().disabled),
     disabledReasons: computed(() => []),
     dirty: computed(() => currentControl().dirty),
+    hasValidators: computed(() => {
+      const current = currentControl();
+      return current.validator !== null || current.asyncValidator !== null;
+    }),
     errors: computed(() => {
       return Object.entries(currentControl().errors ?? {}).map(([kind, details]) => {
         return details && typeof details === 'object' ? { ...details, kind } : details === true ? { kind } : { kind, value: details };

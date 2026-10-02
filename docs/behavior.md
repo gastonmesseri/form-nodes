@@ -3881,6 +3881,33 @@ packages/forms/signals/src/api/control.ts, and packages/forms/signals/test/node/
 Reactive Forms, template-driven forms, asynchronous completion, rebinding, and disconnection.
 
 
+### Validator presence on the common control-state facade
+
+`useFormNodeState().hasValidators` is a readonly `Signal<boolean | undefined>`. A configured
+`errors` callback on this hook establishes presence immediately, even without a binding or while
+returning nullish/empty results. Otherwise Form Nodes reads the normalized own `validators()` list,
+and Reactive Forms/ngModel check the public `validator` and `asyncValidator` functions. Angular
+validator directives and registered error bridges count. An unbound hook without `errors` returns
+false; Signal Forms without that callback returns undefined rather than asserting absence.
+
+Presence is independent of errors, pending status, disabled/readonly/hidden state, or conditional
+rule activation. It does not resolve compositions, execute callback bodies, traverse ancestors or
+descendants, or infer registration from manual errors. Configured compositions count even when
+they return an empty list. The query reuses existing node signals and Angular event/render
+snapshots for reactive changes; Angular callers still use updateValueAndValidity() after changing
+validators. Rebinding tracks the new control. Detachment/destruction removes binding-derived
+presence while a locally configured callback continues to count. The query does not alter values,
+validation execution, interaction state, async cancellation, reset, submission, or error ownership.
+
+Angular reference: 22.2.x, commit `7a5fc0c20777ea2e3eb3dcc49ec2bd7328e9569c`, latest maintenance
+branch checked on 2026-10-02. Inspected `packages/forms/src/model/abstract_model.ts` (public
+validator/asyncValidator getters), `packages/forms/test/form_control_spec.ts` (assignment, clearing,
+and sync/async reference queries), `packages/forms/signals/src/api/types.ts` (FieldState),
+`signals/src/api/rules/validation/validate.ts`, and `signals/test/node/api/metadata.spec.ts`.
+Signal Forms publishes constraints and opt-in metadata, not a complete registration inventory;
+custom validators can return success without contributing discoverable constraint metadata.
+Counting this hook's configured error callback is a library API decision, not an Angular heuristic.
+
 ### Validator queries on the common control-state facade
 
 `useFormNodeState().hasValidator(validator: unknown, options?: { resolve?: boolean })` returns boolean or undefined. The exact

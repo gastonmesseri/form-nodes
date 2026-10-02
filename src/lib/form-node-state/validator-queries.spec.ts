@@ -307,3 +307,111 @@ it.each(['formControl', 'formControlName', 'ngModel'] as const)('memoizes normal
   expect(result()).toBe(false);
   expect(read).toHaveBeenCalledTimes(2);
 });
+
+describe('hasValidators', () => {
+  it('returns false without a binding, including after destruction', () => {
+    const fixture = TestBed.createComponent(ValidatorControl);
+    expect(fixture.componentInstance.state.hasValidators()).toBe(false);
+    fixture.destroy();
+    expect(fixture.componentInstance.state.hasValidators()).toBe(false);
+  });
+
+  it('returns undefined for Signal Forms even when a known rule is active', async () => {
+    const { fixture, render, component } = await bind('formField');
+    expect(component.state.hasValidators()).toBeUndefined();
+    fixture.componentInstance.required.set(true);
+    await render();
+    expect(component.state.required()).toBe(true);
+    expect(component.state.hasValidators()).toBeUndefined();
+    fixture.destroy();
+    expect(component.state.hasValidators()).toBe(false);
+  });
+
+  it.each(['field', 'form', 'nested form'] as const)('tracks own registrations on a %s without running validators or counting descendants', async (kind) => {
+    const { fixture, render, component } = await bind('formNode');
+    const profile = form({ name: field('', required), nested: form({ name: field('', required) }) });
+    const node = kind === 'field' ? field('Ada') : kind === 'form' ? profile : profile.nested;
+    fixture.componentInstance.node.set(node);
+    await render();
+    expect(component.state.hasValidators()).toBe(false);
+    const composed = vi.fn(() => []);
+    const remote = vi.fn(async () => null);
+    const asyncRule = asyncValidator(remote);
+    node.$api.disable();
+    node.$api.setValidators([composed, asyncRule]);
+    expect(component.state.hasValidators()).toBe(true);
+    expect(composed).not.toHaveBeenCalled();
+    expect(remote).not.toHaveBeenCalled();
+    expect(component.state.errors()).toEqual([]);
+    node.$api.reset();
+    expect(component.state.hasValidators()).toBe(true);
+    node.$api.setValidators(asyncRule);
+    expect(component.state.hasValidators()).toBe(true);
+    expect(remote).not.toHaveBeenCalled();
+    node.$api.setValidators([]);
+    expect(component.state.hasValidators()).toBe(false);
+    node.$api.setValidators(requiredIf(() => false));
+    node.$api.enable();
+    expect(component.state.hasValidators()).toBe(true);
+    expect(node.$api.errors()).toEqual([]);
+    fixture.componentInstance.node.set(field('Replacement'));
+    await render();
+    expect(component.state.hasValidators()).toBe(false);
+    node.$api.setValidators(required);
+    expect(component.state.hasValidators()).toBe(false);
+    fixture.destroy();
+    expect(component.state.hasValidators()).toBe(false);
+  });
+
+  it.each(['formControl', 'formControlName', 'ngModel'] as const)('tracks sync and async registrations on %s independently of errors', async (source) => {
+    const { fixture, render, component, control } = await bind(source);
+    // The inactive required directive still registers a validator.
+    expect(component.state.hasValidators()).toBe(true);
+    expect(component.state.required()).toBe(false);
+    control!.clearValidators();
+    control!.updateValueAndValidity();
+    expect(component.state.hasValidators()).toBe(false);
+    control!.setErrors({ manual: true });
+    expect(component.state.invalid()).toBe(true);
+    expect(component.state.hasValidators()).toBe(false);
+    control!.setErrors(null);
+    const validate = vi.fn(() => null);
+    control!.addValidators(validate);
+    control!.updateValueAndValidity();
+    const calls = validate.mock.calls.length;
+    expect(component.state.hasValidators()).toBe(true);
+    expect(component.state.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(calls);
+    control!.disable();
+    expect(component.state.hasValidators()).toBe(true);
+    control!.clearValidators();
+    control!.updateValueAndValidity({ emitEvent: false });
+    await render();
+    expect(component.state.hasValidators()).toBe(false);
+    const remote = vi.fn(async () => null);
+    control!.addAsyncValidators(remote);
+    await render();
+    expect(component.state.hasValidators()).toBe(true);
+    expect(remote).not.toHaveBeenCalled();
+    control!.clearAsyncValidators();
+    await render();
+    expect(component.state.hasValidators()).toBe(false);
+    fixture.destroy();
+    expect(component.state.hasValidators()).toBe(false);
+  });
+
+  it('follows replacement of an Angular control', async () => {
+    const { fixture, render, component, control } = await bind('formControl');
+    control!.clearValidators();
+    control!.updateValueAndValidity();
+    expect(component.state.hasValidators()).toBe(false);
+    fixture.componentInstance.control = new FormControl('Replacement', Validators.required);
+    await render();
+    expect(component.state.hasValidators()).toBe(true);
+    control!.updateValueAndValidity();
+    expect(component.state.hasValidators()).toBe(true);
+    fixture.componentInstance.control.clearValidators();
+    fixture.componentInstance.control.updateValueAndValidity();
+    expect(component.state.hasValidators()).toBe(false);
+  });
+});

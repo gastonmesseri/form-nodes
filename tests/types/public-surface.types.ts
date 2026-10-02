@@ -1,4 +1,4 @@
-import type { Provider, OutputRef } from '@angular/core';
+import type { Signal, Provider, OutputRef } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 import { FormNodeDirective, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
@@ -141,3 +141,9 @@ name.resetToInitial();
 nameBinding.node().resetToInitial();
 // @ts-expect-error resetToInitial always restores captured defaults and accepts no replacement value
 name.resetToInitial('replacement');
+
+const hasValidatorsResult = injectedControlState.hasValidators();
+type _StateHasValidators = Expect<Equal<typeof hasValidatorsResult, boolean | undefined>>;
+type _StateHasValidatorsSignal = Expect<Equal<typeof injectedControlState.hasValidators, Signal<boolean | undefined>>>;
+// @ts-expect-error Validator presence is a readonly signal.
+injectedControlState.hasValidators.set(true);

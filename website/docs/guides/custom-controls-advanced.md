@@ -158,6 +158,11 @@ whose callers use different Angular forms APIs; no manual state adapter selectio
 Use `hasError(kind)` and `getError(kind)` to query the same normalized errors across those bindings.
 The latter returns the first full error object or `undefined`; names are preserved, including
 Angular `minlength` versus Form Nodes `minLength`.
+Use [`hasValidators()`](../reference/form-node-state.md#hasvalidators) to detect registered
+validation independently of current errors. A configured `useFormNodeState({ errors })` callback
+also counts, even when empty or unbound. Without that callback, unbound controls return `false`
+and Signal Forms bindings return `undefined` because validator presence is unknown.
+
 `hasValidator(required)` and `hasValidator(Validators.required)` both query the active required
 state. Other functions use direct registration identity for Form Nodes and Angular AbstractControl
 bindings; Angular Signal Forms returns `undefined` for unsupported reference queries.

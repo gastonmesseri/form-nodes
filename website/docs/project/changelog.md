@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Add `useFormNodeState().hasValidators()`, a reactive signal reporting registered synchronous/asynchronous validators or a configured local `errors` callback, independently of current errors and disabled state. Unbound controls return false unless they configure `errors`; Signal Forms returns undefined when no local callback establishes validation presence.
+
 ## 📦 5.7.0 — 2026-10-02 {#570--2026-10-02}
 
 ### Changed

@@ -179,6 +179,7 @@ it.each(['formControl', 'formControlName', 'ngModel'] as const)('contributes ind
   control.issue.set({ kind: 'invalidDate', message: 'Invalid date' });
   control.otherIssue.set({ kind: 'other' });
   fixture.detectChanges();
+  expect(control.state.hasValidators()).toBe(true);
   expect(control.state.hasError('invalidDate')).toBe(true);
   expect(control.state.hasError('required')).toBe(true);
   expect(control.state.invalid()).toBe(true);
@@ -222,6 +223,7 @@ it('does not evaluate disconnected error sources', () => {
   fixture.componentInstance.issue.set('Invalid');
   fixture.detectChanges();
   expect(fixture.componentInstance.evaluate).not.toHaveBeenCalled();
+  expect(fixture.componentInstance.state.hasValidators()).toBe(true);
   expect(fixture.componentInstance.state.errors()).toEqual([]);
   expect(fixture.componentInstance.state.invalid()).toBe(false);
 });
@@ -285,10 +287,12 @@ it('uses the public CVA validator bridge with Angular Signal Forms or reports it
   control.issue.set({ kind: 'invalidDate' });
   fixture.detectChanges();
   expect(fixture.componentInstance.first().invalid()).toBe(true);
+  expect(control.state.hasValidators()).toBe(true);
   expect(control.state.hasError('invalidDate')).toBe(true);
   control.issue.set(null);
   fixture.detectChanges();
   expect(fixture.componentInstance.first().valid()).toBe(true);
+  expect(control.state.hasValidators()).toBe(true);
   control.otherIssue.set('Persistent local error');
   fixture.detectChanges();
   expect(fixture.componentInstance.first().invalid()).toBe(true);
@@ -337,4 +341,36 @@ it('propagates invalid input with an unchanged null value, blocks submission, an
   expect(profile.dirty()).toBe(false);
   expect(await profile.submit()).toBe(true);
   expect(submit).toHaveBeenCalledTimes(1);
+});
+
+it.each(['field', 'form', 'unbound'] as const)('counts a configured error callback on %s while empty, failing, disabled, and disconnected', async (kind) => {
+  @Component({
+    template: kind === 'unbound' ? '<error-control />' : '<error-control [formNode]="node" />',
+    imports: [ErrorControl, FormNodeDirective],
+  })
+  class Host {
+    node = kind === 'form' ? form({ name: field('Ada') }) : field('Ada');
+  }
+  const fixture = TestBed.createComponent(Host);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  const control = fixture.debugElement.children[0]!.componentInstance as ErrorControl;
+  expect(fixture.componentInstance.node.$api.validators()).toEqual([]);
+  expect(control.state.hasValidators()).toBe(true);
+  expect(control.state.errors()).toEqual([]);
+  const calls = control.evaluate.mock.calls.length;
+  expect(control.state.hasValidators()).toBe(true);
+  expect(control.evaluate).toHaveBeenCalledTimes(calls);
+  for (const issue of [{ kind: 'local' }, null, []]) {
+    control.issue.set(issue);
+    fixture.detectChanges();
+    expect(control.state.hasValidators()).toBe(true);
+  }
+  fixture.componentInstance.node.$api.disable();
+  fixture.detectChanges();
+  expect(control.state.hasValidators()).toBe(true);
+  expect(control.state.errors()).toEqual([]);
+  fixture.destroy();
+  expect(control.state.connected()).toBe(false);
+  expect(control.state.hasValidators()).toBe(true);
 });

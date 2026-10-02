@@ -43,6 +43,7 @@ type ControlState<TValue = unknown> = {
     readonly touched: Signal<boolean>;
     hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
     getError(kind: keyof ValidationErrorMap | (string & {})): ControlStateError | undefined;
+    readonly hasValidators: Signal<boolean | undefined>;
     hasValidator(validator: unknown, options?: {
         resolve?: boolean;
     }): boolean | undefined;
@@ -85,6 +86,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `touched` | Whether the user has interacted with and left the bound control. |
 | `hasError` | Whether the current normalized error list contains an exact, case-sensitive kind. Suggests registered error kinds while accepting any custom string. Returns false when absent or disconnected, regardless of an error payload's truthiness. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
 | `getError` | Returns the first normalized error with an exact, case-sensitive kind, or undefined when absent or disconnected. Returns the same object as errors(), including kind and details. Suggests registered error kinds while accepting any custom string. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
+| `hasValidators` | Whether the bound control has registered validators or this hook configures an errors callback. True even when the value is valid, the control is disabled, or a registered rule's condition is false. Does not execute validator bodies, resolve compositions, or inspect ancestors or descendants. Form Nodes reads its normalized configured list; Angular controls expose their composed validator functions, including registered validator directives and error bridges. |
 | `hasValidator` | Queries a known rule or a validator function reference on the active binding. The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic queries: both return required(), including conditional rules, requiredTrue obligations, and active own required errors. Other functions use direct registration identity: Form Nodes checks its configured validators; Reactive Forms and ngModel check synchronous and asynchronous validator references. Angular Signal Forms cannot answer arbitrary reference queries and returns undefined. |
 | `markAsTouched` | Marks the bound control touched. Does nothing when no supported binding is connected. |
 

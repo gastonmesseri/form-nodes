@@ -561,6 +561,36 @@ export type ControlState<TValue = unknown> = {
    */
   getError(kind: keyof ValidationErrorMap | (string & {})): ControlStateError | undefined;
   /**
+   * Whether the bound control has registered validators or this hook configures an errors callback.
+   * True even when the value is valid, the control is disabled, or a registered rule's condition
+   * is false. Does not execute validator bodies, resolve compositions, or inspect ancestors or
+   * descendants. Form Nodes reads its normalized configured list; Angular controls expose their
+   * composed validator functions, including registered validator directives and error bridges.
+   *
+   * An errors callback counts even when it returns null or an empty array, including without a
+   * binding. Without a binding or callback, returns false. Angular Signal Forms returns undefined
+   * without this hook's callback because its public API cannot enumerate validators.
+   * False means absence is known, not merely that errors are empty. Angular control events update the signal; silent registration changes
+   * are reconciled after rendering. Call updateValueAndValidity() after changing Angular rules.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: `
+   *     @if (state.hasValidators() === true) {
+   *       <span>Validation configured</span>
+   *     }
+   *   `,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   * }
+   * ```
+   */
+  readonly hasValidators: Signal<boolean | undefined>;
+  /**
    * Queries a known rule or a validator function reference on the active binding.
    * The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic
    * queries: both return required(), including conditional rules, requiredTrue obligations, and active own required errors.
@@ -735,6 +765,11 @@ export const useFormNodeState = <TValue = unknown>(options?: FormNodeStateOption
     disabledReasons: computed(() => active()?.disabledReasons() ?? []),
     dirty: computed(() => active()?.dirty() ?? false),
     errors,
+    hasValidators: computed(() => {
+      if (evaluateErrors) return true;
+      const adapter = active();
+      return adapter ? adapter.hasValidators?.() : false;
+    }),
     hidden: computed(() => active()?.hidden() ?? false),
     invalid: computed(() => active()?.invalid() ?? false),
     max: computed(() => active()?.max()),

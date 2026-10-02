@@ -51,6 +51,11 @@ export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, 
     disabled: computed(() => node().$api.disabled()),
     disabledReasons: computed(() => node().$api.disabledReasons().map(({ message }) => message === undefined ? {} : { message })),
     dirty: computed(() => node().$api.dirty()),
+    hasValidators: computed(() => {
+      const api = node().$api;
+      const validators = (api as typeof api & { validators: Signal<readonly unknown[]> }).validators;
+      return validators().length > 0;
+    }),
     errors: computed(() => binding()!.errors().map(error => ({ ...error, kind: error.kind }))),
     hidden: computed(() => node().$api.hidden()),
     invalid: computed(() => node().$api.invalid()),

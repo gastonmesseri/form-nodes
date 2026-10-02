@@ -105,6 +105,7 @@ No provider or adapter selection is required.
 | Mirror UI state | `disabled()`, `readonly()`, `hidden()`, `required()` | [Interaction and availability properties](#interaction-and-availability-properties) |
 | Apply native constraints | `min()`, `max()`, lengths, `pattern()` | [Constraint properties](#constraint-properties) |
 | Check or inspect an error | `hasError(kind)`, `getError(kind)` | [Error queries](#haserrorkind) |
+| Detect configured validation | `hasValidators()` | [Validator presence](#hasvalidators) |
 | Inspect a validator or known rule | `hasValidator(validator)` | [Validator queries](#hasvalidatorvalidator) |
 | Report blur interaction | `markAsTouched()` | [Method reference](#method-reference) |
 | Understand source selection | Adapter priority | [Selection and lifecycle](#selection-and-lifecycle) |
@@ -115,7 +116,7 @@ No provider or adapter selection is required.
 useFormNodeState<TValue = unknown>(options?: FormNodeStateOptions): ControlState<TValue>;
 ```
 
-The hook has no arguments or configuration object. `TValue` affects only the type returned by
+The optional configuration supplies component-owned error contributions. `TValue` affects only the type returned by
 `value()`; it does not select an adapter or change runtime behavior.
 
 ```ts
@@ -596,6 +597,39 @@ all five supported bindings the same query semantics.
 Queries follow control replacement and disconnection. Angular control events update them normally;
 silent Angular changes are reconciled after rendering, just like `errors()`. See the
 [complete custom-control example](#constraint-properties) for template use with error details.
+
+### ◆ hasValidators() {#hasvalidators}
+
+**Signature:** `hasValidators: Signal<boolean | undefined>`
+
+Reports whether validation is configured, independently of whether the value currently has errors.
+It includes synchronous and asynchronous validators registered directly on the bound control, plus
+an `errors` callback configured through this hook. The callback counts even when it returns `null`,
+`undefined`, or `[]`, and even without a binding. Reading the signal does not execute validator or
+error callbacks, resolve compositions, or scan parent or child controls.
+
+| Binding | Without this hook's `errors` callback | With this hook's `errors` callback |
+| --- | --- | --- |
+| `[formNode]` | `true` if the node's configured validator list is nonempty; otherwise `false` | `true` |
+| `[formControl]`, `[formControlName]`, `[(ngModel)]` | `true` if Angular exposes a synchronous or asynchronous validator function; otherwise `false` | `true` |
+| `[formField]` | `undefined`: Angular does not expose a complete validator inventory | `true` |
+| No binding | `false` | `true` |
+
+:::info Presence is independent of validation results
+A disabled control or a registered rule with `when: false` still has validation configured.
+A registered composition counts even when it currently returns no rules. Angular validator
+directives and registered error bridges also count, including an inactive `[required]` directive.
+Manually assigned errors alone do not establish validator registration.
+:::
+
+Use `state.hasValidators() === true` for known presence, `=== false` for known absence, and
+`=== undefined` for unknown. Avoid converting `undefined` into `false` when the distinction matters.
+The signal follows rebinding and validator replacement. Angular events update it immediately;
+silent registration changes are reconciled after rendering. Call `updateValueAndValidity()` after
+changing Angular validators as usual. On disconnection, only this hook's configured `errors`
+callback continues to count. Error contribution lifecycle and validation execution are unchanged.
+
+<CodeBlock language="ts" title="control-validator-state.ts">{validatorQueriesSource}</CodeBlock>
 
 ### ◆ hasValidator(validator) {#hasvalidatorvalidator}
 
