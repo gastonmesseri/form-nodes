@@ -87,7 +87,7 @@ npm run test:browser
 After that command prepares the shared browser fixtures, focused reruns are:
 
 ```sh
-npx vitest run --config vitest.browser.config.ts src/lib/form-node/ui-libraries.browser.spec.ts src/lib/form-node/ui-selects.browser.spec.ts
+npx vitest run --config vitest.browser.config.ts src/lib/form-node/tests/ui-libraries.browser.spec.ts src/lib/form-node/tests/ui-selects.browser.spec.ts
 ```
 
 The browser Vite configuration prebundles all imported UI entry points to avoid dependency

@@ -32,9 +32,9 @@ Nodes integration contracts rather than Angular Signal Forms APIs.
 | --- | --- | --- |
 | Core | [`sync-query-params.spec.ts`](../../src/lib/router/sync-query-params.spec.ts) | Existing deterministic navigation, ownership, signal/node, and error scenarios. |
 | Serializers | [`query-param-serializer.spec.ts`](../../src/lib/router/query-param-serializer.spec.ts) | Scalar, repeated-array, JSON, malformed-input, and serializer contracts. |
-| Adapted | [`sync-query-params.upstream.spec.ts`](../../src/lib/router/sync-query-params.upstream.spec.ts) | Added cross-library regressions, shared field/signal matrix, and generated Unicode round trips. |
-| Browser | [`sync-query-params.browser.spec.ts`](../../src/lib/router/sync-query-params.browser.spec.ts) | Existing real Router, guard, redirect, history, array/JSON, and mixed-source integration. |
-| Adapted browser | [`sync-query-params.upstream.browser.spec.ts`](../../src/lib/router/sync-query-params.upstream.browser.spec.ts) | Added history traversal, conditional components, late debounce completion, and model signal integration. |
+| Adapted | [`sync-query-params.upstream.spec.ts`](../../src/lib/router/tests/sync-query-params.upstream.spec.ts) | Added cross-library regressions, shared field/signal matrix, and generated Unicode round trips. |
+| Browser | [`sync-query-params.browser.spec.ts`](../../src/lib/router/tests/sync-query-params.browser.spec.ts) | Existing real Router, guard, redirect, history, array/JSON, and mixed-source integration. |
+| Adapted browser | [`sync-query-params.upstream.browser.spec.ts`](../../src/lib/router/tests/sync-query-params.upstream.browser.spec.ts) | Added history traversal, conditional components, late debounce completion, and model signal integration. |
 | Primitives | [`field.spec.ts`](../../src/lib/primitives/field.spec.ts), [`form.spec.ts`](../../src/lib/primitives/form.spec.ts) | Public state, interaction, validation, and nested control-debounce transitions. |
 
 The additions comprise **34 helper tests, 4 primitive tests, and 7 Chromium tests**. The helper
@@ -122,7 +122,7 @@ matrix. Angular 22 source inspection is distinct from executing these tests on A
 The focused command is:
 
 ```sh
-npx vitest run src/lib/router/sync-query-params.upstream.spec.ts src/lib/router/sync-query-params.spec.ts src/lib/router/query-param-serializer.spec.ts src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts
+npx vitest run src/lib/router/tests/sync-query-params.upstream.spec.ts src/lib/router/sync-query-params.spec.ts src/lib/router/query-param-serializer.spec.ts src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts
 ```
 
 It discovers five files and **739 tests**. The adapted Chromium file discovers **7 tests**.

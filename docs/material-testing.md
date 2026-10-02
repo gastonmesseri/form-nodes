@@ -50,7 +50,7 @@ asserted against the pinned installed controls.
 After `npm run test:browser` has prepared its fixtures, a focused rerun is:
 
 ```sh
-npx vitest run --config vitest.browser.config.ts src/lib/form-node/material-*.browser.spec.ts
+npx vitest run --config vitest.browser.config.ts src/lib/form-node/tests/material-*.browser.spec.ts
 ```
 
 ## Additional interaction and composition coverage

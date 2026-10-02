@@ -51,6 +51,8 @@
 
 ## Public API testing
 
+- Keep a test beside its implementation only when its filename exactly replaces `.ts` with `.spec.ts` (for example, `control-state.ts` and `control-state.spec.ts`). Place supplemental, integration, browser, server, and variant suites in the owning directory's `tests/` subdirectory.
+
 - When removing or renaming an API, remove or update its obsolete tests instead of adding tests whose sole purpose is proving that the retired API no longer exists. This includes runtime absence assertions, negative export checks, and `@ts-expect-error` assertions for retired names, properties, signatures, or options. Test the supported replacement and its observable behavior instead. Keep negative tests that enforce current contracts, such as invalid input types, readonly state, node-kind restrictions, and private implementation boundaries.
 - Treat `field()` and `form()` as the library's primary public API and maintain comprehensive behavioral coverage in `field.spec.ts` and `form.spec.ts`.
 - Test public behavior through these primitives even when the underlying utility, validator runner, marker, watcher, or state helper already has focused unit tests of its own.

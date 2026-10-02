@@ -12,6 +12,12 @@ Organize implementation code by responsibility directly under `src/lib/`:
 | `types/` | Contracts shared across features. Keep feature-specific types with their feature. |
 | `utils/` | General helpers and infrastructure shared across features. |
 
+Keep a test beside its implementation only when its filename exactly replaces `.ts` with
+`.spec.ts`, such as `control-state.ts` and `control-state.spec.ts`. Put supplemental, integration,
+browser, server, and variant suites in the owning directory's `tests/` subdirectory. Preserve
+`.browser.spec.ts` and `.production-aot.spec.ts` suffixes so the existing Vitest configurations
+continue to discover the appropriate suites.
+
 `src/public-api.ts` defines the package exports. Internal modules use direct relative imports.
 
 `primitives/field.ts` owns the public field overloads, nullability shortcuts, and the distinction

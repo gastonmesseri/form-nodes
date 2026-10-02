@@ -43,13 +43,13 @@ The public export surface and implementation are authoritative when older prose 
 | Stable array reconciliation and reordering | [Array primitive](../../src/lib/primitives/array.ts), [reorderable arrays cookbook](../../website/docs/cookbook/reorderable-arrays.md) | #90 is accessible UI orchestration around existing operations. |
 | Returned submission errors, gates and stale-result protection | [Behavior specification](../behavior.md), [form tests](../../src/lib/primitives/form.spec.ts) | #9 is a path adapter; #19 and #22 extend submission lifecycle. |
 | CVA errors, flexible single/array/nullish validation results and state observation | [Form node state](../../src/lib/control-state/control-state.ts), [error contributions](../../src/lib/control-state/control-errors.ts) | #23 extends independent application error ownership; it does not introduce CVA validation. |
-| Standalone value binding and optional explicit nodes | [Directive](../../src/lib/form-node/form-node.directive.ts), [standalone binding tests](../../src/lib/form-node/form-node-value.spec.ts) | No proposal to add standalone or one-way binding. |
+| Standalone value binding and optional explicit nodes | [Directive](../../src/lib/form-node/form-node.directive.ts), [standalone binding tests](../../src/lib/form-node/tests/form-node-value.spec.ts) | No proposal to add standalone or one-way binding. |
 | onValueChange, factories, global/scoped defaults and message catalogs | [Exports](../../src/public-api.ts), [messages](../../src/lib/validation/validator-messages.ts) | Autosave/calculations are productized composition; locale packs add translations, not localization infrastructure. |
 | Native numeric/date parsing, parse errors and custom control adapters | [Native value adapter](../../src/lib/form-node/adapters/native-control/native-control-value.ts), [control adapter contract](../../src/lib/form-node/adapters/control-adapter.ts) | #5 generalizes conversion; specialized widgets remain optional adapters. |
 | Conditional hidden/disabled/readonly state, focus and error aggregation | [Node contract](../../src/lib/types/node.type.ts), [behavior](../behavior.md) | Declarative rules and error navigation add a layer over existing state. |
 | Multi-step and server-data editing recipes | [Multi-step cookbook](../../website/docs/cookbook/multi-step-form.md), [server-data cookbook](../../website/docs/cookbook/edit-server-data.md) | #13 and #20 package existing recipes and address their orchestration gaps. |
 
-The baseline review ran `npx vitest run src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts src/lib/form-node/form-node-value.spec.ts`: **3 files and 568 tests passed**. These establish the reviewed baseline; they do not validate any proposed feature. This change contains research documents only.
+The baseline review ran `npx vitest run src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts src/lib/form-node/tests/form-node-value.spec.ts`: **3 files and 568 tests passed**. These establish the reviewed baseline; they do not validate any proposed feature. This change contains research documents only.
 
 ### Angular behavior reference
 
