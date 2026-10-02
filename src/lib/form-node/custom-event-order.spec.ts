@@ -7,9 +7,9 @@ import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { FormNodeDirective } from './form-node.directive';
-import { assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../tests/helpers/assert-custom-event-order';
+import { assertCustomEventLifecycle, assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../tests/helpers/assert-custom-event-order';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
-import { CustomEventOrderHost, DirectBindingControl, DirectBindingHost, DirectDirectiveControl, DirectPairControl, OrderedValueControl, OrderedCheckboxControl, OrderedPairControl } from '../../../tests/integration/custom-event-order.fixture';
+import { CustomEventLifecycleHost, ConstructionOutputControl, OrderedCva, OrderedWrapper, ExplicitOrderedWrapper, CustomEventOrderHost, DirectBindingControl, DirectBindingHost, DirectDirectiveControl, DirectPairControl, OrderedValueControl, OrderedCheckboxControl, OrderedPairControl } from '../../../tests/integration/custom-event-order.fixture';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalModelForJit(DirectBindingControl, 'value');
@@ -21,6 +21,11 @@ registerSignalModelForJit(OrderedCheckboxControl, 'checked');
 registerSignalInputForJit(OrderedPairControl, 'value', 'value');
 registerSignalOutputForJit(OrderedPairControl, 'valueChange');
 for (const type of [OrderedValueControl, OrderedCheckboxControl, OrderedPairControl, DirectBindingControl, DirectDirectiveControl, DirectPairControl]) registerSignalOutputForJit(type, 'touch');
+for (const type of [ConstructionOutputControl, OrderedCva, OrderedWrapper, ExplicitOrderedWrapper]) {
+  registerSignalModelForJit(type, 'value');
+  registerSignalOutputForJit(type, 'touch');
+}
+registerSignalInputForJit(OrderedWrapper, 'formNode', 'formNode');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());
@@ -36,4 +41,8 @@ it('updates before output handlers with direct constructor injection of FORM_NOD
   const control = element.componentInstance as DirectBindingControl;
   expect(control.binding).toBe(element.injector.get(FormNodeDirective));
   assertDirectBindingEventOrder(fixture);
+});
+
+it('ignores construction outputs and preserves CVA and pass-through event ownership', () => {
+  assertCustomEventLifecycle(TestBed.createComponent(CustomEventLifecycleHost));
 });

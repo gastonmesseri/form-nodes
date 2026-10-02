@@ -10,7 +10,7 @@ import { field } from '../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { warnFailedInputWrite } from './ng-internals/component-input-writer';
 import { assertValueChangeOutputs } from '../../../tests/helpers/assert-value-change-outputs';
-import { assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../tests/helpers/assert-custom-event-order';
+import { assertCustomEventLifecycle, assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../tests/helpers/assert-custom-event-order';
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -230,4 +230,9 @@ it('binds standalone values and explicit nodes through production AOT inputs and
   expect(host.profile.name()).toBe('Server');
   expect(host.profile.pristine()).toBe(true);
   fixture.destroy();
+});
+
+it('ignores construction outputs and preserves CVA and pass-through event ownership in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  assertCustomEventLifecycle(TestBed.createComponent(module.CustomEventLifecycleHost));
 });

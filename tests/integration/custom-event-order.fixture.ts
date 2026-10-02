@@ -1,7 +1,7 @@
-import { NgControl } from '@angular/forms';
-import { Component, inject, input, model, output } from '@angular/core';
+import { NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
+import { Component, forwardRef, inject, input, model, output } from '@angular/core';
 
-import { field, form, required, FORM_NODE, FormNodeDirective, type AnyNode } from '../../src/public-api';
+import { field, form, required, FORM_NODE, FormNodeDirective, provideFormNodePassThrough, type AnyNode } from '../../src/public-api';
 
 @Component({ selector: 'ordered-value', template: '' })
 export class OrderedValueControl {
@@ -128,4 +128,78 @@ export class DirectBindingHost {
   pairedObserved = '';
 
   pairedTouched = false;
+}
+
+@Component({ selector: 'construction-output-control', template: '' })
+export class ConstructionOutputControl {
+  binding = inject(FORM_NODE, { self: true });
+
+  value = model('');
+
+  touch = output<void>();
+
+  constructor() {
+    this.value.set('construction');
+    this.touch.emit();
+  }
+}
+
+@Component({
+  selector: 'ordered-cva',
+  template: '',
+  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => OrderedCva), multi: true }],
+})
+export class OrderedCva {
+  value = model('');
+
+  touch = output<void>();
+
+  onChange: (value: string) => void = () => {};
+
+  onTouched: () => void = () => {};
+
+  writeValue(value: string) { this.value.set(value); }
+
+  registerOnChange(callback: (value: string) => void) { this.onChange = callback; }
+
+  registerOnTouched(callback: () => void) { this.onTouched = callback; }
+}
+
+@Component({ selector: 'ordered-wrapper', template: '<input [formNode]="formNode()">', imports: [FormNodeDirective] })
+export class OrderedWrapper {
+  formNode = input.required<AnyNode>();
+
+  value = model('wrapper');
+
+  touch = output<void>();
+}
+
+@Component({ selector: 'explicit-ordered-wrapper', template: '', providers: [provideFormNodePassThrough()] })
+export class ExplicitOrderedWrapper {
+  value = model('wrapper');
+
+  touch = output<void>();
+}
+
+@Component({
+  selector: 'custom-event-lifecycle-host',
+  imports: [FormNodeDirective, ConstructionOutputControl, OrderedCva, OrderedWrapper, ExplicitOrderedWrapper],
+  template: `
+    <construction-output-control [formNode]="profile.construction" />
+    <ordered-cva [formNode]="profile.cva" (valueChange)="values.push(profile.cva())" (touch)="touches.push(profile.cva.touched())" />
+    <ordered-wrapper [formNode]="profile.wrapper" />
+    <explicit-ordered-wrapper [formNode]="profile.explicit" />
+  `,
+})
+export class CustomEventLifecycleHost {
+  profile = form({
+    construction: field.strict('initial'),
+    cva: field.strict('initial'),
+    wrapper: field.strict('initial'),
+    explicit: field.strict('initial'),
+  });
+
+  values: string[] = [];
+
+  touches: boolean[] = [];
 }

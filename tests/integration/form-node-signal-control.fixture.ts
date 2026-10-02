@@ -206,7 +206,7 @@ export class AotAliasedModelHost {
 
 export { NativeEventOrderHost } from './native-event-order.fixture';
 export { IsolatedCva, IsolatedModel, NativeEventIsolationHost } from './native-event-isolation.fixture';
-export { CustomEventOrderHost, DirectBindingControl, DirectBindingHost } from './custom-event-order.fixture';
+export { CustomEventLifecycleHost, CustomEventOrderHost, DirectBindingControl, DirectBindingHost } from './custom-event-order.fixture';
 
 export { ValueChangeOutputsHost } from './value-change-outputs.fixture';
 
