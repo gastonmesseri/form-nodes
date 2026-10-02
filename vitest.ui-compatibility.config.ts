@@ -41,7 +41,7 @@ export default defineConfig({
     ],
   },
   test: {
-    include: ['src/lib/form-node/material-*.browser.spec.ts', 'src/lib/form-node/ui-*.browser.spec.ts'],
+    include: ['src/lib/form-node/tests/material-*.browser.spec.ts', 'src/lib/form-node/tests/ui-*.browser.spec.ts'],
     browser: {
       enabled: true,
       provider: 'playwright',
