@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.8.1 — 2026-10-02 {#581--2026-10-02}
+
 ## 📦 5.8.0 — 2026-10-02 {#580--2026-10-02}
 
 ### Added

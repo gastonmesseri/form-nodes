@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.8.1] - 2026-10-02
+
 ## [5.8.0] - 2026-10-02
 
 ### Added
@@ -528,7 +530,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.1...HEAD
+[5.8.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.0...v5.8.1
 [5.8.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.7.0...v5.8.0
 [5.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.2...v5.7.0
 [5.6.2]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.1...v5.6.2
