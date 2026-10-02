@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.8.0] - 2026-10-02
+
 ### Added
 
 - Add `useControlState().hasValidators()`, a reactive signal reporting registered synchronous/asynchronous validators or a configured local `errors` callback, independently of current errors and disabled state. Unbound controls return false unless they configure `errors`; Signal Forms returns undefined when no local callback establishes validation presence.
@@ -526,7 +528,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.7.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.0...HEAD
+[5.8.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.7.0...v5.8.0
 [5.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.2...v5.7.0
 [5.6.2]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.1...v5.6.2
 [5.6.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.0...v5.6.1
