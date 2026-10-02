@@ -7,7 +7,7 @@ title: Migration guides
 import CodeBlock from '@theme/CodeBlock';
 import fieldNullabilitySource from '!!raw-loader!../../examples/field-nullability.example.ts';
 
-## Upcoming minor release: optional empty text {#optional-empty-text-default}
+## Moving to 5.7.0: optional empty text {#optional-empty-text-default}
 
 `minLength` and `lengthBetween` now accept `''` by default, matching Angular Signal Forms.
 Empty arrays and other collections still fail a positive minimum. The maintainer has chosen
@@ -70,7 +70,7 @@ for conversion examples.
 
 ## Moving to 4.0.0: minimum length checks empty text {#minimum-length-empty-text}
 
-This section describes the historical 4.0.0 change. The [upcoming minor release](#optional-empty-text-default)
+This section describes the historical 4.0.0 change. The [5.7.0 release](#optional-empty-text-default)
 restores optional empty strings by default.
 
 **Breaking:** `minLength(n)` now measures an empty string as length zero, just like an empty

@@ -86,3 +86,11 @@ The maintainer explicitly requested a minor release despite this breaking behavi
 as an exception to the default Semantic Versioning policy. Use `requiredTrue` for mandatory
 acceptance and update its error handling and messages as described in the
 [3.9.0 migration guide](./migrations.md#boolean-required).
+
+## Optional empty text: 5.7.0 {#optional-empty-text}
+
+Version **5.7.0** allows empty strings to satisfy `minLength` and `lengthBetween` by default,
+matching Angular Signal Forms. Empty collections still fail a positive minimum. This default
+change ships in a minor release at the maintainer's explicit request. Use
+`allowEmptyString: false` to retain the previous empty-string validation, as described in the
+[5.7.0 migration guide](./migrations.md#optional-empty-text-default).

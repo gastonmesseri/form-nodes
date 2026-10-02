@@ -10,9 +10,11 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.7.0 — 2026-10-02 {#570--2026-10-02}
+
 ### Changed
 
-- Allow empty strings by default in `minLength` and `lengthBetween`, matching Angular Signal Forms, while empty arrays and other collections still fail a positive minimum. Add `allowEmptyString: false` to keep measuring empty text as zero. Combining `required` with the default length validators now reports only `required` for empty text; length metadata remains available. This default change is scheduled for a minor release by maintainer decision.
+- Allow empty strings by default in `minLength` and `lengthBetween`, matching Angular Signal Forms, while empty arrays and other collections still fail a positive minimum. Add `allowEmptyString: false` to keep measuring empty text as zero. Combining `required` with the default length validators now reports only `required` for empty text; length metadata remains available. This default change ships in a minor release by maintainer decision.
 
 ## 📦 5.6.2 — 2026-09-28 {#562--2026-09-28}
 

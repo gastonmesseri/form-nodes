@@ -10,9 +10,11 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.7.0] - 2026-10-02
+
 ### Changed
 
-- Allow empty strings by default in `minLength` and `lengthBetween`, matching Angular Signal Forms, while empty arrays and other collections still fail a positive minimum. Add `allowEmptyString: false` to keep measuring empty text as zero. Combining `required` with the default length validators now reports only `required` for empty text; length metadata remains available. This default change is scheduled for a minor release by maintainer decision.
+- Allow empty strings by default in `minLength` and `lengthBetween`, matching Angular Signal Forms, while empty arrays and other collections still fail a positive minimum. Add `allowEmptyString: false` to keep measuring empty text as zero. Combining `required` with the default length validators now reports only `required` for empty text; length metadata remains available. This default change ships in a minor release by maintainer decision.
 
 ## [5.6.2] - 2026-09-28
 
@@ -516,7 +518,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.2...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.7.0...HEAD
+[5.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.2...v5.7.0
 [5.6.2]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.1...v5.6.2
 [5.6.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.0...v5.6.1
 [5.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.5.0...v5.6.0
