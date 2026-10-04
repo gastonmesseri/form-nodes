@@ -5244,3 +5244,33 @@ use only the canonical name; existing `FormNodeStateOptions` and `provideFormNod
 names remain supported. The implementation and adapters live in `src/lib/control-state/`, with
 matching test, helper, and website example filenames. The reference is `control-state.md`; its
 explicit slug and legacy heading anchors preserve the published URL and existing deep links.
+
+
+## Writable signal control bindings
+
+`[formNode]` accepts a Form Nodes node or a writable Angular signal. Node recognition precedes
+signal detection; signal detection uses Angular's public isSignal() guard plus a callable set,
+without requiring update(), to retain Angular 21.0 compatibility. Readonly signals and structural
+lookalikes are rejected. A writable signal cannot be combined with formNodeValue.
+
+A signal binding creates a local field initialized synchronously from the source signal, with no
+configured validators and debounce: 0. Signal reads are tracked by a binding-owned Angular effect.
+Source changes synchronize the field and selected adapter as programmatic writes, without dirtying
+the control or emitting control-originated outputs. Parsed control values commit immediately and
+write to the source signal before control/committed outputs or custom template output handlers.
+CVA callback ordering remains component-owned. Model-to-view feedback does not write to the source.
+
+Bindings sharing one source own separate interaction state. A user edit propagates to other bindings
+as a programmatic write. These fields are not composed into ancestor forms. useControlState observes
+local binding state and retains existing control-error integration. Signal set/update are the
+application value operations; explicit node bindings retain their existing operations and options.
+Replacing the signal creates fresh local state and disconnects the old source. Rebinding between
+signals and explicit field/form nodes retains each transport's existing behavior. Destruction
+cleans up subscriptions and effects without disposing or modifying the source signal.
+
+Reference inspected: Angular 22.2.x, commit 576df28471a5007f7eec56cc56cc8b87c5c74be5,
+packages/forms/signals/src/directive/control_custom.ts and control_cva.ts,
+packages/forms/signals/test/web/form_field.spec.ts (custom value-control synchronization), and
+packages/forms/src/directives/ng_model.ts (viewToModelUpdate). Direct writable signal input is a
+Form Nodes API extension; Angular Signal Forms binds Field instances. Existing adapters preserve
+its separation of programmatic rendering and control-originated writes.

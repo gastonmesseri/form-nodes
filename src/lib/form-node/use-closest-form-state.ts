@@ -1,7 +1,7 @@
 import { ControlContainer, FormGroupDirective, NgForm, type AbstractControl } from '@angular/forms';
 import { DestroyRef, afterEveryRender, assertInInjectionContext, computed, inject, signal, untracked, type Signal } from '@angular/core';
 
-import { FORM_NODE } from './form-node.directive';
+import { FORM_NODE } from './utils/form-node.token';
 import type { FormApi } from '../primitives/form.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 

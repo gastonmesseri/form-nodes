@@ -9,6 +9,7 @@ import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { FormNodeNgControl } from '../form-node-ng-control';
 import { warnFailedInputWrite } from '../ng-internals/component-input-writer';
+import { assertSignalBinding } from '../../../../tests/helpers/assert-signal-binding';
 import { assertValueChangeOutputs } from '../../../../tests/helpers/assert-value-change-outputs';
 import { assertCustomEventLifecycle, assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../../tests/helpers/assert-custom-event-order';
 
@@ -235,4 +236,9 @@ it('binds standalone values and explicit nodes through production AOT inputs and
 it('ignores construction outputs and preserves CVA and pass-through event ownership in production AOT', async () => {
   const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../tests/integration/form-node-signal-control.fixture');
   assertCustomEventLifecycle(TestBed.createComponent(module.CustomEventLifecycleHost));
+});
+
+it('binds writable signals through native, model and CVA transports in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../tests/integration/form-node-signal-control.fixture');
+  assertSignalBinding(TestBed.createComponent(module.SignalBindingHost));
 });

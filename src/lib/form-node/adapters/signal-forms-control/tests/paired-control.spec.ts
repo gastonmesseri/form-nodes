@@ -8,9 +8,10 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../../../primitives/form';
 import { field } from '../../../../primitives/field';
+import { FORM_NODE } from '../../../utils/form-node.token';
 import type { AnyNode } from '../../../../types/node.type';
+import { FormNodeDirective } from '../../../form-node.directive';
 import { required } from '../../../../validation/validators/required';
-import { FormNodeDirective, FORM_NODE } from '../../../form-node.directive';
 import { provideFormNodesConfig } from '../../../provide-form-nodes-config';
 import type { SyncInputs } from '../../../../configuration/node-input-config';
 import { createFormPrimitives } from '../../../../primitives/create-form-primitives';

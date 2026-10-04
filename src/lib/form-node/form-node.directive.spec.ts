@@ -1907,7 +1907,7 @@ describe('FormNodeDirective', () => {
 
     const fixture = TestBed.createComponent(Host);
     expect(() => fixture.detectChanges())
-      .toThrowError('formNode: a field, form, group, or array node is required');
+      .toThrowError('formNode: a node or writable Angular signal is required');
     fixture.destroy();
   });
 

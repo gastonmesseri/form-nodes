@@ -3,6 +3,7 @@ title: "[formNode] directive"
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import signalBindingSource from '!!raw-loader!../../examples/signal-binding.typecheck.ts';
 import basicBindingSource from '!!raw-loader!../../examples/form-node-binding-basic.typecheck.ts';
 import valueInputSource from '!!raw-loader!../../examples/form-node-value-input.typecheck.ts';
 import templateActionsSource from '!!raw-loader!../../examples/form-node-template-actions.typecheck.ts';
@@ -14,7 +15,7 @@ import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-h
 
 # [formNode] directive {#formnode-directive}
 
-`FormNodeDirective` connects a control to a form node. Import it in your component and pass the
+`FormNodeDirective` connects a control to a form node or a writable Angular signal. Import it in your component and pass the
 field to `[formNode]`; typing updates the field and its displayed value automatically.
 
 <CodeBlock language="ts" title="profile-page.component.ts">{basicBindingSource}</CodeBlock>
@@ -24,11 +25,11 @@ Read the value with `form.username()` and update it from component code with
 
 ## Template API at a glance {#template-api}
 
-Bind a node, listen to control edits, or attach the directive to `<form>` for submission and reset.
+Bind a node or writable signal, listen to control edits, or attach the directive to `<form>` for submission and reset.
 
 | Template API | Example | What it does |
 | --- | --- | --- |
-| [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
+| [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds a node or writable Angular signal to a compatible control. |
 | [`[formNodeValue]`](#value-input) | `[formNodeValue]="suggestedName()"` | Supplies a raw value to an independent field or to the explicitly bound node. |
 | [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="onValueChange($event)"` | Receives the committed value after debounce. |
 | [`(formNodeModelChange)`](#value-outputs) | `(formNodeModelChange)="onModelChange($event)"` | Receives committed node value changes from controls and programmatic writes. |
@@ -110,20 +111,21 @@ and linker infrastructure.
 
 ## 🔌 Directive input {#directive-input}
 
-Import `FormNodeDirective` in the component and bind a Form Nodes node to the `formNode` input,
-as in the opening example.
+Import `FormNodeDirective` in the component and pass a Form Nodes node or a writable Angular
+signal to the `formNode` input. See [writable signal binding](#writable-signal) for service-owned values.
 
 **Binding:** `[formNode]="node"`
 
-The directive accepts a field, form, group, or array node. Native controls require a [`field()`](./field.md);
+The directive accepts a field, form, group, or array node, or a writable signal. Native controls
+accept a [`field()`](./field.md) or a writable signal;
 native `<form>` elements require a [`form()`](./form.md) or [`group()`](./group.md). Aggregate nodes can also bind to a
 recognized custom component that models their complete value.
 
-| Host | Accepted node | Purpose |
+| Host | Accepted binding | Purpose |
 | --- | --- | --- |
-| Native input, select, or textarea | `field()` | Two-way value and state synchronization |
-| Signal custom-control component | Compatible field or aggregate node | Synchronizes its `value` or `checked` model |
-| CVA component | Compatible field or aggregate node | Uses `ControlValueAccessor` interoperability |
+| Native input, select, or textarea | `field()` or writable signal | Two-way value and state synchronization |
+| Signal custom-control component | Compatible node or writable signal | Synchronizes its `value` or `checked` model |
+| CVA component | Compatible node or writable signal | Uses `ControlValueAccessor` interoperability |
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
 
@@ -719,3 +721,29 @@ Programmatic values and resets synchronize `input.files`; strings cannot select 
 Populated programmatic selections require browser `DataTransfer` support. Selecting a file does
 not upload it. See [File inputs](../guides/control-binding.md#file-inputs) for complete examples,
 reset semantics, and `FormData` payloads.
+
+## Binding a writable signal {#writable-signal}
+
+Use `[formNode]="mySignal"` for immediate two-way value binding when application data lives in a
+service or another owner that should not declare a field. Pass the writable signal itself, without
+calling it. Service writes update the control; control edits call the signal's `set()` before
+`formNodeControlValueChange`, `formNodeChange` / `formNodeValueChange`, and custom model output
+handlers run. CVAs retain their callback ordering.
+
+<CodeBlock language="ts" title="description-editor.component.ts">{signalBindingSource}</CodeBlock>
+
+Native controls, signal model controls (including aliases and checked models), and CVAs use their
+existing transports. Experimental input/output pairs still require `bindInputOutputPairs` through
+provider or global configuration. Native parsing rules still apply, including numeric and date inputs.
+
+The signal supplies values only. Each binding owns an independent local field for control state;
+`useControlState()` can observe that binding's dirty, touched, and validation state. Editing one of
+several controls sharing a signal updates the others as programmatic writes, without marking them
+dirty. Signal bindings do not become children of an ancestor form and always commit immediately.
+Use an explicit node when you need configured validators, debounce, or form-level operations.
+Use the source signal's `set()` or `update()` for application writes.
+
+Readonly signals such as `computed()` and `asReadonly()` are not supported. Do not combine a
+writable signal binding with `[formNodeValue]`, which would introduce a second value owner.
+Replacing the signal reconnects the binding with fresh local state and stops observing the previous
+source. Destroying the binding releases its effects and listeners without changing the service signal.

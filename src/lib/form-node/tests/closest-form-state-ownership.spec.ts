@@ -5,7 +5,7 @@ import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { group } from '../../primitives/group';
 import { array } from '../../primitives/array';
-import { FORM_NODE } from '../form-node.directive';
+import { FORM_NODE } from '../utils/form-node.token';
 import type { AnyNode } from '../../types/node.type';
 import { useClosestFormState } from '../use-closest-form-state';
 

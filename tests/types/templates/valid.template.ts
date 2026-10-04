@@ -106,6 +106,9 @@ void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost];
       (formNodeControlValueChange)="$event.toFixed()">
     {{ standalone.node()().toFixed() }}
     <input [(formNodeValue)]="amount">
+    <input #signalBinding="formNode" [formNode]="amount" (formNodeChange)="$event.toFixed()" (formNodeModelChange)="$event.toFixed()">
+    {{ signalBinding.node()().toFixed() }}
+    <input [formNode]="optionalName" (formNodeControlValueChange)="$event?.toUpperCase()">
     <input [formNode]="optionalAge()" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()" (formNodeChange)="$event.toFixed()">
     <input [formNodeValue]="optionalName()" (formNodeValueChange)="$event?.toUpperCase()">
     <valid-profile-control [formNodeValue]="person" (formNodeValueChange)="$event.name.toUpperCase()" />

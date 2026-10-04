@@ -310,3 +310,10 @@ component already uses submission history, so no extra visibility condition is n
 
 See [FormNodeErrors](../reference/form-node-errors.md) for message limits, custom text, visibility
 policies, and the [native-input example](../reference/form-node-errors.md#native-input).
+
+## Binding service signals
+
+Consumers can bind `[formNode]="store.description"` directly to a writable Angular signal. Model
+controls and CVAs keep the same value transport, and `useControlState()` observes state local to
+that binding. Service writes render programmatically; control edits write to the signal immediately
+before value output handlers. See [writable signal binding](../reference/form-node-binding.md#writable-signal).

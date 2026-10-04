@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import type { Signal, Provider, OutputRef } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
@@ -150,3 +151,10 @@ injectedControlState.hasValidators.set(true);
 
 // The deprecated alias preserves the exact generic call contract.
 type _LegacyControlStateHook = Expect<Equal<typeof useFormNodeState, typeof useControlState>>;
+
+const signalValue = signal({ name: 'Ada' });
+declare const signalDirective: FormNodeDirective<typeof signalValue>;
+signalDirective.node()().name.toUpperCase();
+signalDirective.formNodeValueChange.subscribe(value => value.name.toUpperCase());
+// @ts-expect-error Signal bindings preserve their value type.
+signalDirective.node()().name.toFixed();

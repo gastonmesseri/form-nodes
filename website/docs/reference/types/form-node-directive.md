@@ -19,14 +19,14 @@ Use this type for a template-reference or view query. The same exported name is 
 ## Declaration
 
 ```ts
-type FormNodeDirective<TNode extends AnyNode = AnyNode> = FormNodeBinding<TNode>;
+type FormNodeDirective<TNode extends AnyNode | WritableSignal<unknown> = AnyNode> = FormNodeBinding<BoundNode<TNode, unknown>>;
 ```
 
 ## Type parameters
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNode` | `AnyNode` | `AnyNode` |
+| `TNode` | `AnyNode \| WritableSignal<unknown>` | `AnyNode` |
 
 ## Related reference
 

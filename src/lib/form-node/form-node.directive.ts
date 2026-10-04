@@ -1,16 +1,20 @@
 import { NgControl } from '@angular/forms';
-import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, output, untracked, type OnInit, type Signal, type OnChanges } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, output, untracked, type OnInit, type Signal, type WritableSignal, type OnChanges } from '@angular/core';
 
+import { FORM_NODE } from './utils/form-node.token';
 import { shallowEqual } from '../utils/shallow-equal';
+import { isFormNode } from '../primitives/is-form-node';
 import type { FieldNode } from '../primitives/field.type';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { createFieldNode } from '../primitives/field-node';
 import type { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
+import type { BoundNode } from './utils/form-node-binding-node.type';
 import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
+import { isWritableControlSignal } from '../utils/is-writable-control-signal';
 import { registerControlStateBinding } from '../control-state/adapters/form-node';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
@@ -23,13 +27,6 @@ import { componentAcceptsFormNode } from './adapters/signal-forms-control/discov
 import { FORM_NODE_INTEROP, createFormNodeInterop, injectFormNodeNgControl } from './form-node-interop';
 
 const UNSET_VALUE = Symbol('unset formNodeValue');
-
-// Angular's template type constructor defaults an omitted node generic to any.
-// Infer standalone field values from the value input in that case.
-type BoundNode<TNode extends AnyNode, TValue> = 0 extends (1 & TNode) ? FieldNode<TValue> : [TNode] extends [never] ? FieldNode<TValue> : TNode;
-
-/** Public injection token for the nearest Form Nodes control binding. */
-export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE');
 
 @Directive({
   selector: '[formNode],[formNodeValue]',
@@ -50,7 +47,7 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
   outputs: ['formNodeChange'],
   exportAs: 'formNode',
 })
-export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implements FormNodeBinding<BoundNode<TNode, TValue>>, OnInit, OnChanges {
+export class _FormNode<TNode extends AnyNode | WritableSignal<unknown> = never, TValue = unknown> implements FormNodeBinding<BoundNode<TNode, TValue>>, OnInit, OnChanges {
   formNodeInput = input<TNode | undefined>(undefined, { alias: 'formNode' });
 
   /** Supplies a value to the explicit node or an independent, lazily created field. */
@@ -248,6 +245,10 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
 
   bindingGeneration = 0;
 
+  private signalSource: WritableSignal<unknown> | undefined;
+
+  private signalNode: AnyNode | undefined;
+
   private _standaloneNode: FieldNode<TValue> | undefined;
 
   private _synchronizedNode: BoundNode<TNode, TValue> | undefined;
@@ -299,22 +300,48 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
 
   constructor() {
     this.interop.connect(this);
-    this.destroyRef.onDestroy(() => {
-      this.stopModelChange?.();
-      this.customEvents = undefined;
-      this.controlStateCleanup?.();
-      this.bindingInjectorCleanups.forEach(cleanup => cleanup());
-      this.bindingInjectorCleanups.clear();
-    });
-    effect((onCleanup) => {
-      const cleanup = registerNodeBindingInjector(this.node(), this.injector);
-      this.bindingInjectorCleanups.add(cleanup);
-      onCleanup(() => {
-        this.bindingGeneration++;
-        this.bindingInjectorCleanups.delete(cleanup);
-        cleanup();
+    this.registerDestroyCleanup();
+    this.installSignalValueEffect();
+    this.installBindingInjectorEffect();
+  }
+
+  /**
+   * Field, group, form, or array node currently bound to the host control.
+   */
+  get field(): BoundNode<TNode, TValue> {
+    const input = this.formNodeInput();
+    let node: AnyNode | undefined;
+    if (isFormNode(input)) {
+      this.signalSource = undefined;
+      this.signalNode = undefined;
+      node = input;
+    } else if (isWritableControlSignal(input)) {
+      if (this.signalSource !== input) {
+        this.signalSource = input;
+        this.signalNode = untracked(() => createFieldNode(input(), [], { injector: this.injector, debounce: 0 }));
+      }
+      node = this.signalNode;
+    } else {
+      this.signalSource = undefined;
+      this.signalNode = undefined;
+      if (input !== undefined) throw new Error('formNode: a node or writable Angular signal is required. Use [formNode] to bind a node, not [(formNode)].');
+    }
+    if (node === undefined && this._formNodeValue() !== UNSET_VALUE) {
+      this._standaloneNode ??= untracked(() => {
+        return createFieldNode(this._formNodeValue() as TValue, [], { injector: this.injector });
       });
-    }, { injector: this.injector });
+      node = this._standaloneNode;
+    }
+    // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
+    if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
+      throw new Error('formNode: a field, form, group, or array node is required. Use [formNode] to bind a node, not [(formNode)].');
+    }
+    return node as BoundNode<TNode, TValue>;
+  }
+
+  /** Observable `NgControl` view exposed only through Angular dependency injection. */
+  get ngControl(): FormNodeNgControl {
+    return this.interop.get();
   }
 
   ngOnChanges() {
@@ -326,6 +353,9 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
       this.modelChangeNode = undefined;
     }
     const value = this._formNodeValue();
+    if (this.signalSource && value !== UNSET_VALUE) {
+      throw new Error('formNode: a writable signal cannot be combined with formNodeValue');
+    }
     if (value !== UNSET_VALUE) {
       untracked(() => {
         if (node !== this._synchronizedNode || !Object.is(value, this._synchronizedValue)) {
@@ -394,6 +424,7 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     api._setControlValue(value, () => {
       committedValue = api._value() as NodeValue<BoundNode<TNode, TValue>>;
       committed = true;
+      if (this.signalSource) this.signalSource.set(committedValue);
       if (!receiving) emitCommitted();
     });
     this.formNodeControlValueChange.emit(api._controlValue() as NodeValue<BoundNode<TNode, TValue>>);
@@ -445,6 +476,40 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     return api;
   }
 
+  private registerDestroyCleanup() {
+    this.destroyRef.onDestroy(() => {
+      this.stopModelChange?.();
+      this.customEvents = undefined;
+      this.controlStateCleanup?.();
+      this.bindingInjectorCleanups.forEach(cleanup => cleanup());
+      this.bindingInjectorCleanups.clear();
+    });
+  }
+
+  private installSignalValueEffect() {
+    effect(() => {
+      const source = this.formNodeInput();
+      if (isFormNode(source) || !isWritableControlSignal(source)) return;
+      const value = source();
+      untracked(() => {
+        const node = this.node();
+        if (!Object.is((node as unknown as InternalNode).$api._value(), value)) node.$api.set(value as NodeValue<BoundNode<TNode, TValue>>);
+      });
+    });
+  }
+
+  private installBindingInjectorEffect() {
+    effect((onCleanup) => {
+      const cleanup = registerNodeBindingInjector(this.node(), this.injector);
+      this.bindingInjectorCleanups.add(cleanup);
+      onCleanup(() => {
+        this.bindingGeneration++;
+        this.bindingInjectorCleanups.delete(cleanup);
+        cleanup();
+      });
+    });
+  }
+
   private installClassBindingEffect() {
     const classes = Object.entries(this.configuredClasses).map(([className, predicate]) => [
       className,
@@ -464,29 +529,6 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
         });
       },
     }, { injector: this.injector });
-  }
-
-  /**
-   * Field, group, form, or array node currently bound to the host control.
-   */
-  get field(): BoundNode<TNode, TValue> {
-    let node: AnyNode | undefined = this.formNodeInput();
-    if (node === undefined && this._formNodeValue() !== UNSET_VALUE) {
-      this._standaloneNode ??= untracked(() => {
-        return createFieldNode(this._formNodeValue() as TValue, [], { injector: this.injector });
-      });
-      node = this._standaloneNode;
-    }
-    // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
-    if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
-      throw new Error('formNode: a field, form, group, or array node is required. Use [formNode] to bind a node, not [(formNode)].');
-    }
-    return node as BoundNode<TNode, TValue>;
-  }
-
-  /** Observable `NgControl` view exposed only through Angular dependency injection. */
-  get ngControl(): FormNodeNgControl {
-    return this.interop.get();
   }
 
   private warnWhenHidden() {
@@ -538,6 +580,9 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
  * Reset forces a synchronous CVA write even for unchanged values. Rebinding refreshes value
  * and disabled state during synchronization, including when the new node has an equal value.
  * CVA user callbacks update control state synchronously, with debounce governing commits.
+ * `[formNode]="writableSignal"` synchronizes values immediately in both directions.
+ * Signal bindings own local control state and do not register in an ancestor form.
+ * Readonly signals and combining a signal with `formNodeValue` are unsupported.
  *
  * ```ts
  * import { Component } from '@angular/core';
@@ -557,6 +602,7 @@ export const FormNodeDirective = _FormNode;
 
 /**
  * Public instance view exposed by `[formNode]` template references and queries.
+ * A writable signal binding exposes a local field for its value type.
  *
  * ```ts
  * import { Component } from '@angular/core';
@@ -572,4 +618,4 @@ export const FormNodeDirective = _FormNode;
  * }
  * ```
  */
-export type FormNodeDirective<TNode extends AnyNode = AnyNode> = FormNodeBinding<TNode>;
+export type FormNodeDirective<TNode extends AnyNode | WritableSignal<unknown> = AnyNode> = FormNodeBinding<BoundNode<TNode, unknown>>;

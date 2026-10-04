@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Bind controls directly to writable Angular signals with `[formNode]="mySignal"`. Control edits update the signal immediately before value output handlers; service writes render through existing native, model, and CVA adapters. Each binding keeps independent local control state and releases its connection on rebinding or destruction.
+
 ## [5.8.1] - 2026-10-02
 
 ## [5.8.0] - 2026-10-02

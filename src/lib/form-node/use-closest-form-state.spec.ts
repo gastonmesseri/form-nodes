@@ -11,9 +11,10 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import type { AnyNode } from '../types/node.type';
+import { FORM_NODE } from './utils/form-node.token';
+import { FormNodeDirective } from './form-node.directive';
 import { useClosestFormState } from './use-closest-form-state';
 import { useControlState } from '../control-state/control-state';
-import { FORM_NODE, FormNodeDirective } from './form-node.directive';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');

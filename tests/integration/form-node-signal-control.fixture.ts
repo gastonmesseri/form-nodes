@@ -227,3 +227,5 @@ export class AotStandaloneValueHost {
 
   profile = form({ name: field.strict('') });
 }
+
+export { SignalBindingHost } from './signal-binding.fixture';
