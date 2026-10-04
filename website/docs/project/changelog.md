@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.9.0 — 2026-10-04 {#590--2026-10-04}
+
 ### Added
 
 - Bind controls directly to writable Angular signals with `[formNode]="mySignal"`. Control edits update the signal immediately before value output handlers; service writes render through existing native, model, and CVA adapters. Each binding keeps independent local control state and releases its connection on rebinding or destruction.

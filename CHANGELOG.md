@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [5.9.0] - 2026-10-04
+
 ### Added
 
 - Bind controls directly to writable Angular signals with `[formNode]="mySignal"`. Control edits update the signal immediately before value output handlers; service writes render through existing native, model, and CVA adapters. Each binding keeps independent local control state and releases its connection on rebinding or destruction.
@@ -534,7 +536,8 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v5.9.0...HEAD
+[5.9.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.0...v5.9.0
 [5.8.1]: https://github.com/gastonmesseri/form-nodes/compare/v5.8.0...v5.8.1
 [5.8.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.7.0...v5.8.0
 [5.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v5.6.2...v5.7.0
